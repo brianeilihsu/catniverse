@@ -18,7 +18,7 @@ public class PostController {
 
     @RequestMapping("/")
     public String greet(){
-        return "Hello Eilihsu";
+        return "spring is working...";
     }
 
     @GetMapping("/{id}")
