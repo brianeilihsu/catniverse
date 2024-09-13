@@ -21,7 +21,8 @@ public class UsersController {
 
     @PostMapping("/login")
     public String login(@RequestBody Users user){
-        return service.verify(user);}
+        return service.verify(user);
+    }
 
     @PostMapping("/register")
     public Users register(@RequestBody Users user){
