@@ -2,7 +2,6 @@ package com.catniverse.backend.request;
 
 import com.catniverse.backend.model.Category;
 import lombok.Data;
-
 import java.math.BigDecimal;
 
 @Data

@@ -1,4 +1,4 @@
-package com.catniverse.backend.service.Category;
+package com.catniverse.backend.service.category;
 
 import com.catniverse.backend.model.Category;
 

@@ -1,11 +1,10 @@
-package com.catniverse.backend.service.Category;
+package com.catniverse.backend.service.category;
 
 import com.catniverse.backend.exceptions.AlreadyExistsException;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.Category;
 import com.catniverse.backend.repo.CategoryRepo;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

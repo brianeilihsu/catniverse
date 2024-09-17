@@ -1,11 +1,11 @@
-package com.catniverse.backend.service.Image;
+package com.catniverse.backend.service.image;
 
 import com.catniverse.backend.dto.ImageDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.Image;
 import com.catniverse.backend.model.Product;
 import com.catniverse.backend.repo.ImageRepo;
-import com.catniverse.backend.service.Product.ImpProductService;
+import com.catniverse.backend.service.product.ImpProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

@@ -1,4 +1,4 @@
-package com.catniverse.backend.service.Product;
+package com.catniverse.backend.service.product;
 
 import com.catniverse.backend.dto.ImageDto;
 import com.catniverse.backend.dto.ProductDto;

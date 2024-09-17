@@ -4,7 +4,7 @@ import com.catniverse.backend.exceptions.AlreadyExistsException;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.Category;
 import com.catniverse.backend.response.ApiResponse;
-import com.catniverse.backend.service.Category.ImpCategoryService;
+import com.catniverse.backend.service.category.ImpCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,4 +1,4 @@
-package com.catniverse.backend.service.Image;
+package com.catniverse.backend.service.image;
 
 import com.catniverse.backend.dto.ImageDto;
 import com.catniverse.backend.model.Image;
