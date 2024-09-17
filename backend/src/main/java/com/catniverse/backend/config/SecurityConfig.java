@@ -36,11 +36,12 @@ public class SecurityConfig {
         return  http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/users/register",
-                                        "/api/users/login",
-                                        "/api/test")
-                        .permitAll()
-                        .anyRequest().authenticated())
+//                        .requestMatchers("/api/users/register",
+//                                        "/api/users/login",
+//                                        "/api/test",
+//                                        "/api/v1/products/all")
+//                        .permitAll()
+                        .anyRequest().permitAll())//authenticated
                 .formLogin(Customizer.withDefaults())
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

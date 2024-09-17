@@ -7,13 +7,13 @@ import java.util.List;
 
 public interface ProductRepo extends JpaRepository<Product, Long> {
 
-    List<Product> findByCategoryName(String category);
+    List<Product> findByCategoryNameIgnoreCase(String category);
 
-    List<Product> findByBrand(String brand);
+    List<Product> findByBrandIgnoreCase(String brand);
 
     List<Product> findByCategoryNameAndBrand(String category, String brand);
 
-    List<Product> findByName(String name);
+    List<Product> findByNameIgnoreCase(String name);
 
     List<Product> findByBrandAndName(String brand, String name);
 

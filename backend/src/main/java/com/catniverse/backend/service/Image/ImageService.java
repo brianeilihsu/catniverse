@@ -20,12 +20,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ImageService implements ImpImageService{
     private final ImageRepo imageRepo;
-    private final ImpProductService ProductService;
+    private final ImpProductService productService;
 
     @Override
     public Image getImageById(Long id) {
-        return imageRepo.findById(id).
-                orElseThrow(() -> new ResourceNotFoundException("No image found with id: " + id));
+        return imageRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No image found with id: " + id));
     }
 
     @Override
@@ -37,8 +37,9 @@ public class ImageService implements ImpImageService{
     }
 
     @Override
-    public List<ImageDto> saveImages(List<MultipartFile> files, Long productId) {
-        Product product = ProductService.getProductById(productId);
+    public List<ImageDto> saveImages(Long productId, List<MultipartFile> files) {
+        Product product = productService.getProductById(productId);
+
         List<ImageDto> savedImageDto = new ArrayList<>();
         for(MultipartFile file : files) {
             try {
@@ -48,7 +49,7 @@ public class ImageService implements ImpImageService{
                 image.setImage(new SerialBlob(file.getBytes()));
                 image.setProduct(product);
 
-                String buildDownloadUrl = "/api/v1/images/image/download";
+                String buildDownloadUrl = "/api/v1/images/image/download/";
                 String downloadUrl = buildDownloadUrl + image.getId();
                 image.setDownloadUrl(downloadUrl);
                 Image savedImage = imageRepo.save(image);
@@ -57,8 +58,8 @@ public class ImageService implements ImpImageService{
                 imageRepo.save(savedImage);
 
                 ImageDto imageDto = new ImageDto();
-                imageDto.setImageId(savedImage.getId());
-                imageDto.setImageName(savedImage.getFileName());
+                imageDto.setId(savedImage.getId());
+                imageDto.setFileName(savedImage.getFileName());
                 imageDto.setDownloadUrl(savedImage.getDownloadUrl());
                 savedImageDto.add(imageDto);
 
@@ -66,9 +67,8 @@ public class ImageService implements ImpImageService{
             }catch (IOException | SQLException e) {
                 throw new RuntimeException(e.getMessage());
             }
-            return savedImageDto;
         }
-        return null;
+        return savedImageDto;
     }
 
     @Override
