@@ -1,5 +1,6 @@
 package com.catniverse.backend.service.cart;
 
+import com.catniverse.backend.dto.CartDto;
 import com.catniverse.backend.model.Cart;
 
 import java.math.BigDecimal;
@@ -11,5 +12,7 @@ public interface ImpCartService {
 
     Long initializeNewCart();
 
-    Cart getCartByUserId();
+    Cart getCartByUserId(Long userId);
+
+    CartDto convertToDto(Cart cart);
 }

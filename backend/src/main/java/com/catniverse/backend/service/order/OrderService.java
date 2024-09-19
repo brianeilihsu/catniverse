@@ -1,20 +1,21 @@
 package com.catniverse.backend.service.order;
 
+import com.catniverse.backend.dto.OrderDto;
 import com.catniverse.backend.enums.OrderStatus;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.Cart;
 import com.catniverse.backend.model.Order;
 import com.catniverse.backend.model.OrderItem;
 import com.catniverse.backend.model.Product;
-import com.catniverse.backend.repo.CartRepo;
 import com.catniverse.backend.repo.OrderRepo;
 import com.catniverse.backend.repo.ProductRepo;
 import com.catniverse.backend.service.cart.CartService;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 
@@ -24,10 +25,11 @@ public class OrderService implements ImpOrderService{
     private final OrderRepo orderRepo;
     private final ProductRepo productRepo;
     private final CartService cartService;
+    private final ModelMapper modelMapper;
 
     @Override
     public Order placeOrder(Long userId) {
-        Cart cart = cartService.getCartByUserId();
+        Cart cart = cartService.getCartByUserId(userId);
         Order order = createOrder(cart);
         List<OrderItem> orderItemList = createOrderItems(order, cart);
         order.setOrderItems(new HashSet<>(orderItemList));
@@ -41,7 +43,7 @@ public class OrderService implements ImpOrderService{
         Order order = new Order();
         order.setUser(cart.getUser());
         order.setOrderStatus(OrderStatus.PENDING);
-        order.setOrderDate(LocalDate.now());
+        order.setOrderDate(LocalDateTime.now());
         return order;
     }
     // ↑↑↑↑↑↑↑↑↑↑ keep track of the inventory
@@ -72,8 +74,22 @@ public class OrderService implements ImpOrderService{
 
 
     @Override
-    public Order getOrder(Long orderId) {
+    public OrderDto getOrder(Long orderId) {
         return orderRepo.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+                .map(this::convertToDto)
+                .orElseThrow(()->new ResourceNotFoundException("Order not found"));
+    }
+
+    @Override
+    public List<OrderDto> getUserOrders(Long userId) {
+        List<Order> orders = orderRepo.findByUserId(userId);
+        return orders
+                .stream()
+                .map(this::convertToDto)
+                .toList();
+    }
+
+    private OrderDto convertToDto(Order order) {
+        return modelMapper.map(order, OrderDto.class);
     }
 }

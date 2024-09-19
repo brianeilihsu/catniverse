@@ -1,5 +1,6 @@
 package com.catniverse.backend.controller;
 
+import com.catniverse.backend.dto.CartDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.Cart;
 import com.catniverse.backend.response.ApiResponse;
@@ -24,7 +25,8 @@ public class CartController {
     public ResponseEntity<ApiResponse> getCart(@PathVariable Long cartId) {
         try {
             Cart cart = cartService.getCart(cartId);
-            return ResponseEntity.ok(new ApiResponse("Success", cart));
+            CartDto cartDto = cartService.convertToDto(cart);
+            return ResponseEntity.ok(new ApiResponse("Success", cartDto));
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
