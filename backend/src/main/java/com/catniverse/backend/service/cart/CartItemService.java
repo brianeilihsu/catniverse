@@ -1,5 +1,6 @@
 package com.catniverse.backend.service.cart;
 
+import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.Cart;
 import com.catniverse.backend.model.CartItem;
 import com.catniverse.backend.model.Product;
@@ -8,6 +9,8 @@ import com.catniverse.backend.repo.CartRepo;
 import com.catniverse.backend.service.product.ImpProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -46,12 +49,35 @@ public class CartItemService implements ImpCartItemService{
     }
 
     @Override
-    public void removeItemFromCart(Long cartId, Long porductId) {
-
+    public void removeItemFromCart(Long cartId, Long productId) {
+        Cart cart = cartService.getCart(cartId);
+        CartItem itemToRemove = getCartItem(cartId, productId);
+        cart.removeItem(itemToRemove);
+        cartRepo.save(cart);
     }
 
     @Override
     public void updateItemQuantity(Long cartId, Long porductId, int quantity) {
+        Cart cart = cartService.getCart(cartId);
+        cart.getItems()
+                .stream()
+                .filter(item -> item.getProduct().getId().equals(porductId))
+                .findFirst()
+                .ifPresent(item -> {
+                    item.setQuantity(quantity);
+                    item.setUnitPrice(item.getProduct().getPrice());
+                    item.setTotalPrice();
+                });
+        cart.updateTotalAmount();
+        cartRepo.save(cart);
+    }
 
+    @Override
+    public CartItem getCartItem(Long cartId, Long productId) {
+        Cart cart = cartService.getCart(cartId);
+        return cart.getItems()
+                .stream()
+                .filter(item -> item.getProduct().getId().equals(productId))
+                .findFirst().orElseThrow(() -> new ResourceNotFoundException("Product not found"));
     }
 }
