@@ -1,8 +1,10 @@
 package com.catniverse.backend.repo;
-import com.catniverse.backend.model.Post;
+
+import com.catniverse.backend.model.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PostRepo extends JpaRepository<Post, Long>{
+public interface CartItemRepo extends JpaRepository<CartItem, Long> {
+    void deleteAllByCartId(Long id);
 }

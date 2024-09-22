@@ -8,6 +8,7 @@ import Login from "./Components/Login";
 import ReportCat from "./Components/ReportCat";
 import ImageTest from "./Components/ImageTest";
 import Show from "./Components/Show";
+import UploadEcommerce from "./Components/UploadEcommerce"
 
 function App() {
   const [count, setCount] = useState(0);
@@ -20,6 +21,7 @@ function App() {
           <Route path="/ReportCat" element={<ReportCat/>}/>
           <Route path="/test" element={<ImageTest/>}/>
           <Route path="/show" element={<Show/>}/>
+          <Route path="/uploadEcommerce" element={<UploadEcommerce/>}/>
         </Routes>
     </div>
   );
