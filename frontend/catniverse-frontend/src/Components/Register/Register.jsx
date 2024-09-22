@@ -4,10 +4,12 @@ import { useNavigate } from "react-router-dom";
 import "./Register.css";
 
 function Register() {
-  const [account, setAccount] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordCheck, setPasswordCheck] = useState("");
-  const [email, setEmail] = useState("");
+  const [registerData, setRegisterData] = useState({
+    account: "",
+    password: "",
+    passwordCheck: "",
+    email: "",
+  });
 
   useEffect(() => {
     document.documentElement.style.height = '100%';
@@ -27,30 +29,27 @@ function Register() {
     };
   }, []); 
 
-  const handleRegister = () => {
-    if (password !== passwordCheck) {
+  const handleChange = (e) => {
+    setRegisterData({ ...registerData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = () => {
+    if (registerData.password !== registerData.passwordCheck) {
       alert("密碼與確認密碼不一致");
-      setPassword("");
-      setPasswordCheck("");
+
+      setRegisterData({
+        ...registerData,
+        password: "",
+        passwordCheck: ""
+      });
+      
       return;
+    }
+    else {
+
     }
   };
 
-  const handleGetAccount = (event) => {
-    setAccount(event.target.value);
-  };
-
-  const handleGetPassword = (event) => {
-    setPassword(event.target.value);
-  };
-
-  const handlePasswordCheck = (event) => {
-    setPasswordCheck(event.target.value);
-  };
-  
-  const handleGetEmail = (event) => {
-    setEmail(event.target.value);
-  };
 
   return (
     <div className="ctr">
@@ -61,8 +60,9 @@ function Register() {
           <input
             type="text"
             id="r_account"
-            value={account}
-            onChange={handleGetAccount}
+            name="account"
+            value={registerData.account}
+            onChange={handleChange}
             required
           />
 
@@ -70,9 +70,10 @@ function Register() {
           <input
             type="password"
             id="r_password"
+            name="password"
             className="pass-key"
-            value={password}
-            onChange={handleGetPassword}
+            value={registerData.password}
+            onChange={handleChange}
             required
           />
 
@@ -80,9 +81,10 @@ function Register() {
           <input
             type="password"
             id="r_password_check"
+            name="passwordCheck"
             className="pass-key"
-            value={passwordCheck}
-            onChange={handlePasswordCheck}
+            value={registerData.passwordCheck}
+            onChange={handleChange}
             required
           />
 
@@ -90,12 +92,13 @@ function Register() {
           <input
             type="email"
             id="r_email"
-            value={email}
-            onChange={handleGetEmail}
+            name="email"
+            value={registerData.email}
+            onChange={handleChange}
             required
           />
 
-          <button type="button" onClick={handleRegister}>
+          <button type="button" onClick={handleSubmit}>
             註冊
           </button>
         </form>
