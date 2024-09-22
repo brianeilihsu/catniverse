@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
@@ -7,6 +7,24 @@ function Login() {
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.documentElement.style.height = '100%';
+    document.body.style.height = '100%';
+    document.body.style.display = 'flex';
+    document.body.style.justifyContent = 'center';
+    document.body.style.alignItems = 'center';
+    document.body.style.lineHeight = '0';
+
+    return () => {
+      document.documentElement.style.height = '';
+      document.body.style.height = '';
+      document.body.style.display = '';
+      document.body.style.justifyContent = '';
+      document.body.style.alignItems = '';
+      document.body.style.lineHeight = '';
+    };
+  }, []); 
 
   const handleGetAccount = (event) => {
     setAccount(event.target.value);
