@@ -1,4 +1,4 @@
-package com.catniverse.backend.config;
+package com.catniverse.backend.security.config;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

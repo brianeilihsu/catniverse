@@ -10,6 +10,7 @@ import com.catniverse.backend.model.Product;
 import com.catniverse.backend.repo.OrderRepo;
 import com.catniverse.backend.repo.ProductRepo;
 import com.catniverse.backend.service.cart.CartService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -27,8 +28,9 @@ public class OrderService implements ImpOrderService{
     private final CartService cartService;
     private final ModelMapper modelMapper;
 
+    @Transactional
     @Override
-    public Order placeOrder(Long userId) {
+    public OrderDto placeOrder(Long userId) {
         Cart cart = cartService.getCartByUserId(userId);
         Order order = createOrder(cart);
         List<OrderItem> orderItemList = createOrderItems(order, cart);
@@ -36,7 +38,7 @@ public class OrderService implements ImpOrderService{
         order.setTotalAmount(calculateTotalAmount(orderItemList));
         Order savedOrder = orderRepo.save(order);
         cartService.clearCart(cart.getId());
-        return savedOrder;
+        return convertToDto(savedOrder);
     }
     // ↑↑↑↑↑↑↑↑↑↑
     private Order createOrder(Cart cart) {

@@ -2,6 +2,7 @@ package com.catniverse.backend.service.product;
 
 import com.catniverse.backend.dto.ImageDto;
 import com.catniverse.backend.dto.ProductDto;
+import com.catniverse.backend.exceptions.AlreadyExistsException;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.Category;
 import com.catniverse.backend.model.Image;
@@ -36,6 +37,11 @@ public class ProductService implements ImpProductService {
         // if yes, set it as the new product category
         // if no, then save it as a new category
         //then set as the new product category.
+
+//        if(productExists(request.getName(), request.getBrand())){
+//            throw new AlreadyExistsException(request.getBrand() + ' ' + request.getName() + "already exists");
+//        }
+
         Category category = Optional.ofNullable(categoryRepo.findByName(request.getCategory().getName()))
                 .orElseGet(() -> {
                     Category newCategory = new Category(request.getCategory().getName());
@@ -43,6 +49,10 @@ public class ProductService implements ImpProductService {
                 });
         request.setCategory(category);
         return productRepo.save(createProduct(request, category));
+    }
+    // ↑↑↑↑↑↑↑↑↑↑ if u want to add product to exist product, instead of create a new entity
+    private boolean productExists(String name, String brand){
+        return productRepo.existsByNameAndBrand(name, brand);
     }
     // ↑↑↑↑↑↑↑↑↑↑
     private Product createProduct(AddProductRequest request, Category category) {

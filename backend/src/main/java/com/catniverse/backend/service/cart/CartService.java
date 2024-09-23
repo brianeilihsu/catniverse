@@ -3,6 +3,7 @@ package com.catniverse.backend.service.cart;
 import com.catniverse.backend.dto.CartDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.Cart;
+import com.catniverse.backend.model.User;
 import com.catniverse.backend.repo.CartItemRepo;
 import com.catniverse.backend.repo.CartRepo;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 
@@ -31,10 +33,11 @@ public class CartService implements ImpCartService{
     }
 
     @Override
-    public void clearCart(Long id) {
+    public void clearCart(Long id) { //肏他媽的這白癡cart一直山不掉
         Cart cart = getCart(id);
-        cartItemRepo.deleteAllByCartId(id);
         cart.getItems().clear();
+        cartRepo.save(cart);
+        cartItemRepo.deleteAllByCartId(id);
         cartRepo.deleteById(id);
     }
 
@@ -45,11 +48,13 @@ public class CartService implements ImpCartService{
     }
 
     @Override
-    public Long initializeNewCart() {
-        Cart newCart = new Cart();
-        Long newCartId = cartIdGenerator.incrementAndGet();
-        newCart.setId(newCartId);
-        return cartRepo.save(newCart).getId();
+    public Cart initializeNewCart(User user) {
+        return Optional.ofNullable(getCartByUserId(user.getId()))
+                .orElseGet(() -> {
+                    Cart cart = new Cart();
+                    cart.setUser(user);
+                    return cartRepo.save(cart);
+                });
     }
 
     @Override
