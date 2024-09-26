@@ -6,6 +6,7 @@ import Index from "./Components/Index/Index";
 import Introduction from "./Components/Introduction/Introduction";
 import Map from "./Components/Map/Map";
 import Shop from "./Components/Shop/Shop";
+import Member from "./Components/Member/Member";
 import Profile from "./Components/Profile/Profile";
 import ReportCat from "./Components/ReportCat";
 import ImageTest from "./Components/ImageTest";
@@ -20,6 +21,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/map" element={<Map />} />
+        <Route path="/member" element={<Member />} />
         <Route path="/introduction" element={<Introduction />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/register" element={<Register />} />
