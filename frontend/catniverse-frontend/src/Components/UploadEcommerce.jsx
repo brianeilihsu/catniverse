@@ -87,7 +87,7 @@ function ProductForm() {
       try {
         // API call to add product
         const productResponse = await axios.post(
-          "http://localhost:8080/api/v1/products/add",
+          "http://140.136.151.71:8787/api/v1/products/add",
           formData,
           {
             headers: {
@@ -105,7 +105,7 @@ function ProductForm() {
           formData.append("files", images[i]);
 
           await axios.post(
-            `http://localhost:8080/api/v1/images/upload`,
+            `http://140.136.151.71:8787/api/v1/images/upload`,
             formData,
             {
               headers: {

@@ -10,7 +10,7 @@ function Header({ account }) {
                 <Link to="/">首頁</Link>
                 <Link to="/map">地圖</Link>
                 <Link to="/introduction">關於我們</Link>
-                <Link to="/help">如何幫助</Link>
+                <Link to="/shop">義賣專區</Link>
 
 
                 {account == null ? (

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
 function Login() {
-  const [account, setAccount] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     document.documentElement.style.height = '100%';
@@ -26,20 +28,41 @@ function Login() {
     };
   }, []); 
 
-  const handleGetAccount = (event) => {
-    setAccount(event.target.value);
+  const handleGetEmail = (event) => {
+    setEmail(event.target.value);
   }
 
   const handleGetPassword = (event) => {
     setPassword(event.target.value);
   }
 
-  const handleLogin = () => {
-    if (account == "123" && password == 123) {
+  const handleLogin = async (e) => {
+
+    e.preventDefault();
+    
+    try {
+      const response = await axios.post("http://140.136.151.71:8787/api/v1/auth/login", {
+        email: email,
+        password: password,
+      });
+      // 請求成功時
+      console.log('Response data:', response.data);
+      
+      // 如果有拿到 JWT Token，通常會存到 Local Storage 或 State 中
+      const jwtToken = response.data.data.jwt;  // 假設後端回傳的 JWT 存在 data.jwt 中
+      localStorage.setItem('token', jwtToken);  // 儲存到 Local Storage 中
+
+      // 設定訊息
+      setMessage('Login successful! Token saved.');
       navigate("/");
-    } else {
-      // 如果帳號或密碼錯誤，顯示提示信息
-      alert("帳號或密碼錯誤，請再試一次。");
+
+    } catch (error) {
+      // 錯誤處理
+      if (error.response && error.response.status === 401) {
+        setMessage('Login failed: Invalid email or password.');
+      } else {
+        setMessage('An error occurred: ' + error.message);
+      }
     }
   }
 
@@ -54,9 +77,9 @@ function Login() {
           <input
             type="text"
             id="account"
-            placeholder="帳號"
-            value={account}
-            onChange={handleGetAccount}
+            placeholder="信箱"
+            value={email}
+            onChange={handleGetEmail}
             required
           />
           <input
