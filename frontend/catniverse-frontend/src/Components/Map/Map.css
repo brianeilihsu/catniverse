@@ -1,0 +1,15 @@
+h2 {
+    padding-top: 0%;
+}
+
+.map-container {
+    width: 66.67%; /* 設置寬度為 2/3 */
+    margin: 0 auto; /* 讓地圖水平居中 */
+  }
+  
+  /* 設置地圖圖片的寬度為 100% 並保持高度自適應 */
+  .map-container img {
+    width: 100%; /* 讓地圖圖片填滿父容器 */
+    height: auto; /* 保持圖片比例 */
+    background-color: #f0f8ff;
+  }
