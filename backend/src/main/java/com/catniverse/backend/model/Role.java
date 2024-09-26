@@ -16,10 +16,10 @@ public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String roleName;
+    private String name;
 
     public Role(String roleName) {
-        this.roleName = roleName;
+        this.name = roleName;
     }
 
     @ManyToMany(mappedBy = "roles")

@@ -27,7 +27,7 @@ public class CatniverseUserDetails implements UserDetails {
     public static CatniverseUserDetails buildUserDetails(User user) {
         List<GrantedAuthority> authorities = user.getRoles()
                 .stream()
-                .map(role -> new SimpleGrantedAuthority(role.getRoleName()))
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
         return new CatniverseUserDetails(
                 user.getId(),

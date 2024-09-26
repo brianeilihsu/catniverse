@@ -9,6 +9,9 @@ import com.catniverse.backend.request.CreateUserRequest;
 import com.catniverse.backend.request.UserUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -18,6 +21,7 @@ import java.util.Optional;
 public class UserService implements ImpUserService{
     private final UserRepo userRepo;
     private final ModelMapper modelMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public User getUserById(Long userId) {
@@ -33,7 +37,7 @@ public class UserService implements ImpUserService{
                     User user = new User();
                     user.setUsername(req.getUsername());
                     user.setEmail(request.getEmail());
-                    user.setPassword(request.getPassword());
+                    user.setPassword(passwordEncoder.encode(request.getPassword()));
                     return userRepo.save(user);
                 }).orElseThrow(()-> new AlreadyExistsException("Oops! " + request.getEmail() + "User already exists"));
     }
@@ -56,5 +60,12 @@ public class UserService implements ImpUserService{
     @Override
     public UserDto convertUserToDto(User user) {
         return modelMapper.map(user, UserDto.class);
+    }
+
+    @Override
+    public User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return userRepo.findByEmail(email);
     }
 }
