@@ -36,7 +36,7 @@ public class JwtUtils {
 
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + expirationTime))
-                .signWith(key()).compact(); //這一行code is deprecated 要怎麼解決?
+                .signWith(key(), SignatureAlgorithm.HS256).compact(); //這一行code is deprecated 要怎麼解決?
     }
 
     private Key key() {

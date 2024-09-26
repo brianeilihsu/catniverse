@@ -2,7 +2,6 @@ package com.catniverse.backend.service.product;
 
 import com.catniverse.backend.dto.ImageDto;
 import com.catniverse.backend.dto.ProductDto;
-import com.catniverse.backend.exceptions.AlreadyExistsException;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.Category;
 import com.catniverse.backend.model.Image;
