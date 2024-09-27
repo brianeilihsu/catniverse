@@ -30,6 +30,13 @@ public class PostController {
         return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
     }
 
+    @GetMapping("/user-post/{userId}")
+    public ResponseEntity<ApiResponse> getUserPosts(@PathVariable Long userId) {
+        List<Post> posts = postService.getPostsByUserId(userId);
+        List<PostDto> convertedPosts = postService.getConvertedPosts(posts);
+        return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+    }
+
     @PostMapping("/add/{userId}")
     public ResponseEntity<ApiResponse> addPost(@RequestBody AddPostRequest postRequest,
                                                @PathVariable Long userId) {

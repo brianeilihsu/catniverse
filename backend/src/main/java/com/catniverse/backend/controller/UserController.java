@@ -4,6 +4,7 @@ import com.catniverse.backend.dto.UserDto;
 import com.catniverse.backend.exceptions.AlreadyExistsException;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.User;
+import com.catniverse.backend.model.UserAvatar;
 import com.catniverse.backend.request.CreateUserRequest;
 import com.catniverse.backend.request.UserUpdateRequest;
 import com.catniverse.backend.response.ApiResponse;
@@ -46,6 +47,9 @@ public class UserController {
     public ResponseEntity<ApiResponse> createUser(@RequestBody CreateUserRequest request){
         try {
             User user = userService.createUser(request);
+            UserAvatar userAvatar = new UserAvatar();
+            userAvatar.setUser(user);
+            user.setUserAvatar(userAvatar);
             UserDto userDto = userService.convertUserToDto(user);
             return ResponseEntity.ok(new ApiResponse("Success",userDto));
         } catch (AlreadyExistsException e) {

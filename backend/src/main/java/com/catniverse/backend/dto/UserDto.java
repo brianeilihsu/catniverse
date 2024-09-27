@@ -6,8 +6,8 @@ import java.util.List;
 
 @Data
 public class UserDto {
-    private Long userId;
-    private String userName;
+    private Long id;
+    private String username;
     private String email;
     private UserAvatarDto userAvatar;
     private List<OrderDto> orders;

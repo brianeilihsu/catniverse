@@ -3,6 +3,7 @@ package com.catniverse.backend.data;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.Role;
 import com.catniverse.backend.model.User;
+import com.catniverse.backend.model.UserAvatar;
 import com.catniverse.backend.repo.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,9 @@ public class DataInitializer implements ApplicationListener<ApplicationReadyEven
             user.setEmail(defaultEmail);
             user.setPassword(passwordEncoder.encode("123456"));
             user.setRoles(Set.of(userRole));
+            UserAvatar userAvatar = new UserAvatar();
+            userAvatar.setUser(user);
+            user.setUserAvatar(userAvatar);
             userRepo.save(user);
             System.out.println("Default User " + i + " created");
         }
@@ -58,6 +62,9 @@ public class DataInitializer implements ApplicationListener<ApplicationReadyEven
             user.setEmail(defaultEmail);
             user.setPassword(passwordEncoder.encode("123456"));
             user.setRoles(Set.of(adminRole));
+            UserAvatar userAvatar = new UserAvatar();
+            userAvatar.setUser(user);
+            user.setUserAvatar(userAvatar);
             userRepo.save(user);
             System.out.println("Default admin user " + i + " created successfully.");
         }
