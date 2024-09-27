@@ -48,4 +48,8 @@ public class Cart {
                              })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+    public void clearCart(){
+        this.items.clear();
+        updateTotalAmount();
+    }
 }

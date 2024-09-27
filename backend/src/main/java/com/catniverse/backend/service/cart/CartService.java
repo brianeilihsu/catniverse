@@ -35,9 +35,8 @@ public class CartService implements ImpCartService{
     @Override
     public void clearCart(Long id) { //肏他媽的這白癡cart一直山不掉
         Cart cart = getCart(id);
-        cart.getItems().clear();
-        cartRepo.save(cart);
         cartItemRepo.deleteAllByCartId(id);
+        cart.clearCart();
         cartRepo.deleteById(id);
     }
 

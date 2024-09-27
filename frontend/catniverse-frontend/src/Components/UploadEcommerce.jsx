@@ -12,7 +12,7 @@ function ProductForm() {
     description: "",
     category: "",
   });
-  const [images, setImages] = useState([]);
+  const [productImages, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [errors, setErrors] = useState({}); // State for validation errors
 
@@ -44,16 +44,16 @@ function ProductForm() {
       errors.category = "Category must be selected.";
     }
 
-    if (images.length === 0) {
-      errors.images = "At least one image must be uploaded.";
+    if (productImages.length === 0) {
+      errors.productImages = "At least one productImage must be uploaded.";
     } else {
-      images.forEach((image, index) => {
-        if (!["image/jpeg", "image/png", "image/gif"].includes(image.type)) {
-          errors.images = `Only JPEG, PNG, or GIF images are allowed. Invalid file type: ${image.name}`;
+      productImages.forEach((productImage, index) => {
+        if (!["productImage/jpeg", "productImage/png", "productImage/gif"].includes(productImage.type)) {
+          errors.productImages = `Only JPEG, PNG, or GIF productImages are allowed. Invalid file type: ${productImage.name}`;
         }
-        if (image.size > 5 * 1024 * 1024) {
+        if (productImage.size > 5 * 1024 * 1024) {
           // Max size: 5MB
-          errors.images = `Image ${image.name} exceeds the 5MB size limit.`;
+          errors.productImages = `Image ${productImage.name} exceeds the 5MB size limit.`;
         }
       });
     }
@@ -66,7 +66,7 @@ function ProductForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle image input change and preview
+  // Handle productImage input change and preview
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     setImages(files);
@@ -98,14 +98,14 @@ function ProductForm() {
 
         const productId = productResponse.data.data.id; // Assuming your product returns an ID
 
-        // Upload images after product is added
-        for (let i = 0; i < images.length; i++) {
+        // Upload productImages after product is added
+        for (let i = 0; i < productImages.length; i++) {
           const formData = new FormData();
           formData.append("productId", productId);
-          formData.append("files", images[i]);
+          formData.append("files", productImages[i]);
 
           await axios.post(
-            `http://140.136.151.71:8787/api/v1/images/upload`,
+            `http://140.136.151.71:8787/api/v1/productImages/upload`,
             formData,
             {
               headers: {
@@ -115,7 +115,7 @@ function ProductForm() {
           );
         }
 
-        alert("Product and images uploaded successfully!");
+        alert("Product and productImages uploaded successfully!");
       } catch (error) {
         console.error("Error uploading product:", error);
         alert("Error uploading product");
@@ -237,23 +237,23 @@ function ProductForm() {
           {errors.category && <p style={{ color: "red" }}>{errors.category}</p>}
         </div>
         <div>
-          <label htmlFor="images">Product Images:</label>
+          <label htmlFor="productImages">Product Images:</label>
           <div
-            className="image-upload"
-            onClick={() => document.getElementById("images").click()}
+            className="productImage-upload"
+            onClick={() => document.getElementById("productImages").click()}
           >
-            <p>Click or drag and drop images here</p>
+            <p>Click or drag and drop productImages here</p>
             <input
               type="file"
-              id="images"
-              name="images"
-              accept="image/*"
+              id="productImages"
+              name="productImages"
+              accept="productImage/*"
               multiple
               style={{ display: "none" }}
               onChange={handleImageChange}
             />
           </div>
-          <div className="image-preview">
+          <div className="productImage-preview">
             {imagePreviews.map((preview, index) => (
               <img
                 key={index}
@@ -263,7 +263,7 @@ function ProductForm() {
               />
             ))}
           </div>
-          {errors.images && <p style={{ color: "red" }}>{errors.images}</p>}
+          {errors.productImages && <p style={{ color: "red" }}>{errors.productImages}</p>}
         </div>
         <button type="submit">Upload Product</button>
       </form>

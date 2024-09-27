@@ -3,7 +3,7 @@ package com.catniverse.backend.dto;
 import lombok.Data;
 
 @Data
-public class ImageDto {
+public class ProductImageDto {
     private Long id;
     private String fileName;
     private String downloadUrl;

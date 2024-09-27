@@ -1,10 +1,10 @@
 package com.catniverse.backend.service.product;
 
-import com.catniverse.backend.dto.ImageDto;
+import com.catniverse.backend.dto.ProductImageDto;
 import com.catniverse.backend.dto.ProductDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.Category;
-import com.catniverse.backend.model.Image;
+import com.catniverse.backend.model.ProductImage;
 import com.catniverse.backend.model.Product;
 import com.catniverse.backend.repo.CategoryRepo;
 import com.catniverse.backend.repo.ImageRepo;
@@ -142,11 +142,11 @@ public class ProductService implements ImpProductService {
     @Override
     public ProductDto convertToDto(Product product) {
         ProductDto productDto = modelMapper.map(product, ProductDto.class);
-        List<Image> images = imageRepo.findByProductId(product.getId());
-        List<ImageDto> imageDtos = images.stream()
-                .map(image -> modelMapper.map(image, ImageDto.class))
+        List<ProductImage> productImages = imageRepo.findByProductId(product.getId());
+        List<ProductImageDto> productImageDtos = productImages.stream()
+                .map(image -> modelMapper.map(image, ProductImageDto.class))
                 .toList();
-        productDto.setImages(imageDtos);
+        productDto.setImages(productImageDtos);
         return productDto;
     }
 }

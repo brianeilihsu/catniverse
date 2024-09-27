@@ -1,10 +1,10 @@
 package com.catniverse.backend.controller;
 
-import com.catniverse.backend.dto.ImageDto;
+import com.catniverse.backend.dto.ProductImageDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
-import com.catniverse.backend.model.Image;
+import com.catniverse.backend.model.ProductImage;
 import com.catniverse.backend.response.ApiResponse;
-import com.catniverse.backend.service.image.ImpImageService;
+import com.catniverse.backend.service.productImage.ImpProductImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -24,15 +24,15 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @CrossOrigin
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("${api.prefix}/images")
-public class ImageController {
-    private final ImpImageService imageService;
+@RequestMapping("${api.prefix}/product-images")
+public class ProductImageController {
+    private final ImpProductImageService productImageService;
 
     @PostMapping("/upload")
     public ResponseEntity<ApiResponse> saveImages(@RequestParam List<MultipartFile> files, @RequestParam Long productId) {
         try {
-            List<ImageDto> imageDtos = imageService.saveImages(productId, files);
-            return ResponseEntity.ok(new ApiResponse("Upload success!", imageDtos));
+            List<ProductImageDto> productImageDtos = productImageService.saveImages(productId, files);
+            return ResponseEntity.ok(new ApiResponse("Upload success!", productImageDtos));
         } catch (Exception e) {
             return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(new ApiResponse("Upload failed!", e.getMessage()));
         }
@@ -41,10 +41,10 @@ public class ImageController {
     @Transactional
     @GetMapping("/image/download/{imageId}")
     public ResponseEntity<Resource> downloadImage(@PathVariable Long imageId) throws SQLException {
-        Image image = imageService.getImageById(imageId);
-        ByteArrayResource resource = new ByteArrayResource(image.getImage().getBytes(1, (int) image.getImage().length()));
-        return  ResponseEntity.ok().contentType(MediaType.parseMediaType(image.getFileType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + image.getFileName() + "\"")
+        ProductImage productImage = productImageService.getImageById(imageId);
+        ByteArrayResource resource = new ByteArrayResource(productImage.getImage().getBytes(1, (int) productImage.getImage().length()));
+        return  ResponseEntity.ok().contentType(MediaType.parseMediaType(productImage.getFileType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + productImage.getFileName() + "\"")
                 .body(resource);
     }
 
@@ -52,9 +52,9 @@ public class ImageController {
     public ResponseEntity<ApiResponse> updateImage(@PathVariable Long imageId,
                                                    @RequestBody MultipartFile file){
         try {
-            Image image = imageService.getImageById(imageId);
-            if(image != null){
-                imageService.updateImage(file, imageId);
+            ProductImage productImage = productImageService.getImageById(imageId);
+            if(productImage != null){
+                productImageService.updateImage(file, imageId);
                 return ResponseEntity.ok(new ApiResponse("Update success", null));
             }
         } catch (ResourceNotFoundException e) {
@@ -66,9 +66,9 @@ public class ImageController {
     @DeleteMapping("/image/{imageId}/delete")
     public ResponseEntity<ApiResponse> deleteImage(@PathVariable Long imageId){
         try {
-            Image image = imageService.getImageById(imageId);
-            if(image != null){
-                imageService.deleteImageById(imageId);
+            ProductImage productImage = productImageService.getImageById(imageId);
+            if(productImage != null){
+                productImageService.deleteImageById(imageId);
                 return ResponseEntity.ok(new ApiResponse("Delete success", null));
             }
         } catch (ResourceNotFoundException e) {

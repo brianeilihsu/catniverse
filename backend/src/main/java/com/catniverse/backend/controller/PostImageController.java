@@ -2,7 +2,6 @@ package com.catniverse.backend.controller;
 
 import com.catniverse.backend.dto.PostImageDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
-import com.catniverse.backend.model.Image;
 import com.catniverse.backend.model.PostImage;
 import com.catniverse.backend.response.ApiResponse;
 import com.catniverse.backend.service.postImage.ImpPostImageService;

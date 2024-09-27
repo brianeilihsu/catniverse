@@ -10,7 +10,7 @@ import java.sql.Blob;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class Image {
+public class ProductImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

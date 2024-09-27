@@ -1,12 +1,10 @@
 package com.catniverse.backend.service.order;
 
 import com.catniverse.backend.dto.OrderDto;
+import com.catniverse.backend.dto.OrderItemDto;
 import com.catniverse.backend.enums.OrderStatus;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
-import com.catniverse.backend.model.Cart;
-import com.catniverse.backend.model.Order;
-import com.catniverse.backend.model.OrderItem;
-import com.catniverse.backend.model.Product;
+import com.catniverse.backend.model.*;
 import com.catniverse.backend.repo.OrderRepo;
 import com.catniverse.backend.repo.ProductRepo;
 import com.catniverse.backend.service.cart.CartService;
@@ -92,6 +90,17 @@ public class OrderService implements ImpOrderService{
     }
 
     private OrderDto convertToDto(Order order) {
-        return modelMapper.map(order, OrderDto.class);
+        OrderDto orderDto = modelMapper.map(order, OrderDto.class);
+        order.getOrderItems()
+                .stream()
+                .map(orderItem -> {
+                    Product product = productRepo.findById(orderItem.getId()).orElse(null);
+                    ProductImage productImage = product.getProductImages().stream().findFirst().orElse(null);
+                    productImage.getDownloadUrl();
+                    return orderItem;
+                });
+        return orderDto;
     }
+
+
 }
