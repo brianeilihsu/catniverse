@@ -34,6 +34,7 @@ public class PostService implements ImpPostService{
         Post post = new Post();
         post.setTitle(addPostRequest.getTitle());
         post.setContent(addPostRequest.getContent());
+        post.setAddress(addPostRequest.getAddress());
         post.setUser(addPostRequest.getUser()); // 假設 AddPostRequest 中有 User 物件
         post.setCreatedAt(LocalDateTime.now());
 
@@ -75,6 +76,7 @@ public class PostService implements ImpPostService{
                 .map(postImage -> modelMapper.map(postImage, PostImageDto.class))
                 .toList();
         postDto.setPostImages(postImagesDto);
+        postDto.setUserId(post.getUser().getId());
         return postDto;
     }
 }

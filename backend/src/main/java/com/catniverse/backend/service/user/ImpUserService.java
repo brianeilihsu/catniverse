@@ -7,6 +7,7 @@ import com.catniverse.backend.request.UserUpdateRequest;
 
 public interface ImpUserService {
     User getUserById(Long userId);
+    User getUserByEmail(String email);
     User createUser(CreateUserRequest request);
     User updateUser(UserUpdateRequest request, Long userId);
     void deleteUser(Long userId);

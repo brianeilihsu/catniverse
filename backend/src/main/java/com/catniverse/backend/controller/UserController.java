@@ -21,6 +21,16 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class UserController {
     private final ImpUserService userService;
 
+    @GetMapping("/get-by-email")
+    public ResponseEntity<ApiResponse> getUserByEmail(@RequestParam("email") String email) {
+        User user = userService.getUserByEmail(email);
+        if (user == null) {
+            return ResponseEntity.status(NOT_FOUND).body(new ApiResponse("User Not Found",null));
+        }
+        UserDto userDto = userService.convertUserToDto(user);
+        return ResponseEntity.ok(new ApiResponse("User Found",userDto));
+    }
+
     @GetMapping("/{userId}/user")
     public ResponseEntity<ApiResponse> getUserById(@PathVariable Long userId){
         try {

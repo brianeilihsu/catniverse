@@ -23,10 +23,16 @@ public class UserService implements ImpUserService{
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
 
+
     @Override
     public User getUserById(Long userId) {
         return userRepo.findById(userId)
                 .orElseThrow(()-> new ResourceNotFoundException("User not found"));
+    }
+
+    @Override
+    public User getUserByEmail(String email) {
+        return userRepo.findByEmail(email);
     }
 
     @Override

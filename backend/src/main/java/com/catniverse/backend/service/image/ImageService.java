@@ -23,7 +23,7 @@ public class ImageService implements ImpImageService{
     private final ImpProductService productService;
 
     @Override
-    public Image getImageById(Long id) {
+    public Image getImageById(Long id) { //imageId not userId
         return imageRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No image found with id: " + id));
     }

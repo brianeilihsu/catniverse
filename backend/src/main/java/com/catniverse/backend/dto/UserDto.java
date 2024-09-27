@@ -10,5 +10,6 @@ public class UserDto {
     private String userName;
     private String email;
     private List<OrderDto> orders;
+    private List<PostDto> posts;
     private CartDto cart;
 }
