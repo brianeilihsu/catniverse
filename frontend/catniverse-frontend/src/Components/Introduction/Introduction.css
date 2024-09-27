@@ -1,7 +1,9 @@
 .content {
-    margin-left: 200px;
+    margin-left: 0px;
+    padding-left: 0px;
     padding: 20px;
     flex-grow: 1;
+    transform: translateX(130px);
 }
 
 .container {

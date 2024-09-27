@@ -1,8 +1,7 @@
-import { useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Login from "./Components/Login/Login";
 import Register from "./Components/Register/Register";
-import Index from "./Components/Index/Index";
 import Introduction from "./Components/Introduction/Introduction";
 import Map from "./Components/Map/Map";
 import Shop from "./Components/Shop/Shop";
@@ -12,12 +11,37 @@ import ReportCat from "./Components/ReportCat";
 import ImageTest from "./Components/ImageTest";
 import Show from "./Components/Show";
 import UploadEcommerce from "./Components/UploadEcommerce";
+import Index from "./Components/Index/Index";
+import Header from "./Components/Header/Header";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const location = useLocation(); 
+  const noHeaderRoutes = ["/login", "/register", "/uploadEcommerce"];
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const storedUsername = localStorage.getItem("username");
+      if (storedUsername) {
+        setUsername(storedUsername);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 登出功能
+  const handleLogout = () => {
+    localStorage.removeItem("username");  // 清空localStorage中的username
+    setUsername("");  // 重置username狀態
+  };
 
   return (
     <div>
+      {!noHeaderRoutes.includes(location.pathname) && (
+        <Header user={username} onLogout={handleLogout} />
+      )}
+
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/map" element={<Map />} />
@@ -25,8 +49,8 @@ function App() {
         <Route path="/introduction" element={<Introduction />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/profile/:id" element={<Profile />} />
+        <Route path="/login" element={<Login setUsername={setUsername} />} />
         <Route path="/ReportCat" element={<ReportCat />} />
         <Route path="/test" element={<ImageTest />} />
         <Route path="/show" element={<Show />} />

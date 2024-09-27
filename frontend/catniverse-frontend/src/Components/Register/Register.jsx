@@ -11,7 +11,6 @@ function Register() {
     passwordCheck: "",
     email: "",
   });
-  const [error, setError] = useState(""); // 用於顯示錯誤消息
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -70,10 +69,10 @@ function Register() {
     } catch (error) {
       if (error.response) {
         console.error("Error response:", error.response.data);
-        setError(error.response.data.message || "註冊失敗，請稍後再試。");
+        alert(error.response.data.message);
       } else {
         console.error("Error registering:", error);
-        setError("註冊失敗，請稍後再試。");
+        alert("註冊失敗，請稍後再試。");
       }
     }
   };
@@ -82,7 +81,6 @@ function Register() {
     <div className="ctr">
       <div className="register-container">
         <h1>🐱 台灣浪貓地圖</h1>
-        {error && <p className="error">{error}</p>} {/* 顯示錯誤消息 */}
         <form onSubmit={handleSubmit}>
           <label>使用者名稱</label>
           <input

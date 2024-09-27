@@ -1,8 +1,8 @@
-
-  .content {
-    margin-left: 200px;
-    padding-left: 250px;
+    .content {
+    margin-left: 0px;
+    padding-left: 0px;
     flex-grow: 1;
+    transform: translateX(130px);
   }
   .container {
     width: 800px;
@@ -16,6 +16,11 @@
     color: #4CAF50;
     text-align: center;
   }
+
+h4 {
+  color: black;
+}
+
   .post {
     border: 1px solid #ddd;
     border-radius: 10px;
@@ -41,6 +46,22 @@
     max-height: 500px;
     object-fit: cover;
     border-radius: 5px;
+    height: auto; /* 保持圖片比例 */
+    object-fit: cover; /* 如果圖片比例不符，這樣可以防止圖片變形 */
+  }
+  
+  /* 確保 Slider 容器正確顯示 */
+  .slick-slider {
+    width: 100%; /* Slider 的寬度 */
+    height: auto; /* 高度自適應圖片 */
+  }
+  
+  .slick-list {
+    overflow: hidden; /* 確保滑動時圖片不會溢出 */
+  }
+  
+  .slick-track {
+    display: flex; /* 使圖片按一行排列 */
   }
   .post-content {
     margin-top: 1em;

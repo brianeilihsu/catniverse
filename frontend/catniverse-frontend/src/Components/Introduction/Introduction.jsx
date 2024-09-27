@@ -1,11 +1,10 @@
-import React, { useState } from "react";
-import Header from "../Header/Header";
+import React, { useState, useEffect } from "react";
 import "./Introduction.css";
 
 function Introduction() {
+
   return (
     <div>
-      <Header />
       <div className="content">
         <div className="container">
           <p className="black">

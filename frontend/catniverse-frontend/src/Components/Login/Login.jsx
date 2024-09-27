@@ -4,11 +4,13 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
-function Login() {
+
+function Login({ setUsername }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+
 
   useEffect(() => {
     document.documentElement.style.height = '100%';
@@ -52,10 +54,21 @@ function Login() {
       const jwtToken = response.data.data.jwt;  // 假設後端回傳的 JWT 存在 data.jwt 中
       localStorage.setItem('token', jwtToken);  // 儲存到 Local Storage 中
 
-      // 設定訊息
-      setMessage('Login successful! Token saved.');
-      navigate("/");
+      const userId = response.data.data.id;
 
+      const response2 = await axios.get(`http://140.136.151.71:8787/api/v1/users/${userId}/user`);
+      console.log('Response2 data:',response2.data);
+
+      if (response2.data && response2.data.data.username) {
+        const username = response2.data.data.username;
+        localStorage.setItem("username", username); 
+        setUsername(username);
+        console.log('Username:', username);
+        setMessage('Login successful! Token saved.');
+        navigate("/");
+      } else {
+        console.error('Failed to fetch username');
+      }
     } catch (error) {
       // 錯誤處理
       if (error.response && error.response.status === 401) {
