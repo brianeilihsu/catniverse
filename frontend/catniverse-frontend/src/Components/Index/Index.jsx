@@ -1,35 +1,41 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./index.css";
 import { Link } from "react-router-dom";
-import Slider from "react-slick"; 
+import Slider from "react-slick";
 
 function Index() {
   const [postData, setPostData] = useState([]);
+  const [userData, setUserData] = useState({});
   const [visibleCount, setVisibleCount] = useState(10);
-  const [imageUrls, setImageUrls] = useState({});
-  const [currentSlide, setCurrentSlide] = useState(0); 
+  const [postImageUrls, setPostImageUrls] = useState({});
+  const [userImageUrls, setUserImageUrls] = useState({});
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchPostData = async () => {
       try {
         const response = await axios.get(
           "http://140.136.151.71:8787/api/v1/posts/all"
         );
-        setPostData(response.data.data);
+        const posts = response.data.data;
+        setPostData(posts);
 
-        response.data.data.forEach((post) => {
+        // 針對每個帖子的 userId 取得使用者資料
+        posts.forEach((post) => {
+          fetchUserData(post.userId);
+
           if (post.postImages && post.postImages.length > 0) {
             const downloadUrls = post.postImages.map((img) => img.downloadUrl);
-            fetchImages(downloadUrls, post.id);
+            fetchPostImages(downloadUrls, post.id);
           }
         });
       } catch (error) {
-        console.error("Error fetching data: ", error);
+        console.error("Error fetching post data: ", error);
       }
     };
 
-    const fetchImages = async (downloadUrls, postId) => {
+    const fetchPostImages = async (downloadUrls, postId) => {
       try {
         const imageBlobPromises = downloadUrls.map(async (downloadUrl) => {
           const response = await axios.get(
@@ -40,7 +46,7 @@ function Index() {
         });
 
         const blobUrls = await Promise.all(imageBlobPromises);
-        setImageUrls((prevState) => ({
+        setPostImageUrls((prevState) => ({
           ...prevState,
           [postId]: blobUrls,
         }));
@@ -49,21 +55,59 @@ function Index() {
       }
     };
 
-    fetchData();
-  }, []);
+    const fetchUserData = async (userId) => {
+      try {
+        if (!userData[userId]) {
+          const response = await axios.get(
+            `http://140.136.151.71:8787/api/v1/users/${userId}/user`
+          );
+          const user = response.data.data;
+
+          setUserData((prevState) => ({
+            ...prevState,
+            [userId]: user,
+          }));
+
+          if (user.userAvatar && user.userAvatar.downloadUrl) {
+            const avatarUrl = await fetchImage(user.userAvatar.downloadUrl);
+            setUserImageUrls((prevState) => ({
+              ...prevState,
+              [userId]: avatarUrl,
+            }));
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching user data for userId ${userId}:`, error);
+      }
+    };
+
+    const fetchImage = async (downloadUrl) => {
+      try {
+        const response = await axios.get(
+          `http://140.136.151.71:8787${downloadUrl}`,
+          { responseType: "blob" }
+        );
+        return URL.createObjectURL(response.data);
+      } catch (error) {
+        console.error("Error fetching image:", error);
+      }
+    };
+
+    fetchPostData();
+  }, [userData]);
 
   const loadMorePosts = () => {
     setVisibleCount((prevCount) => prevCount + 10);
   };
 
   const handleImageClick = (e, sliderRef) => {
-    const clickX = e.clientX; 
-    const imageWidth = e.target.clientWidth; 
+    const clickX = e.clientX;
+    const imageWidth = e.target.clientWidth;
 
     if (clickX < imageWidth / 2) {
-      sliderRef.slickPrev(); 
+      sliderRef.slickPrev();
     } else {
-      sliderRef.slickNext(); 
+      sliderRef.slickNext();
     }
   };
 
@@ -72,9 +116,9 @@ function Index() {
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    arrows: false, 
-    dots: false, 
-    beforeChange: (oldIndex, newIndex) => setCurrentSlide(newIndex), 
+    arrows: false,
+    dots: false,
+    beforeChange: (oldIndex, newIndex) => setCurrentSlide(newIndex),
     ref: sliderRef,
   });
 
@@ -87,34 +131,43 @@ function Index() {
           <div id="post-list">
             {postData.length > 0 ? (
               postData.slice(0, visibleCount).map((post) => {
-                let sliderRef = React.createRef(); 
+                let sliderRef = React.createRef();
+                const user = userData[post.userId]; 
+                const avatarUrl = userImageUrls[post.userId];
+
                 return (
                   <div className="post" key={post.id}>
                     <div className="post-header">
                       <Link
-                        to={`/profile/${post.id}`}
+                        to={`/profile/${post.userId}`}
                         style={{ textDecoration: "none", color: "inherit" }}
                       >
                         <img
-                          src="你的頭像圖片URL"
+                          src={avatarUrl}
                           alt="使用者頭像"
                           className="user-avatar"
-                          style={{ width: "50px", height: "50px", borderRadius: "50%" }}
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                            borderRadius: "50%",
+                          }}
                         />
                       </Link>
                       <Link
-                        to={`/profile/${post.id}`}
+                        to={`/profile/${post.userId}`}
                         style={{ textDecoration: "none", color: "inherit" }}
                       >
-                        <span className="user-name">{post.userId}</span>
+                        <span className="user-name">
+                          {user ? user.username : "未知使用者"}
+                        </span>
                       </Link>
                     </div>
 
                     <h4>{post.title}</h4>
 
                     <Slider {...sliderSettings(sliderRef)}>
-                      {imageUrls[post.id] &&
-                        imageUrls[post.id].map((url, index) => (
+                      {postImageUrls[post.id] &&
+                        postImageUrls[post.id].map((url, index) => (
                           <div key={index}>
                             <img
                               src={url}
@@ -144,7 +197,7 @@ function Index() {
                         })}
                       </p>
                     </div>
-                    
+
                     <div className="post-actions">
                       <button className="action-btn">
                         <img src="" alt="讚" />

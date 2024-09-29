@@ -1,4 +1,4 @@
-    .content {
+  .content {
     margin-left: 0px;
     padding-left: 0px;
     flex-grow: 1;
@@ -17,9 +17,15 @@
     text-align: center;
   }
 
-h4 {
-  color: black;
-}
+  h4 {
+    color: black;
+  }
+
+  .user-avatar {
+    width: "50px";
+    height: "50px";
+    border-radius: "50%";
+  }
 
   .post {
     border: 1px solid #ddd;
