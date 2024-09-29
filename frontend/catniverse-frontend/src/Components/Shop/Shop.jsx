@@ -6,7 +6,6 @@ import "./Shop.css";
 function Shop() {
   return (
     <>
-      <Header />
       <Product name="product1" price={1221} solded={false} />
       <Product name="product1" price={11758} solded={true} />
       <Product />

@@ -13,8 +13,8 @@ function Header({ user, onLogout }) {
   }, []);
 
   const handleLogout = () => {
-    console.log("Logging out");  // 添加日志來確認按鈕是否工作
-    onLogout();  // 調用來自 App.js 的 onLogout 函數
+    console.log("Logging out");  
+    onLogout();  
   };
 
   return (

@@ -1,50 +1,146 @@
-import React, { useState } from "react";
-import Header from "../Header/Header";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios"; 
 import "./Member.css";
 
 function Member() {
   const [formData, setFormData] = useState({
     avatar: "",
-    username: "貓咪愛好者",
-    email: "catloverts@example.com",
+    username: "",
+    email: "",
     password: "",
     confirmPassword: "",
-    bio: "我是一位熱愛貓咪的志工，常常在台北市進行TNR工作。希望能為流浪貓咪們盡一份心力！",
-    location: "taipei",
-    notifications: "all",
   });
+  const [userData, setUserData] = useState({});
+  const [image, setImage] = useState(null); 
+  const [imagePreview, setImagePreview] = useState(""); 
+  const [errors, setErrors] = useState({}); 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+
+    const fetchUserData = async (userId) => {
+      try {
+        const response = await axios.get(
+          `http://140.136.151.71:8787/api/v1/users/${userId}/user`
+        );
+        const user = response.data.data;
+        setUserData(user);
+
+        setFormData({
+          avatar: "",
+          username: user.username,
+          email: user.email,
+          password: "",
+          confirmPassword: "",
+        });
+
+        if (user.userAvatar && user.userAvatar.downloadUrl) {
+          const avatarUrl = await fetchImage(user.userAvatar.downloadUrl);
+          setImagePreview(avatarUrl);
+        }
+      } catch (error) {
+        console.error(`Error fetching user data for userId ${userId}:`, error);
+      }
+    };
+
+    const fetchImage = async (downloadUrl) => {
+      try {
+        const response = await axios.get(
+          `http://140.136.151.71:8787${downloadUrl}`,
+          { responseType: "blob" }
+        );
+        return URL.createObjectURL(response.data);
+      } catch (error) {
+        console.error("Error fetching image:", error);
+      }
+    };
+
+    if (userId) {
+      fetchUserData(userId);
+    }
+  }, []);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]; 
+    const errors = {};
+
+    if (!["image/jpeg", "image/png", "image/gif"].includes(file.type)) {
+      errors.avatar = `只能上傳 JPEG、PNG 或 GIF 圖片。`;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      errors.avatar = `圖片大小不能超過 5MB。`;
+    }
+
+    if (Object.keys(errors).length === 0) {
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setErrors(errors);
+    }
+  };
+
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: files ? files[0] : value,
+      [name]: value,
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // 處理表單提交邏輯，可以在此執行 API 請求以更新用戶資料
-    const profileData = new FormData();
-    for (let key in formData) {
-      profileData.append(key, formData[key]);
+  
+    if (formData.password !== formData.confirmPassword) {
+      alert("密碼與確認密碼不一致，請重新輸入。");
+  
+      setFormData((prevData) => ({
+        ...prevData,
+        password: "",
+        confirmPassword: ""
+      }));
+  
+      return;
     }
-    // 發送表單資料（formData）到後端
-    console.log("Form submitted:", formData);
-    navigate("/profile");
+  
+    const userId = localStorage.getItem("userId");
+    const profileData = new FormData();
+    profileData.append("username", formData.username);
+    profileData.append("email", formData.email);
+  
+    if (formData.password && formData.confirmPassword) {
+      profileData.append("password", formData.password);
+      profileData.append("confirmPassword", formData.confirmPassword);
+    }
+  
+    if (image) {
+      profileData.append("avatar", image); 
+    }
+  
+    try {
+      await axios.post(
+        `http://140.136.151.71:8787/api/v1/users/${userId}/update`,
+        profileData
+      );
+      console.log("User profile updated successfully:", formData);
+      navigate(`/profile/${userId}`);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+    }
   };
+  
+
 
   return (
     <div>
-      <Header />
       <div className="content">
         <div className="container">
           <h2>修改個人資料</h2>
           <form onSubmit={handleSubmit} encType="multipart/form-data">
             <img
-              src="https://taiwanstraycats.org/default-avatar.jpg"
+              src={imagePreview}
               alt="用戶頭像"
               className="avatar-preview"
               id="avatarPreview"
@@ -56,13 +152,14 @@ function Member() {
               id="avatar"
               name="avatar"
               accept="image/*"
-              onChange={handleChange}
+              onChange={handleImageChange}
             />
+            {errors.avatar && <p style={{ color: "red" }}>{errors.avatar}</p>}
 
             <label htmlFor="username">使用者名稱：</label>
             <input
               type="text"
-              id="username"
+              id="user"
               name="username"
               value={formData.username}
               onChange={handleChange}
@@ -97,43 +194,6 @@ function Member() {
               onChange={handleChange}
             />
 
-            <label htmlFor="bio">個人簡介：</label>
-            <textarea
-              id="bio"
-              name="bio"
-              value={formData.bio}
-              onChange={handleChange}
-              placeholder="說說你對浪貓的看法或你的救援經驗..."
-            />
-
-            <label htmlFor="location">所在地區：</label>
-            <select
-              id="location"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-            >
-              <option value="taipei">台北市</option>
-              <option value="newtaipei">新北市</option>
-              <option value="taoyuan">桃園市</option>
-              <option value="taichung">台中市</option>
-              <option value="tainan">台南市</option>
-              <option value="kaohsiung">高雄市</option>
-              {/* 其他縣市選項 */}
-            </select>
-
-            <label htmlFor="notifications">電子郵件通知：</label>
-            <select
-              id="notifications"
-              name="notifications"
-              value={formData.notifications}
-              onChange={handleChange}
-            >
-              <option value="all">接收所有通知</option>
-              <option value="important">只接收重要通知</option>
-              <option value="none">不接收通知</option>
-            </select>
-
             <button type="submit">更新資料</button>
           </form>
         </div>
@@ -141,4 +201,5 @@ function Member() {
     </div>
   );
 }
+
 export default Member;
