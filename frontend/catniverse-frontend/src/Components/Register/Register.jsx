@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import "./Register.css";
+import logo from "../../Image/cat-lover(1).png";
 
 function Register() {
   const [registerData, setRegisterData] = useState({
@@ -20,6 +21,7 @@ function Register() {
     document.body.style.justifyContent = 'center';
     document.body.style.alignItems = 'center';
     document.body.style.lineHeight = '0';
+    document.body.style.backgroundColor='hsl(0, 0%, 95%)';
 
     return () => {
       document.documentElement.style.height = '';
@@ -28,6 +30,7 @@ function Register() {
       document.body.style.justifyContent = '';
       document.body.style.alignItems = '';
       document.body.style.lineHeight = '';
+      document.body.style.backgroundColor='';
     };
   }, []); 
 
@@ -80,9 +83,12 @@ function Register() {
   return (
     <div className="ctr">
       <div className="register-container">
-        <h1>🐱 台灣浪貓地圖</h1>
+        <div className="logo">
+          <img src={logo}></img>
+          <h1>Sign Up</h1>
+        </div>
         <form onSubmit={handleSubmit}>
-          <label>使用者名稱</label>
+          <label>Username</label>
           <input
             type="text"
             id="r_account"
@@ -92,7 +98,7 @@ function Register() {
             required
           />
 
-          <label>密碼</label>
+          <label>Password</label>
           <input
             type="password"
             id="r_password"
@@ -103,7 +109,7 @@ function Register() {
             required
           />
 
-          <label>確認密碼</label>
+          <label>Confirm Password</label>
           <input
             type="password"
             id="r_password_check"
@@ -114,7 +120,7 @@ function Register() {
             required
           />
 
-          <label>電子郵件</label>
+          <label>Email</label>
           <input
             type="email"
             id="r_email"
@@ -124,10 +130,10 @@ function Register() {
             required
           />
 
-          <button type="submit">註冊</button>
+          <button className=".register-button" type="submit">Register</button>
         </form>
         <div className="login-link">
-          已有帳號？<Link to="/login">登入</Link>
+          Already have an account?<Link to="/login"> Sign in</Link>
         </div>
       </div>
     </div>

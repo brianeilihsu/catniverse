@@ -3,6 +3,7 @@ import axios from "axios";
 import "./index.css";
 import { Link } from "react-router-dom";
 import Slider from "react-slick";
+import guidePic from "../../Image/comment-heart.png";
 
 function Index() {
   const [postData, setPostData] = useState([]);
@@ -125,7 +126,7 @@ function Index() {
     <div>
       <div className="content">
         <div className="container">
-          <h1>台灣浪貓地圖社群</h1>
+          <h1 className="index-title">台灣浪貓地圖社群</h1>
 
           <div id="post-list">
             {postData.length > 0 ? (
@@ -199,15 +200,15 @@ function Index() {
 
                     <div className="post-actions">
                       <button className="action-btn">
-                        <img src="" alt="讚" />
-                        喜歡
+                        <img className="guide-pic" src={guidePic} alt="讚" />
+                        Like
                       </button>
                       <button className="action-btn">
-                        <img src="" alt="留言" />
+                        <img className="guide-pic" src="" alt="留言" />
                         留言
                       </button>
                       <button className="action-btn">
-                        <img src="" alt="分享" />
+                        <img className="guide-pic" src="" alt="分享" />
                         分享
                       </button>
                     </div>

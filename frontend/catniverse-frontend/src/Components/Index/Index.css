@@ -1,20 +1,11 @@
   .content {
-    margin-left: 0px;
+    margin-left: 17.5%;
     padding-left: 0px;
     flex-grow: 1;
-    transform: translateX(130px);
   }
-  .container {
-    width: 800px;
-    margin: 0 auto;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    padding: 2em;
-  }
-  h1 {
-    color: #4CAF50;
-    text-align: center;
+
+ .index-title {
+    color: hsl(0, 1%, 21%);
   }
 
   h4 {
@@ -52,22 +43,21 @@
     max-height: 500px;
     object-fit: cover;
     border-radius: 5px;
-    height: auto; /* 保持圖片比例 */
-    object-fit: cover; /* 如果圖片比例不符，這樣可以防止圖片變形 */
+    height: auto; 
+    object-fit: cover; 
   }
   
-  /* 確保 Slider 容器正確顯示 */
   .slick-slider {
-    width: 100%; /* Slider 的寬度 */
-    height: auto; /* 高度自適應圖片 */
+    width: 100%; 
+    height: auto; 
   }
   
   .slick-list {
-    overflow: hidden; /* 確保滑動時圖片不會溢出 */
+    overflow: hidden;
   }
   
   .slick-track {
-    display: flex; /* 使圖片按一行排列 */
+    display: flex;
   }
   .post-content {
     margin-top: 1em;
@@ -109,14 +99,21 @@
     width: 200px;
     margin: 2em auto;
     padding: 0.5em;
-    background-color: #4CAF50;
-    color: white;
+    background-color: hsl(0, 0%, 95%);
+    color: #555;
     text-align: center;
     text-decoration: none;
     border-radius: 5px;
     font-weight: bold;
   }
   .load-more:hover {
-    background-color: #45a049;
+    background-color: #999;
   }
   
+  .guide-pic {
+    background-color:transparent;
+  }
+
+  .action-btn:hover {
+    background-color: hsl(0, 0%, 95%);
+  }

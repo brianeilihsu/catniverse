@@ -4,12 +4,6 @@
     flex-grow: 1;
 }
 
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
 .profile-header {
     background-color: white;
     border-radius: 10px;
@@ -89,8 +83,4 @@
     justify-content: space-between;
     color: #666;
     font-size: 0.9em;
-}
-
-img {
-    background-color: black;
 }

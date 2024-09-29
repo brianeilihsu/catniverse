@@ -7,7 +7,7 @@
 }
 
 h1 {
-  color: #4caf50;
+  color: hsl(0, 1%, 21%);
   text-align: center;
   margin-bottom: 1em;
 }
@@ -20,21 +20,20 @@ h1 {
   width: 300px;
 }
 
-h1 {
-  color: #4caf50;
-  text-align: center;
-  margin-bottom: 1em;
-}
-
 .logo {
+  display: flex;
   text-align: center;
-  margin-bottom: 1em;
+  margin-bottom: 0;
+  align-items: center;
 }
 
 .logo img {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  margin-right: 7.5%;
+  margin-left: 10%;
+  margin-bottom: 5%;
+  background-color: transparent;
 }
 
 form {
@@ -52,15 +51,16 @@ input {
 button {
   margin-top: 1em;
   padding: 0.5em;
-  background-color: #4caf50;
-  color: white;
+  background-color: hsl(0, 3%, 87%);
+  color: hsl(0, 1%, 21%);
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  font-size: 17.5px;
 }
 
-button:hover {
-  background-color: #45a049;
+.login-button:hover {
+  background-color: #999;
 }
 
 .links {
@@ -69,7 +69,7 @@ button:hover {
 }
 
 .links a {
-  color: #4caf50;
+  color: hsl(0, 1%, 21%);
   text-decoration: none;
 }
 
@@ -77,53 +77,4 @@ button:hover {
   text-decoration: underline;
 }
 
-.logo {
-  text-align: center;
-  margin-bottom: 1em;
-}
 
-.logo img {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-}
-
-input {
-  margin: 0.5em 0;
-  padding: 0.5em;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-button {
-  margin-top: 1em;
-  padding: 0.5em;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #45a049;
-}
-
-.links {
-  margin-top: 1em;
-  text-align: center;
-}
-
-.links a {
-  color: #4caf50;
-  text-decoration: none;
-}
-
-.links a:hover {
-  text-decoration: underline;
-}

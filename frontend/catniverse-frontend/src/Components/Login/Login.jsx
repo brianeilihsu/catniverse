@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
+import logo from "../../Image/cat-lover.png";
 
 
 function Login({ setUsername }) {
@@ -19,6 +20,7 @@ function Login({ setUsername }) {
     document.body.style.justifyContent = 'center';
     document.body.style.alignItems = 'center';
     document.body.style.lineHeight = '0';
+    document.body.style.backgroundColor='hsl(0, 0%, 95%)';
 
     return () => {
       document.documentElement.style.height = '';
@@ -27,6 +29,7 @@ function Login({ setUsername }) {
       document.body.style.justifyContent = '';
       document.body.style.alignItems = '';
       document.body.style.lineHeight = '';
+      document.body.style.backgroundColor='';
     };
   }, []); 
 
@@ -80,15 +83,15 @@ function Login({ setUsername }) {
   return (
     <div>
       <div className="login-container">
-        <h1>台灣浪貓地圖</h1>
         <div className="logo">
-          <img src="img/login_cat.jpg" alt="台灣浪貓地圖 Logo" />
+          <img src={logo} alt="" />
+          <h1>Sign in</h1>
         </div>
         <form>
           <input
             type="text"
             id="account"
-            placeholder="信箱"
+            placeholder="Email"
             value={email}
             onChange={handleGetEmail}
             required
@@ -96,17 +99,17 @@ function Login({ setUsername }) {
           <input
             type="password"
             id="password"
-            placeholder="密碼"
+            placeholder="Password"
             value={password}
             onChange={handleGetPassword}
             required
           />
-          <button type="button" onClick={handleLogin}>
-            登入
+          <button type="login-button" onClick={handleLogin}>
+            Login
           </button>
         </form>
         <div className="links">
-          <Link to="/register">註冊新帳號</Link>
+          <Link to="/register">Register a new account</Link>
         </div>
       </div>
     </div>

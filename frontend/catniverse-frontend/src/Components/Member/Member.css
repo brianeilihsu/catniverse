@@ -4,15 +4,6 @@
     flex-grow: 1;
 }
 
-.container {
-    max-width: 600px;
-    margin: 0 auto;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    padding: 2em;
-}
-
 h2 {
     color: #4CAF50;
     text-align: center;
@@ -43,18 +34,11 @@ textarea {
 }
 
 button {
-    margin-top: 1em;
-    padding: 0.5em;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
+    
 }
 
 button:hover {
-    background-color: #45a049;
+    
 }
 
 .avatar-preview {
@@ -66,6 +50,3 @@ button:hover {
     display: block;
 }
 
-img {
-    background-color: black;
-}
