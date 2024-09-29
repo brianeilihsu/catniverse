@@ -1,11 +1,20 @@
-import React from "react";
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Link } from 'react-router-dom';  
 import './Header.css';
 
 function Header({ user, onLogout }) {
+  const [userId, setUserId] = useState(null); 
+
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('userId'); 
+    if (storedUserId) {
+      setUserId(storedUserId); 
+    }
+  }, []);
 
   const handleLogout = () => {
-    onLogout();  // 調用父組件傳遞的登出功能
+    console.log("Logging out");  // 添加日志來確認按鈕是否工作
+    onLogout();  // 調用來自 App.js 的 onLogout 函數
   };
 
   return (
@@ -19,7 +28,7 @@ function Header({ user, onLogout }) {
         {user ? (
           <div>
             <Link to="/upload">上傳圖片</Link>
-            <Link to="/profile">個人檔案</Link>
+            <Link to={`/profile/${userId}`}>個人檔案</Link>
             <Link to="#" onClick={handleLogout}>登出</Link>
             <p id="username">登入帳號: {user}</p>
           </div>

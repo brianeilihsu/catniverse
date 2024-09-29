@@ -47,14 +47,13 @@ function Login({ setUsername }) {
         email: email,
         password: password,
       });
-      // 請求成功時
       console.log('Response data:', response.data);
       
-      // 如果有拿到 JWT Token，通常會存到 Local Storage 或 State 中
-      const jwtToken = response.data.data.jwt;  // 假設後端回傳的 JWT 存在 data.jwt 中
-      localStorage.setItem('token', jwtToken);  // 儲存到 Local Storage 中
+      const jwtToken = response.data.data.jwt;  
+      localStorage.setItem('token', jwtToken);  
 
       const userId = response.data.data.id;
+      localStorage.setItem("userId", userId); 
 
       const response2 = await axios.get(`http://140.136.151.71:8787/api/v1/users/${userId}/user`);
       console.log('Response2 data:',response2.data);
@@ -70,7 +69,6 @@ function Login({ setUsername }) {
         console.error('Failed to fetch username');
       }
     } catch (error) {
-      // 錯誤處理
       if (error.response && error.response.status === 401) {
         setMessage('Login failed: Invalid email or password.');
       } else {

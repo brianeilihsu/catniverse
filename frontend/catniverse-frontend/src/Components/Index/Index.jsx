@@ -21,7 +21,6 @@ function Index() {
         const posts = response.data.data;
         setPostData(posts);
 
-        // 針對每個帖子的 userId 取得使用者資料
         posts.forEach((post) => {
           fetchUserData(post.userId);
 

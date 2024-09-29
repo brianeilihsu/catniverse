@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Login from "./Components/Login/Login";
 import Register from "./Components/Register/Register";
 import Introduction from "./Components/Introduction/Introduction";
@@ -16,24 +16,37 @@ import Header from "./Components/Header/Header";
 
 function App() {
   const location = useLocation(); 
+  const navigate = useNavigate();  
   const noHeaderRoutes = ["/login", "/register", "/uploadEcommerce"];
   const [username, setUsername] = useState("");
+  const [userid, setUserid] = useState("");
+  const isLoggingOut = useRef(false); 
 
   useEffect(() => {
-    const fetchData = async () => {
-      const storedUsername = localStorage.getItem("username");
-      if (storedUsername) {
-        setUsername(storedUsername);
-      }
-    };
-
-    fetchData();
+    const storedUsername = localStorage.getItem("username");
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUsername) {
+      setUsername(storedUsername);
+    }
+    if (storedUserId) {
+      setUserid(storedUserId);
+    }
   }, []);
 
-  // 登出功能
+  useEffect(() => {
+    if (!username && isLoggingOut.current) {
+      navigate("/");  
+      isLoggingOut.current = false; 
+    }
+  }, [username, navigate]);
+
   const handleLogout = () => {
-    localStorage.removeItem("username");  // 清空localStorage中的username
-    setUsername("");  // 重置username狀態
+    localStorage.removeItem("username"); 
+    localStorage.removeItem("userId"); 
+    setUsername("");
+    setUserid("");  
+    isLoggingOut.current = true;  
+    navigate("/"); 
   };
 
   return (
