@@ -13,6 +13,7 @@ public class PostDto {
     private String title;
     private String content;
     private String address;
+    private int total_likes; // 我要怎麼取得likes的總數?
 
     @JsonIgnore
     private User user;

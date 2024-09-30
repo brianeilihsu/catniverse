@@ -1,6 +1,7 @@
 package com.catniverse.backend.data;
 
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
+import com.catniverse.backend.model.Like;
 import com.catniverse.backend.model.Role;
 import com.catniverse.backend.model.User;
 import com.catniverse.backend.model.UserAvatar;
@@ -12,6 +13,9 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -41,6 +45,10 @@ public class DataInitializer implements ApplicationListener<ApplicationReadyEven
             user.setUsername("User" + i);
             user.setEmail(defaultEmail);
             user.setPassword(passwordEncoder.encode("123456"));
+            user.setJoinDate(LocalDate.now());
+            user.setBio("Hello I'm User " + i);
+            List<Like> likes = new ArrayList<Like>();
+            user.setLikes(likes);
             user.setRoles(Set.of(userRole));
             UserAvatar userAvatar = new UserAvatar();
             userAvatar.setUser(user);
@@ -61,6 +69,10 @@ public class DataInitializer implements ApplicationListener<ApplicationReadyEven
             user.setUsername("Admin" + i);
             user.setEmail(defaultEmail);
             user.setPassword(passwordEncoder.encode("123456"));
+            user.setJoinDate(LocalDate.now());
+            user.setBio("Hello I'm Admin " + i);
+            List<Like> likes = new ArrayList<Like>();
+            user.setLikes(likes);
             user.setRoles(Set.of(adminRole));
             UserAvatar userAvatar = new UserAvatar();
             userAvatar.setUser(user);

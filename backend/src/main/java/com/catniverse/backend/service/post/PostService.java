@@ -8,6 +8,7 @@ import com.catniverse.backend.model.PostImage;
 import com.catniverse.backend.repo.PostImageRepo;
 import com.catniverse.backend.repo.PostRepo;
 import com.catniverse.backend.request.AddPostRequest;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,18 +17,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 @Service
 public class PostService implements ImpPostService{
     private final PostRepo postRepo;
     private final PostImageRepo postImageRepo;
     private final ModelMapper modelMapper;
 
-    @Autowired
-    public PostService(PostRepo postRepo, PostImageRepo postImageRepo, ModelMapper modelMapper) {
-        this.postRepo = postRepo;
-        this.postImageRepo = postImageRepo;
-        this.modelMapper = modelMapper;
-    }
 
     @Override
     public Post addPost(AddPostRequest addPostRequest) {
@@ -77,6 +73,7 @@ public class PostService implements ImpPostService{
                 .toList();
         postDto.setPostImages(postImagesDto);
         postDto.setUserId(post.getUser().getId());
+        postDto.setTotal_likes(post.getLikes().size());
         return postDto;
     }
 }

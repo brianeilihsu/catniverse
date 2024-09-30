@@ -51,6 +51,7 @@ public class UserService implements ImpUserService{
     @Override
     public User updateUser(UserUpdateRequest request, Long userId) {
         return userRepo.findById(userId).map(existingUser -> {
+
             existingUser.setUsername(request.getUsername());
             return userRepo.save(existingUser);
         }).orElseThrow(()-> new ResourceNotFoundException("User not found"));
