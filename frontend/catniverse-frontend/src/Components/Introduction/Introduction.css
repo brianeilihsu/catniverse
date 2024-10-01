@@ -1,23 +1,116 @@
-.content {
-    margin-left: 0px;
-    padding-left: 0px;
-    padding: 20px;
-    flex-grow: 1;
+.content_ {
+  margin-left: 17.5%;
+  padding: 0px;
+  flex-grow: 1;
 }
 
+.header-image {
+  width: 45%; /* 根據需要調整寬度 */
+  height: auto; /* 保持圖片比例 */
+  border-radius: 5px; /* 圓角 */
+  margin: 0 auto; /* 取消上下空隙並水平置中 */
+  display: block; /* 確保圖片是塊級元素 */
+  margin-left: 40%;
+}
+
+.card:first-child {
+  margin-top: 0; /* 取消第一個卡片的頂部空隙 */
+}
+
+/* 容器設置 */
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0px;
+}
+
+/* 卡片式設計 */
+.card {
+  background-color: #fff;
+  padding: 20px;
+  margin-bottom: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 標題樣式 */
+h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 15px;
+  border-bottom: 2px solid hsl(0, 71%, 33%);
+  padding-bottom: 10px;
+}
+
+/* 文字段落 */
 .black {
-    line-height: 1.6;
-    color: #333;
+  color: #555;
+  font-size: 18px;
+  line-height: 1.8;
+  margin-bottom: 20px;
 }
 
-.feature {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #e9f7ef;
-    border-radius: 5px;
+/* 特殊段落樣式 */
+.welcome {
+  font-size: 20px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 40px;
 }
 
-.feature h2 {
-    color: #4CAF50;
-    margin-top: 0;
+.call-to-action {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  color: hsl(0, 71%, 33%);
+}
+
+/* 列表設置 */
+ul, ol {
+  padding-left: 40px;
+}
+
+li {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+ol li::before {
+  counter-increment: item;  /* 自動遞增編號 */
+  content: counter(item) ". ";  /* 顯示當前項的編號 */
+  font-weight: bold;
+  color: hsl(0, 71%, 33%);
+}
+
+ol {
+  counter-reset: item;  /* 重置編號為1 */
+}
+
+ol, ul {
+  list-style-type: none;
+}
+
+/* 自訂列表標記 */
+ul li::before {
+  content: '• ';
+  color: #751717;
+  font-weight: bold;
+}
+
+
+/* 自定義卡片樣式 */
+.welcome-card {
+  background-color: #fefefe;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.goals-card {
+  background-color: #fefefe;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }

@@ -9,7 +9,8 @@
     z-index: 10; 
 }
 .sidebar a{
-    display: block;
+    display: flex;
+    align-items: center;
     color: hsl(0, 1%, 21%);
     padding: 14px;
     text-decoration: none;
@@ -35,6 +36,29 @@
     align-items: center;
     background-color: transparent;
     bottom: 0px;
+    display: inline;
+  }
+
+  .guidePic-1{
+    max-width: 20px;
+    z-index: 10;
+    padding-right: 20px;
+    margin-top: 2px;
+    align-items: center;
+    background-color: transparent;
+    bottom: 0px;
+    display: inline;
+  }
+
+  .guidePic-2{
+    max-width: 22.5px;
+    z-index: 10;
+    padding-right: 20px;
+    margin-top: 2px;
+    align-items: center;
+    background-color: transparent;
+    bottom: 0px;
+    display: inline;
   }
 
 .user-info {

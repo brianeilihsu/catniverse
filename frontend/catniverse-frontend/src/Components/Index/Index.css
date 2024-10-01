@@ -44,7 +44,6 @@
     object-fit: cover;
     border-radius: 5px;
     height: auto; 
-    object-fit: cover; 
   }
   
   .slick-slider {
@@ -116,4 +115,10 @@
 
   .action-btn:hover {
     background-color: hsl(0, 0%, 95%);
+  }
+
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* 動態列寬 */
+    gap: 10px;
   }

@@ -11,14 +11,16 @@ import Profile from "./Components/Profile/Profile";
 import ReportCat from "./Components/ReportCat";
 import ImageTest from "./Components/ImageTest";
 import Show from "./Components/Show";
-import UploadEcommerce from "./Components/UploadEcommerce";
+import UploadEcommerce from "./Components/Shop/UploadEcommerce";
+import Cart from "./Components/Shop/Cart";
+import Order from "./Components/Shop/Order";
 import Index from "./Components/Index/Index";
 import Header from "./Components/Header/Header";
 
 function App() {
   const location = useLocation(); 
   const navigate = useNavigate();  
-  const noHeaderRoutes = ["/login", "/register", "/uploadEcommerce"];
+  const noHeaderRoutes = ["/login", "/register"];
   const [username, setUsername] = useState("");
   const [userid, setUserid] = useState("");
   const isLoggingOut = useRef(false); 
@@ -55,7 +57,6 @@ function App() {
       {!noHeaderRoutes.includes(location.pathname) && (
         <Header user={username} onLogout={handleLogout} />
       )}
-
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/map" element={<Map />} />
@@ -70,6 +71,8 @@ function App() {
         <Route path="/test" element={<ImageTest />} />
         <Route path="/show" element={<Show />} />
         <Route path="/uploadEcommerce" element={<UploadEcommerce />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/order" element={<Order />} />
       </Routes>
     </div>
   );

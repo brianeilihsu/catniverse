@@ -130,7 +130,7 @@ function Register() {
             required
           />
 
-          <button className=".register-button" type="submit">Register</button>
+          <button className=".register-btn" type="submit">Register</button>
         </form>
         <div className="login-link">
           Already have an account?<Link to="/login"> Sign in</Link>

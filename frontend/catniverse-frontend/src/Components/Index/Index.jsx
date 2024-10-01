@@ -168,12 +168,11 @@ function Index() {
                     <Slider {...sliderSettings(sliderRef)}>
                       {postImageUrls[post.id] &&
                         postImageUrls[post.id].map((url, index) => (
-                          <div key={index}>
+                          <div className="grid-container" key={index} style={{ display: "flex", justifyContent: "center" }}>
                             <img
                               src={url}
                               alt={`Post image ${index}`}
                               className="post-image"
-                              style={{ width: "100%", height: "auto" }}
                               onClick={(e) =>
                                 handleImageClick(e, sliderRef.current)
                               }

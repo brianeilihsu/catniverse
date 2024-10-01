@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./Upload.css";
 
@@ -15,6 +16,7 @@ function Upload() {
   const [errors, setErrors] = useState({});
   const [city, setCity] = useState(""); 
   const [district, setDistrict] = useState(""); 
+  const navigate = useNavigate();
 
   const cities = {
     "台北市": ["中正區", "大同區", "中山區", "萬華區", "信義區", "松山區", "大安區", "南港區", "北投區", "士林區", "文山區"],
@@ -99,7 +101,6 @@ function Upload() {
             },
           }
         );
-
         const postId = postResponse.data.data.id;
 
         for (let i = 0; i < imageFiles.length; i++) {
@@ -108,7 +109,7 @@ function Upload() {
           imageData.append("files", imageFiles[i]);
 
           await axios.post(
-            `http://140.136.151.71:8787/api/v1/images/upload`,
+            `http://140.136.151.71:8787/api/v1/post-images/upload`,
             imageData,
             {
               headers: {
@@ -119,6 +120,7 @@ function Upload() {
         }
 
         alert("貼文和圖片成功！");
+        navigate("/");
       } catch (error) {
         console.error("上傳貼文失敗：", error);
         alert("上傳貼文失敗");
@@ -135,6 +137,7 @@ function Upload() {
 
   return (
     <div className="content">
+      <br/>
       <main>
         <form
           className="container"
@@ -213,7 +216,7 @@ function Upload() {
             ))}
           </div>
 
-          <button type="submit">發布</button>
+          <button className="submit-btn" type="submit">發布</button>
         </form>
       </main>
     </div>

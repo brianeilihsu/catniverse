@@ -1,25 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios"; 
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./Member.css";
+import backPic from "../../Image/back.png";
 
 function Member() {
-  const [formData, setFormData] = useState({
-    avatar: "",
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
   const [userData, setUserData] = useState({});
   const [image, setImage] = useState(null); 
   const [imagePreview, setImagePreview] = useState(""); 
   const [errors, setErrors] = useState({}); 
+  const [confirmPassword, setConfirmPassword] = useState(""); // 新增 confirmPassword 狀態
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const userId = localStorage.getItem("userId");
+  const userId = localStorage.getItem("userId");
 
+  useEffect(() => {
     const fetchUserData = async (userId) => {
       try {
         const response = await axios.get(
@@ -27,14 +22,6 @@ function Member() {
         );
         const user = response.data.data;
         setUserData(user);
-
-        setFormData({
-          avatar: "",
-          username: user.username,
-          email: user.email,
-          password: "",
-          confirmPassword: "",
-        });
 
         if (user.userAvatar && user.userAvatar.downloadUrl) {
           const avatarUrl = await fetchImage(user.userAvatar.downloadUrl);
@@ -60,7 +47,7 @@ function Member() {
     if (userId) {
       fetchUserData(userId);
     }
-  }, []);
+  }, [userId]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0]; 
@@ -84,60 +71,68 @@ function Member() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
+    setUserData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
   };
 
+  const handleConfirmPasswordChange = (e) => {
+    setConfirmPassword(e.target.value);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    if (formData.password !== formData.confirmPassword) {
-      alert("密碼與確認密碼不一致，請重新輸入。");
-  
-      setFormData((prevData) => ({
-        ...prevData,
-        password: "",
-        confirmPassword: ""
+
+    if (userData.password && userData.password !== confirmPassword) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        confirmPassword: "密碼與確認密碼不一致",
       }));
-  
       return;
     }
-  
-    const userId = localStorage.getItem("userId");
-    const profileData = new FormData();
-    profileData.append("username", formData.username);
-    profileData.append("email", formData.email);
-  
-    if (formData.password && formData.confirmPassword) {
-      profileData.append("password", formData.password);
-      profileData.append("confirmPassword", formData.confirmPassword);
-    }
-  
-    if (image) {
-      profileData.append("avatar", image); 
-    }
-  
     try {
-      await axios.post(
+      await axios.put(
         `http://140.136.151.71:8787/api/v1/users/${userId}/update`,
-        profileData
+        userData
       );
-      console.log("User profile updated successfully:", formData);
-      navigate(`/profile/${userId}`);
+      console.log("User profile updated successfully:", userData);
     } catch (error) {
       console.error("Error updating user profile:", error);
     }
-  };
-  
 
+    try {
+      if (image) {
+        const imageData = new FormData();
+        imageData.append("file", image);
+        await axios.put(
+          `http://140.136.151.71:8787/api/v1/user-avatar/${userId}/update`,
+          imageData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        console.log("User avatar updated successfully:", imageData);
+      }
+      navigate(`/profile/${userId}`);
+    } catch (error) {
+      console.error("Error updating user avatar:", error);
+    }
+  };
 
   return (
     <div>
       <div className="content">
         <div className="container">
-          <h2>修改個人資料</h2>
+          <div className="backLogo">
+            <Link to={`/profile/${userId}`} className="back-container">
+              <button className="back-btn"><img className="backPic" src={backPic} /></button>
+              <p>Back</p>
+            </Link>
+          </div>
+          <h1>Modify profile</h1>
           <form onSubmit={handleSubmit} encType="multipart/form-data">
             <img
               src={imagePreview}
@@ -146,7 +141,7 @@ function Member() {
               id="avatarPreview"
             />
 
-            <label htmlFor="avatar">更新頭像：</label>
+            <label htmlFor="avatar">Update avatar:</label>
             <input
               type="file"
               id="avatar"
@@ -156,45 +151,45 @@ function Member() {
             />
             {errors.avatar && <p style={{ color: "red" }}>{errors.avatar}</p>}
 
-            <label htmlFor="username">使用者名稱：</label>
+            <label htmlFor="username">Username</label>
             <input
               type="text"
               id="user"
               name="username"
-              value={formData.username}
+              value={userData.username || ''}
               onChange={handleChange}
               required
             />
 
-            <label htmlFor="email">電子郵件：</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
+            <label htmlFor="bio">Personal profile:</label>
+            <textarea
+              id="bio"
+              name="bio"
+              value={userData.bio || ''}
               onChange={handleChange}
               required
             />
 
-            <label htmlFor="password">新密碼：（如不修改請留空）</label>
+            <label htmlFor="password">New password: (please leave it blank if you do not want to change it)</label>
             <input
               type="password"
               id="password"
               name="password"
-              value={formData.password}
+              value={userData.password || ''}
               onChange={handleChange}
             />
 
-            <label htmlFor="confirmPassword">確認新密碼：</label>
+            <label htmlFor="confirmPassword">Confirm new password:</label>
             <input
               type="password"
               id="confirmPassword"
               name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
+              value={confirmPassword}
+              onChange={handleConfirmPasswordChange}
             />
+            {errors.confirmPassword && <p style={{ color: "red" }}>{errors.confirmPassword}</p>}
 
-            <button type="submit">更新資料</button>
+            <button className="submit-btn" type="submit">Update</button>
           </form>
         </div>
       </div>

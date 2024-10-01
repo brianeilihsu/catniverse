@@ -111,12 +111,12 @@ function Profile() {
             />
             <div className="profile-info">
               <h1>{userData.username}</h1>  
-              <p>電子郵件: {userData.email}</p>  
-              <p>加入時間: {new Date(userData.createdAt).toLocaleDateString("zh-TW")}</p>  
-              <p>發文數: {userData.posts ? userData.posts.length : 0}</p>  
+              <p>Email: {userData.email}</p>  
+              <p>Join date: {new Date(userData.joinDate).toLocaleDateString("zh-TW")}</p>  
+              <p>Number of posts: {userData.posts ? userData.posts.length : 0}</p>  
             </div>
             <button className="edit-profile-btn" onClick={toMember}>
-              修改個人資料
+              Modify profile
             </button>
           </div>
 

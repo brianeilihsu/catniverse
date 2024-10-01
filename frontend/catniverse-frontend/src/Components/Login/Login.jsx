@@ -33,6 +33,28 @@ function Login({ setUsername }) {
     };
   }, []); 
 
+  const fetchRole = async (email) => {
+    try {
+      const response = await axios.get(
+        `http://140.136.151.71:8787/api/v1/users/get-by-email`,
+        {
+          params: { email: email }
+        }
+      );
+  
+      const user = response.data.data;
+  
+      if (Array.isArray(user.roles)) {
+        localStorage.setItem("roles", JSON.stringify(user.roles)); 
+      }
+  
+    } catch (error) {
+      console.error(`Error fetching user data for email ${email}:`, error);
+    }
+  };
+  
+  
+
   const handleGetEmail = (event) => {
     setEmail(event.target.value);
   }
@@ -50,23 +72,21 @@ function Login({ setUsername }) {
         email: email,
         password: password,
       });
-      console.log('Response data:', response.data);
       
-      const jwtToken = response.data.data.jwt;  
+      const jwtToken = response.data.data.token;  
       localStorage.setItem('token', jwtToken);  
 
       const userId = response.data.data.id;
       localStorage.setItem("userId", userId); 
 
       const response2 = await axios.get(`http://140.136.151.71:8787/api/v1/users/${userId}/user`);
-      console.log('Response2 data:',response2.data);
 
       if (response2.data && response2.data.data.username) {
         const username = response2.data.data.username;
         localStorage.setItem("username", username); 
         setUsername(username);
-        console.log('Username:', username);
         setMessage('Login successful! Token saved.');
+        fetchRole(email);
         navigate("/");
       } else {
         console.error('Failed to fetch username');

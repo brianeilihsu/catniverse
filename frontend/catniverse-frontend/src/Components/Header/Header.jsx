@@ -31,7 +31,7 @@ function Header({ user, onLogout }) {
   return (
     <div>
       <div className="sidebar">
-        <Link to="/"><img className="guidePic" src={guidePic} alt="Home" />Home</Link>
+        <Link to="/"><img className="guidePic-1" src={guidePic} alt="Home" />Home</Link>
         <Link to="/map"><img className="guidePic" src={guidePic2} alt="Map" />Map</Link>
         <Link to="/introduction"><img className="guidePic" src={guidePic3} alt="About as" />About as</Link>
         <Link to="/shop"><img className="guidePic" src={guidePic4} alt="Shop" />Shop</Link>
@@ -40,7 +40,7 @@ function Header({ user, onLogout }) {
           <div>
             <Link to="/upload"><img className="guidePic" src={guidePic9} alt="Upload post" />Upload post</Link>
             <Link to={`/profile/${userId}`}><img className="guidePic" src={guidePic7} alt="Profile" />Profile</Link>
-            <Link to="#" onClick={handleLogout}><img className="guidePic" src={guidePic6} alt="Logout" />Logout</Link>
+            <Link to="#" onClick={handleLogout}><img className="guidePic-2" src={guidePic6} alt="Logout" />Logout</Link>
             <div className="user-info">
               <p id="username"><img className="guidePic" src={guidePic10} alt="Account" /> {user}</p>
             </div>

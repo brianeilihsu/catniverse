@@ -1,0 +1,158 @@
+.p-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-left: 30%;
+
+}
+
+.pl-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-left: 17%;
+
+}
+
+h1, h2 {
+  margin: 0px;
+  color: #333;
+  text-align: center;
+  padding-bottom: 10px;
+}
+
+.product-form, .p-list {
+  margin: 0px;
+}
+
+form {
+  display: flex;
+  flex-direction: column; 
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+textarea {
+  height: 100px;
+}
+
+.image-upload {
+  border: 2px dashed #ddd;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.image-preview img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.submit-btn {
+  background-color: hsl(0, 0%, 95%);
+  font-size: 17.5px;
+  width: 100%;
+  height: 40px;
+  font-weight: bold;
+}
+
+.submit-btn:hover {
+  background-color: #999;
+  transition: 0.5s;
+}
+
+.product-image {
+  max-width: 100px;
+  max-height: 100px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+.edit-btn, .delete-btn, .save-btn, .cancel-btn {
+  padding: 5px 10px;
+  margin: 2px;
+  font-size: 15px;
+}
+
+.edit-btn {
+  background-color: #045ba2;
+  color: white;
+  cursor: pointer;
+}
+
+.save-btn {
+  background-color: #4d8dc2;
+  color: white;
+  cursor: pointer;
+}
+
+.delete-btn {
+  background-color: hsl(0, 71%, 33%);
+  color: white;
+  cursor: pointer;
+  margin-left: 10%;
+}
+
+.cancel-btn {
+  background-color: hsl(0, 47%, 57%);
+  color: white;
+  cursor: pointer;
+  margin-left: 10%;
+}
+
+.backLogo {
+  display: flex;
+}
+
+.new-product-btn {
+  margin-left: 92.5%;
+}

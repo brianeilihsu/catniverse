@@ -38,7 +38,7 @@
     cursor: pointer;
   }
 
-  .cart-btn, .order-btn {
+  .cart-btn, .order-btn, .upload-btn {
     position: fixed;
     width: 60px;  
     height: 60px;
@@ -52,12 +52,12 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   }
   
-  .cart-btn:hover, .order-btn:hover {
+  .cart-btn:hover, .order-btn:hover, .upload-btn:hover  {
     background-color: hsla(0, 1%, 34%, 0.232);
   }
   
 
-  .cart-img, .order-img {
+  .cart-img, .order-img, .upload-img {
     width: 80%;   
     height: 80%;  
     object-fit: contain;
@@ -72,6 +72,11 @@
   .order-btn {
     bottom: 100px;  
     right: 20px;  
+  }
+
+  .upload-btn {
+    bottom: 180px;  
+    right: 20px; 
   }
   
   

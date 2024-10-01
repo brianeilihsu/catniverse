@@ -37,17 +37,19 @@
 }
 
 .edit-profile-btn {
-    background-color: #4CAF50;
-    color: white;
+    background-color: hsl(0, 0%, 95%);
+    color: hsl(0, 1%, 21%);
     border: none;
     padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+    font-weight: bold;
 }
 
 .edit-profile-btn:hover {
-    background-color: #45a049;
+    background-color: #999;
+    transition: 0.5s;
 }
 
 .posts {
