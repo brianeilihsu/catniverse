@@ -52,9 +52,8 @@ function Product({ product }) {
         setShowModal(false); 
     };
 
-    // 添加到購物車的函數
     const addToCart = async () => {
-        setAddingToCart(true); // 禁用按鈕，防止重複點擊
+        setAddingToCart(true);
         const token = localStorage.getItem('token');
 
         try {
@@ -64,7 +63,7 @@ function Product({ product }) {
                 },
                 params: {
                     productId: product.id,
-                    quantity: quantity,  // 傳送當前選擇的商品數量
+                    quantity: quantity, 
                 },
             });
             alert('Product added to cart successfully!');
@@ -72,7 +71,7 @@ function Product({ product }) {
             console.error('Error adding product to cart:', error);
             alert('Error adding product to cart');
         } finally {
-            setAddingToCart(false); // 恢復按鈕可點擊狀態
+            setAddingToCart(false); 
         }
     };
 

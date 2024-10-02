@@ -24,63 +24,46 @@ const ProductManagement = () => {
   const [productImageUrls, setProductImageUrls] = useState({}); 
   const [errors, setErrors] = useState({});
 
+  const fetchProductData = async () => {
+    try {
+      const response = await axios.get(
+        `http://140.136.151.71:8787/api/v1/products/all`
+      );
+      const products = response.data.data;
+      setProductData(products);
+
+      products.forEach(product => {
+        const downloadUrls = product.images.map(img => img.downloadUrl);
+        fetchProductImages(downloadUrls, product.id);
+      });
+    } catch (error) {
+      console.error(`Error fetching product data:`, error);
+    }
+  };
+
   useEffect(() => {
-    const fetchProductData = async () => {
-      try {
-        const response = await axios.get(
-          `http://140.136.151.71:8787/api/v1/products/all`
-        );
-        const products = response.data.data;
-        setProductData(products);
-        if(products.images && products.images.downloadUrl) {
-          const downloadUrl = await fetchImages(products.images.downloadUrl);
-          setProductImageUrls(downloadUrl);
-        }
-
-        products.forEach(product => {
-          const downloadUrls = product.images.map(img => img.downloadUrl);
-          fetchProductImages(downloadUrls, product.id);
-        });
-      } catch (error) {
-        console.error(`Error fetching product data:`, error);
-      }
-    };
-
     fetchProductData();
+  }, []);
 
-    const fetchImages = async (downloadUrl) => {
-      try {
+  const fetchProductImages = async (downloadUrls, productId) => {
+    try {
+      const imageBlobPromises = downloadUrls.map(async (downloadUrl) => {
         const response = await axios.get(
           `http://140.136.151.71:8787${downloadUrl}`,
           { responseType: "blob" }
         );
         return URL.createObjectURL(response.data);
-      } catch (error) {
-        console.error("Error fetching image:", error);
-      }
-    };
-    
-    const fetchProductImages = async (downloadUrls, productId) => {
-      try {
-        const imageBlobPromises = downloadUrls.map(async (downloadUrl) => {
-          const response = await axios.get(
-            `http://140.136.151.71:8787${downloadUrl}`,
-            { responseType: "blob" }
-          );
-          return URL.createObjectURL(response.data);
-        });
+      });
 
-        const blobUrls = await Promise.all(imageBlobPromises);
-        setProductImageUrls((prevState) => ({
-          ...prevState,
-          [productId]: blobUrls, 
-        }));
-      } catch (error) {
-        console.error("Error fetching images:", error);
-      }
-    };
-    
-  }, []);
+      const blobUrls = await Promise.all(imageBlobPromises);
+      setProductImageUrls((prevState) => ({
+        ...prevState,
+        [productId]: blobUrls, 
+      }));
+    } catch (error) {
+      console.error("Error fetching images:", error);
+    }
+  };
 
   const handleEditChange = (e, field) => {
     setEditedProduct({
@@ -128,7 +111,6 @@ const ProductManagement = () => {
     }
   };
   
-
   const startEditing = (product) => {
     setEditingProductId(product.id);
     setEditedProduct({ ...product });
@@ -155,12 +137,10 @@ const ProductManagement = () => {
       alert('Error deleting product');
     }
   };
-  
 
   const saveEdits = async (productId, imageId) => {
     const token = localStorage.getItem('token');
   
-    // 更新商品數據
     try {
       await axios.put(`http://140.136.151.71:8787/api/v1/products/product/${productId}/update`, editedProduct, {
         headers: {
@@ -168,18 +148,14 @@ const ProductManagement = () => {
         },
       });
       
-      // 成功後更新本地 productData 狀態
-      setProductData((prevData) =>
-        prevData.map((product) => (product.id === productId ? editedProduct : product))
-      );
-      
+      fetchProductData(); // 成功更新後重新獲取數據
+
       setEditingProductId(null);
     } catch (error) {
       console.error('Error updating product:', error);
       alert('Error updating product');
     }
-  
-    // 更新商品圖片
+
     if (editedImages) {
       try {
         const formData = new FormData();
@@ -197,6 +173,7 @@ const ProductManagement = () => {
         );
   
         console.log('Image updated successfully');
+        fetchProductData(); // 更新圖片後也重新獲取數據
       } catch (error) {
         console.error('Error updating product image:', error);
         alert('Error updating product image');
@@ -204,8 +181,6 @@ const ProductManagement = () => {
     }
   };
   
-  
-
   const cancelEdits = () => {
     setEditingProductId(null);
     setEditedProduct({});
@@ -257,7 +232,7 @@ const ProductManagement = () => {
       }
 
       alert('Product added successfully!');
-      setProductData([...productData, { ...newProduct, id: productId }]); 
+      fetchProductData(); // 成功新增後重新獲取數據
       resetForm();
       setShowForm(false);
     } catch (error) {
@@ -314,9 +289,9 @@ const ProductManagement = () => {
                     {editingProductId === product.id ? (
                       <input
                         type="text"
-                        value={editedProduct.name}
+                        value={editedProduct.name || ''}
                         onChange={(e) => handleEditChange(e, 'name')}
-                      />
+                      />                    
                     ) : (
                       product.name
                     )}
@@ -358,9 +333,9 @@ const ProductManagement = () => {
                     {editingProductId === product.id ? (
                       <input
                         type="text"
-                        value={editedProduct.category.name}
+                        value={editedProduct.category ? editedProduct.category.name : ''}
                         onChange={(e) => handleEditChange(e, 'category')}
-                      />
+                      />                    
                     ) : (
                       product.category.name
                     )}
@@ -395,7 +370,15 @@ const ProductManagement = () => {
                   <td>
                     {editingProductId === product.id ? (
                       <>
-                        <button className="save-btn" onClick={() => saveEdits(product.id, product.images[0].id)}>
+                        <button
+                          className="save-btn"
+                          onClick={() =>
+                            saveEdits(
+                              product.id,
+                              product.images.length > 0 ? product.images[0].id : null 
+                            )
+                          }
+                        >
                           Save
                         </button>
                         <button className="cancel-btn" onClick={cancelEdits}>Cancel</button>
@@ -506,25 +489,13 @@ const ProductManagement = () => {
                   required
                 >
                   <option value="">Select a category</option>
-                  <option value="computers-technology">
-                    Computers & Technology Products
-                  </option>
-                  <option value="mobile-accessories">
-                    Mobile Phones & Accessories
-                  </option>
+                  <option value="computers-technology">Computers & Technology Products</option>
+                  <option value="mobile-accessories">Mobile Phones & Accessories</option>
                   <option value="fashion">Fashion</option>
-                  <option value="beauty-skincare">
-                    Perfumes, Beauty & Skincare
-                  </option>
-                  <option value="designer-luxury">
-                    Designer Brands & Luxury Goods
-                  </option>
-                  <option value="video-games">
-                    Video Games & Related Products
-                  </option>
-                  <option value="audio-equipment">
-                    Headphones & Audio Recording Equipment
-                  </option>
+                  <option value="beauty-skincare">Perfumes, Beauty & Skincare</option>
+                  <option value="designer-luxury">Designer Brands & Luxury Goods</option>
+                  <option value="video-games">Video Games & Related Products</option>
+                  <option value="audio-equipment">Headphones & Audio Recording Equipment</option>
                   <option value="cameras-photography">Cameras & Photography</option>
                   <option value="furniture-home">Furniture & Home Goods</option>
                   <option value="tv-appliances">TVs & Other Appliances</option>

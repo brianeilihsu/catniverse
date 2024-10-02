@@ -40,10 +40,9 @@
   }
   .post-image {
     width: 100%;
-    max-height: 500px;
+    height: 100%;
     object-fit: cover;
     border-radius: 5px;
-    height: auto; 
   }
   
   .slick-slider {
@@ -76,11 +75,9 @@
   .post-actions {
     display: flex;
     justify-content: space-between;
-    margin-top: 1em;
-    padding-top: 1em;
     border-top: 1px solid #eee;
   }
-  .action-btn {
+  .action-btn, .comment-btn {
     background: none;
     border: none;
     cursor: pointer;
@@ -88,11 +85,12 @@
     align-items: center;
     color: #555;
   }
-  .action-btn img {
+  .action-btn img, .comment-btn img {
     width: 20px;
     height: 20px;
     margin-right: 5px;
   }
+
   .load-more {
     display: block;
     width: 200px;
@@ -109,16 +107,78 @@
     background-color: #999;
   }
   
-  .guide-pic {
+  .heart-pic, .comment-pic {
     background-color:transparent;
   }
 
-  .action-btn:hover {
+  .action-btn:hover, .comment-btn:hover {
     background-color: hsl(0, 0%, 95%);
   }
 
-  .grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* 動態列寬 */
-    gap: 10px;
+  .g-container {
+    width: 100% !important;
+    height: auto !important; 
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .comment {
+    display: flex;
+  }
+
+  .comments-section {
+    margin-top: 15px;
+  }
+  
+  .comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  
+  .comment-content {
+    background-color: #f0f2f5;
+    border-radius: 18px;
+    padding: 8px 12px;
+    flex-grow: 1;
+    margin-bottom: 12px;
+  }
+  
+  .comment-author {
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  
+  .new-comment {
+    display: flex;
+    margin-top: 10px;
+    align-items: center;
+  }
+  
+  .new-comment input {
+    flex-grow: 1;
+    border: none;
+    background-color: #f0f2f5;
+    border-radius: 20px;
+    padding: 8px 12px;
+    margin-right: 10px;
+    width: 0%;
+  }
+
+  .send-btn {
+    background-color: rgb(173, 29, 29);
+    color: white;;
+    margin-top: 0px;
+    padding-top: 0%;
+    padding-bottom: 0%;
+    font-size: 15px;
+    width: 60px;
+    height: 30px;
+  }
+
+  .send-btn:hover {
+    background-color: hsl(0, 71%, 33%);
+    cursor: pointer;
   }
