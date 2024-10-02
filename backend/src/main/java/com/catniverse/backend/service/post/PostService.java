@@ -9,6 +9,7 @@ import com.catniverse.backend.model.PostImage;
 import com.catniverse.backend.repo.PostImageRepo;
 import com.catniverse.backend.repo.PostRepo;
 import com.catniverse.backend.request.AddPostRequest;
+import com.catniverse.backend.service.forbidden.ImpForbiddenService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +25,15 @@ public class PostService implements ImpPostService{
     private final PostRepo postRepo;
     private final PostImageRepo postImageRepo;
     private final ModelMapper modelMapper;
+    private final ImpForbiddenService forbiddenService;
 
 
     @Override
     public Post addPost(AddPostRequest addPostRequest) {
-        if(addPostRequest.getTitle().contains("許皓翔")||
-            addPostRequest.getTitle().contains("許皓翔") )
+        if(forbiddenService.check(addPostRequest.getTitle())||
+                forbiddenService.check(addPostRequest.getContent()))
             throw new SpecitficNameException("請不要使用帥哥的名字，你這個傻逼");
+
         Post post = new Post();
         post.setTitle(addPostRequest.getTitle());
         post.setContent(addPostRequest.getContent());
