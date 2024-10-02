@@ -12,7 +12,6 @@ import com.catniverse.backend.request.AddPostRequest;
 import com.catniverse.backend.service.forbidden.ImpForbiddenService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -45,6 +44,13 @@ public class PostService implements ImpPostService{
             return postRepo.save(post);
         }
 
+    }
+
+    @Override
+    public void deletePostById(Long id){
+        postRepo.findById(id)
+                .ifPresentOrElse(postRepo::delete,
+                        () -> { throw new ResourceNotFoundException("Post with id " + id + " not found"); });
     }
 
     @Override

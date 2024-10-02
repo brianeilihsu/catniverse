@@ -9,6 +9,7 @@ import java.util.List;
 public interface ImpPostService {
     Post addPost(AddPostRequest addPostRequest);
     Post getPostById(Long id);
+    void deletePostById(Long id);
 
     List<Post> getAllPosts();
     List<Post> getPostsByUserId(Long userId);

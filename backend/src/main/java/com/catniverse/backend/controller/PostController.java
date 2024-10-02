@@ -1,6 +1,7 @@
 package com.catniverse.backend.controller;
 
 import com.catniverse.backend.dto.PostDto;
+import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.exceptions.SpecitficNameException;
 import com.catniverse.backend.model.Post;
 import com.catniverse.backend.model.User;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @CrossOrigin
 @RequiredArgsConstructor
@@ -54,5 +56,18 @@ public class PostController {
             return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));
         }
 
+    }
+
+    @DeleteMapping("delete/{postId}")
+    public ResponseEntity<ApiResponse> deletePostById(@PathVariable Long postId){
+        try{
+            postService.deletePostById(postId);
+            return ResponseEntity.ok(new ApiResponse("delete post success", null));
+        }
+        catch (ResourceNotFoundException e){
+            return ResponseEntity.status(NOT_FOUND).body(new ApiResponse("Post not found with id:" + postId, e.getMessage()));
+        }catch (Exception e) {
+            return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));
+        }
     }
 }
