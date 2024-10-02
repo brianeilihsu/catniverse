@@ -1,6 +1,7 @@
 package com.catniverse.backend.controller;
 
 import com.catniverse.backend.dto.PostDto;
+import com.catniverse.backend.exceptions.SpecitficNameException;
 import com.catniverse.backend.model.Post;
 import com.catniverse.backend.model.User;
 import com.catniverse.backend.request.AddPostRequest;
@@ -46,7 +47,10 @@ public class PostController {
             Post post = postService.addPost(postRequest);
             PostDto postDto = postService.convertToDto(post);
             return ResponseEntity.ok(new ApiResponse("add post success", postDto));
-        } catch (Exception e) {
+        }catch (SpecitficNameException e){
+            return ResponseEntity.status(409).body(new ApiResponse("陳妍不要搞", e.getMessage()));
+        }
+        catch (Exception e) {
             return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));
         }
 

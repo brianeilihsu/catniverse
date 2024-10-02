@@ -2,6 +2,7 @@ package com.catniverse.backend.service.comment;
 
 import com.catniverse.backend.dto.CommentDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
+import com.catniverse.backend.exceptions.SpecitficNameException;
 import com.catniverse.backend.model.Comment;
 import com.catniverse.backend.model.Post;
 import com.catniverse.backend.model.User;
@@ -32,6 +33,8 @@ public class CommentService implements ImpCommentService{
 
     @Override
     public Comment addComment(addCommentRequest commentRequest) {
+        if(commentRequest.getContent().contains("許皓翔"))
+            throw new SpecitficNameException("請不要使用帥哥的名字，你這個傻逼");
         Comment comment = new Comment();
         User user = userRepo.findById(commentRequest.getUserId()).orElseThrow(() -> new ResourceNotFoundException("User Not Found with Id: " + commentRequest.getUserId()));
         Post post = postRepo.findById(commentRequest.getPostId()).orElseThrow(() -> new ResourceNotFoundException("Post Not Found with Id: " + commentRequest.getPostId()));

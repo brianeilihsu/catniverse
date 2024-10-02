@@ -3,6 +3,7 @@ package com.catniverse.backend.service.post;
 import com.catniverse.backend.dto.PostDto;
 import com.catniverse.backend.dto.PostImageDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
+import com.catniverse.backend.exceptions.SpecitficNameException;
 import com.catniverse.backend.model.Post;
 import com.catniverse.backend.model.PostImage;
 import com.catniverse.backend.repo.PostImageRepo;
@@ -27,6 +28,9 @@ public class PostService implements ImpPostService{
 
     @Override
     public Post addPost(AddPostRequest addPostRequest) {
+        if(addPostRequest.getTitle().contains("許皓翔")||
+            addPostRequest.getTitle().contains("許皓翔") )
+            throw new SpecitficNameException("請不要使用帥哥的名字，你這個傻逼");
         Post post = new Post();
         post.setTitle(addPostRequest.getTitle());
         post.setContent(addPostRequest.getContent());

@@ -2,6 +2,7 @@ package com.catniverse.backend.controller;
 
 import com.catniverse.backend.dto.CommentDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
+import com.catniverse.backend.exceptions.SpecitficNameException;
 import com.catniverse.backend.model.Comment;
 import com.catniverse.backend.request.addCommentRequest;
 import com.catniverse.backend.response.ApiResponse;
@@ -37,6 +38,9 @@ public class CommentController {
             Comment comment = commentService.addComment(commentRequest);
             CommentDto commentDto = commentService.convertCommentToDto(comment);
             return ResponseEntity.ok().body(new ApiResponse("Add Comment Success", commentDto));
+        }
+        catch(SpecitficNameException e){
+            return ResponseEntity.status(409).body(new ApiResponse("Specitfic Name Error", e.getMessage()));
         }
         catch (ResourceNotFoundException e){
             return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));

@@ -3,15 +3,13 @@ package com.catniverse.backend.service.product;
 import com.catniverse.backend.dto.ProductImageDto;
 import com.catniverse.backend.dto.ProductDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
-import com.catniverse.backend.model.Category;
-import com.catniverse.backend.model.ProductImage;
-import com.catniverse.backend.model.Product;
-import com.catniverse.backend.repo.CategoryRepo;
-import com.catniverse.backend.repo.ImageRepo;
-import com.catniverse.backend.repo.ProductRepo;
+import com.catniverse.backend.exceptions.SpecitficNameException;
+import com.catniverse.backend.model.*;
+import com.catniverse.backend.repo.*;
 import com.catniverse.backend.request.AddProductRequest;
 import com.catniverse.backend.request.UpdateProductRequest;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -25,6 +23,9 @@ import java.util.Optional;
 public class ProductService implements ImpProductService {
     private final ProductRepo productRepo;
     private final CategoryRepo categoryRepo;
+    private final CartItemRepo cartItemRepo;
+    private final OrderRepo orderRepo;
+    private final OrderItemRepo orderItemRepo;
 
     private final ModelMapper modelMapper;
     private final ImageRepo imageRepo;
@@ -74,13 +75,39 @@ public class ProductService implements ImpProductService {
 
     @Override
     public void deleteProductById(Long id) {
+        List<CartItem> cartItems = cartItemRepo.findByProductId(id);
+        List<OrderItem> orderItems = orderItemRepo.findByProductId(id);
         productRepo.findById(id)
-                .ifPresentOrElse(productRepo::delete,
-                        () -> {throw new ResourceNotFoundException("Product not found");});
+                .ifPresentOrElse(product -> {
+                    // Functional approach for category removal
+                    Optional.ofNullable(product.getCategory())
+                            .ifPresent(category -> category.getProducts().remove(product));
+                    product.setCategory(null);
+
+                    // Functional approach for updating cart items
+                    cartItems.stream()
+                            .peek(cartItem -> cartItem.setProduct(null))
+                            .peek(CartItem::setTotalPrice)
+                            .forEach(cartItemRepo::save);
+
+                    // Functional approach for updating order items
+                    orderItems.stream()
+                            .peek(orderItem -> orderItem.setProduct(null))
+                            .forEach(orderItemRepo::save);
+
+                    productRepo.delete(product);
+                }, () -> {
+                    throw new EntityNotFoundException("Product not found!");
+                });
     }
 
     @Override
     public Product updateProduct(UpdateProductRequest request, Long productId) {
+        if(request.getName().contains("許皓翔") ||
+                request.getBrand().contains("許皓翔") ||
+                request.getDescription().contains("許皓翔") ||
+                request.getCategory().getName().contains("許皓翔"))
+            throw new SpecitficNameException("請不要使用帥哥的名字，你這個傻逼");
         return productRepo.findById(productId)
                 .map(existingProduct -> updateExistingProduct(existingProduct, request))
                 .map(productRepo :: save)
@@ -94,7 +121,11 @@ public class ProductService implements ImpProductService {
         existingProduct.setInventory(request.getInventory());
         existingProduct.setDescription(request.getDescription());
 
-        Category category = categoryRepo.findByName(request.getCategory().getName());
+        Category category = Optional.ofNullable(categoryRepo.findByName(request.getCategory().getName()))
+                .orElseGet(() -> {
+                    Category newCategory = new Category(request.getCategory().getName());
+                    return categoryRepo.save(newCategory);
+                });
         existingProduct.setCategory(category);
         return existingProduct;
     }

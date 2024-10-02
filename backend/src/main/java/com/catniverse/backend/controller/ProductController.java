@@ -2,6 +2,7 @@ package com.catniverse.backend.controller;
 
 import com.catniverse.backend.dto.ProductDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
+import com.catniverse.backend.exceptions.SpecitficNameException;
 import com.catniverse.backend.model.Product;
 import com.catniverse.backend.request.AddProductRequest;
 import com.catniverse.backend.request.UpdateProductRequest;
@@ -14,8 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.*;
 
 @CrossOrigin
 @RequiredArgsConstructor
@@ -49,6 +49,8 @@ public class ProductController {
             Product theProduct = productService.addProduct(product);
             ProductDto productDto = productService.convertToDto(theProduct);
             return ResponseEntity.ok(new ApiResponse("Add product success", productDto));
+        } catch (SpecitficNameException e) {
+            return ResponseEntity.status(CONFLICT).body(new ApiResponse("Specific Name Error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));
         }
@@ -58,10 +60,13 @@ public class ProductController {
     @PutMapping("/product/{productId}/update")
     public ResponseEntity<ApiResponse> updateProduct(@RequestBody UpdateProductRequest request, @PathVariable Long productId) {
         try {
-            Product theProduct = productService.updateProduct(request, productId);
-            return ResponseEntity.ok(new ApiResponse("Update product success", theProduct));
+            Product product = productService.updateProduct(request, productId);
+            ProductDto productDto = productService.convertToDto(product);
+            return ResponseEntity.ok(new ApiResponse("Update product success", productDto));
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
+        } catch (SpecitficNameException e) {
+            return ResponseEntity.status(CONFLICT).body(new ApiResponse("陳妍不要搞", e.getMessage()));
         }
     }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
