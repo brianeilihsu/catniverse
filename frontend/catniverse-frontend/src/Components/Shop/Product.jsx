@@ -7,7 +7,7 @@ function Product({ product }) {
     const [showModal, setShowModal] = useState(false); 
     const [productImageUrls, setProductImageUrls] = useState([]); 
     const [addingToCart, setAddingToCart] = useState(false); 
-    const [quantity, setQuantity] = useState(1);  // 控制商品數量的 state
+    const [quantity, setQuantity] = useState(1);  
 
     useEffect(() => {
         if (product.images && Array.isArray(product.images)) {
@@ -63,7 +63,7 @@ function Product({ product }) {
                 },
                 params: {
                     productId: product.id,
-                    quantity: quantity, 
+                    quantity: quantity
                 },
             });
             alert('Product added to cart successfully!');
@@ -75,12 +75,10 @@ function Product({ product }) {
         }
     };
 
-    // 處理數量增加
     const handleIncreaseQuantity = () => {
         setQuantity((prevQuantity) => prevQuantity + 1);
     };
 
-    // 處理數量減少
     const handleDecreaseQuantity = () => {
         if (quantity > 1) {
             setQuantity((prevQuantity) => prevQuantity - 1);
@@ -147,11 +145,10 @@ function Product({ product }) {
                             <p className="modal-sold">
                                 {solded ? "Sold out" : "In stock"} 
                             </p>
-                            {/* 商品數量調整按鈕 */}
                             <div className="quantity-controls">
-                                <button onClick={handleDecreaseQuantity} disabled={quantity === 1}>-</button>
+                                <button className="d-btn" onClick={handleDecreaseQuantity} disabled={quantity === 1}>-</button>
                                 <span>{quantity}</span>
-                                <button onClick={handleIncreaseQuantity}>+</button>
+                                <button className="i-btn" onClick={handleIncreaseQuantity}>+</button>
                             </div>
                             <button 
                                 className="buy-button" 

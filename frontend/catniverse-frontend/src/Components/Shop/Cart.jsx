@@ -1,35 +1,74 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import productPic from "../../Image/132402_0.jpg";
-import productPic2 from "../../Image/132403_0.jpg";
-import productPic3 from "../../Image/132404_0.jpg";
+import axios from "axios";
 import backPic from "../../Image/back.png";
+import binPic from "../../Image/recycle-bin.png";
 import "./Cart.css";
 
 function Cart() {
-  const [selectedItems, setSelectedItems] = useState([false, false, false]); // 追踪選中的商品
-  const [quantities, setQuantities] = useState([1, 1, 1]); // 追踪商品數量
+  const [cartItems, setCartItems] = useState([]); 
+  const [selectedItems, setSelectedItems] = useState([]); 
+  const [quantities, setQuantities] = useState([]); 
+  const [itemsImageUrls, setItemsImageUrls] = useState({});
 
-  const productINcart = [
-    {
-      picURL: productPic,
-      name: "product1",
-      originalPrice: 29,
-      brand: ["A店"],
-    },
-    {
-      picURL: productPic2,
-      name: "product2",
-      originalPrice: 29,
-      brand: ["B店"],
-    },
-    {
-      picURL: productPic3,
-      name: "product3",
-      originalPrice: 29,
-      brand: ["C店"],
-    },
-  ];
+  const cartId = localStorage.getItem("cartId");
+  const token = localStorage.getItem("token");
+  useEffect(() => {
+    const fetchCartData = async () => {
+      if (cartId && token) {
+        try {
+          const response = await axios.get(
+            `http://140.136.151.71:8787/api/v1/carts/${cartId}/mycart`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          const cartData = response.data.data;
+          console.log(cartData);
+  
+          setCartItems(cartData.items);
+          setSelectedItems(new Array(cartData.items.length).fill(false));
+          setQuantities(cartData.items.map((item) => item.quantity));
+  
+          // Fetch images for each product
+          const imagePromises = cartData.items.map(async (item) => {
+            if (item.product.images && item.product.images.length > 0) {
+              const downloadUrl = item.product.images[0].downloadUrl;
+              const imageUrl = await fetchImage(downloadUrl);
+              return { productId: item.product.id, imageUrl };
+            }
+            return null;
+          });
+  
+          const images = await Promise.all(imagePromises);
+  
+          const imageUrlMap = images.reduce((acc, img) => {
+            if (img) acc[img.productId] = img.imageUrl;
+            return acc;
+          }, {});
+  
+          setItemsImageUrls(imageUrlMap);
+        } catch (error) {
+          console.error("Error fetching cart data:", error);
+        }
+      }
+    };
+  
+    const fetchImage = async (downloadUrl) => {
+      try {
+        const response = await axios.get(`http://140.136.151.71:8787${downloadUrl}`, {
+          responseType: "blob",
+        });
+        return URL.createObjectURL(response.data);
+      } catch (error) {
+        console.error("Error fetching image:", error);
+      }
+    };
+  
+    fetchCartData();
+  }, [cartId, token]);
 
   const handleCheckboxChange = (index) => {
     const updatedSelection = [...selectedItems];
@@ -37,51 +76,78 @@ function Cart() {
     setSelectedItems(updatedSelection);
   };
 
-  const handleQuantityChange = (index, increment) => {
+  const handleQuantityChange = async (index, increment) => {
     const updatedQuantities = [...quantities];
-    updatedQuantities[index] = Math.max(
-      1,
-      updatedQuantities[index] + increment
-    );
+    
+    if (updatedQuantities[index] + increment < 0) {
+      return; 
+    }
+  
+    updatedQuantities[index] = updatedQuantities[index] + increment;
+    const updatedQuantity = updatedQuantities[index];
+    const itemId = cartItems[index].product.id;
+  
     setQuantities(updatedQuantities);
+  
+    try {
+      const response = await axios.put(
+        `http://140.136.151.71:8787/api/v1/cartItems/cart/${cartId}/item/${itemId}/update`,
+        null,
+        {
+          params: {
+            quantity: updatedQuantity, 
+          },
+          headers: {
+            Authorization: `Bearer ${token}`, 
+          },
+        }
+      );
+  
+      if (response.status === 200) {
+        console.log("Update quantity success");
+      }
+    } catch (error) {
+      console.error("Update quantity wrong:", error);
+    }
+  };
+  
+  const calculateTotalPrice = () => {
+    return cartItems.reduce((total, item, index) => {
+      return total + item.product.price * quantities[index];
+    }, 0);
   };
 
-  const productDisplay = productINcart.map((p, index) => (
-    <li key={index} className="cart-item">
-      <input
-        type="checkbox"
-        className="select-product-checkbox"
-        checked={selectedItems[index]}
-        onChange={() => handleCheckboxChange(index)}
-      />
-      <img className="product-pic-inCart" src={p.picURL} alt="product pic" />
-      <div className="product-details">
-        <div className="product-tags">
-          {p.brand.map((tag, idx) => (
-            <span key={idx} className="product-tag">
-              {tag}
-            </span>
-          ))}
-        </div>
-        <h2 className="product-name">{p.name}</h2>
-        <div className="product-prices">
-          <span className="original-price">${p.originalPrice}</span>
-        </div>
-      </div>
-      <div className="product-quantity">
-        <button
-          className="remove"
-          onClick={() => handleQuantityChange(index, -1)}
-        >
-          -
-        </button>
-        <span>{quantities[index]}</span>
-        <button className="add" onClick={() => handleQuantityChange(index, 1)}>
-          +
-        </button>
-      </div>
-    </li>
-  ));
+  const handleDeleteItem = async () => {
+    const itemsToDelete = cartItems.filter((_, index) => selectedItems[index]);
+  
+    if (itemsToDelete.length === 0) {
+      return; 
+    }
+  
+    try {
+      const deletePromises = itemsToDelete.map(async (item, index) => {
+        const itemId = item.product.id;
+        await axios.delete(
+          `http://140.136.151.71:8787/api/v1/cartItems/cart/${cartId}/item/${itemId}/remove`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      });
+  
+      await Promise.all(deletePromises);
+  
+      const updatedCartItems = cartItems.filter((_, index) => !selectedItems[index]);
+      setCartItems(updatedCartItems);
+      setSelectedItems(new Array(updatedCartItems.length).fill(false));
+  
+      console.log("Items deleted successfully");
+    } catch (error) {
+      console.error("Error deleting items:", error);
+    }
+  };
 
   return (
     <div>
@@ -91,15 +157,62 @@ function Cart() {
           <div className="backLogo">
             <Link to={`/shop`} className="back-container">
               <button className="back-btn">
-                <img className="backPic" src={backPic} />
+                <img className="backPic" src={backPic} alt="back" />
               </button>
               <p>Back</p>
             </Link>
           </div>
-          <h1 className="cart-header">shopping cart</h1>
-          <ul className="cart-list">{productDisplay}</ul>
+          <h1 className="cart-header">Shopping Cart</h1>
+          <button className="bin-btn" onClick={handleDeleteItem}><img src={binPic}></img></button>
+          <ul className="cart-list">
+            {cartItems.length > 0 ? (
+              cartItems.map((item, index) => (
+                <li key={index} className="cart-item">
+                  <input
+                    type="checkbox"
+                    className="select-product-checkbox"
+                    checked={selectedItems[index]}
+                    onChange={() => handleCheckboxChange(index)}
+                  />
+                  <img
+                    className="product-pic-inCart"
+                    src={itemsImageUrls[item.product.id] || "/default-image.jpg"} // Use the fetched image or a default placeholder
+                    alt="product pic"
+                  />
+                  <div className="product-details">
+                    <div className="product-tags">
+                      <span>{item.product.brand}</span>
+                    </div>
+                    <h2 className="product-name">{item.product.name}</h2>
+                    <div className="product-prices">
+                      <span className="original-price">${item.product.price}</span>
+                    </div>
+                  </div>
+                  <div className="product-quantity">
+                    <button
+                      className="remove"
+                      onClick={() => handleQuantityChange(index, -1)}
+                    >
+                      -
+                    </button>
+                    <span>{quantities[index]}</span>
+                    <button
+                      className="add"
+                      onClick={() => handleQuantityChange(index, 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </li>
+              ))
+            ) : (
+              <p className="empty">Your cart is empty</p>
+            )}
+          </ul>
+
           <div className="cart-total-price">
-            total $000 <button className="cart-buy-btn">buy</button>
+            Total ${calculateTotalPrice()}{" "}
+            <button className="cart-buy-btn">Buy</button>
           </div>
         </div>
       </div>

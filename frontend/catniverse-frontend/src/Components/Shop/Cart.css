@@ -25,6 +25,8 @@
     background-color: #f3f3f3;
     border-radius: 10px;
     padding: 0;
+    content: none !important;
+
   }
   
   .cart-item {
@@ -34,6 +36,10 @@
     border-bottom: 1px solid #eaeaea;
     margin-bottom: 10px;
     position: relative;
+  }
+
+  .cart-item::before {
+    content: none !important;
   }
   
   .select-product-checkbox {
@@ -110,7 +116,7 @@
   }
   
   .cart-buy-btn {
-    font-size: 25px;
+    font-size: 20px;
     color: white;
     background-color: rgb(173, 29, 29);
     border: none;
@@ -125,4 +131,16 @@
   
   .add, .remove {
     margin-top: 0;
+  }
+
+  .bin-btn {
+    background-color: transparent;
+    margin: 0px;
+    padding: 0px;
+    margin-left: 95%;
+  }
+
+  .empty {
+    padding: 5px;
+    text-align: center;
   }

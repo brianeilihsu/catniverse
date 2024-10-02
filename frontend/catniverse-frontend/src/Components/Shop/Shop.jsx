@@ -11,6 +11,7 @@ function Shop() {
   const [name, setName] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [productData, setProductData] = useState([]);
+  const [userData, setUserData] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,6 +38,36 @@ function Shop() {
 
     fetchProductData();
   }, []);
+
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+
+    const fetchUserData = async (userId) => {
+      try {
+        if (!userData[userId]) {
+          const response = await axios.get(
+            `http://140.136.151.71:8787/api/v1/users/${userId}/user`
+          );
+          const user = response.data.data;
+
+          setUserData((prevState) => ({
+            ...prevState,
+            [userId]: user,
+          }));
+
+          if (user.cart.cartId) {
+            localStorage.setItem("cartId", user.cart.cartId);
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching user data for userId ${userId}:`, error);
+      }
+    };
+
+    if (userId) {
+      fetchUserData(userId);
+    }
+  }, [userData]);
 
   function handleNameChange(event) {
     setName(event.target.value);
@@ -69,10 +100,7 @@ function Shop() {
 
       <div className="product-list">
         {productData.map((product) => (
-          <Product
-            key={product.id} 
-            product={product} 
-          />
+          <Product key={product.id} product={product} />
         ))}
       </div>
 

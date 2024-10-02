@@ -70,9 +70,10 @@
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
-    width: 400px;
+    width: 350px;
     max-width: 90%;
     position: relative;
+    margin-left: 15%;
   }
   
   .close-button {
@@ -137,4 +138,16 @@
   
   .buy-button:disabled {
     background-color: #ccc;
+  }
+
+  .d-btn {
+    margin-right: 7.5px;
+    border-radius: 50%;
+    margin-top: 0px;
+  }
+
+  .i-btn {
+    margin-left: 7.5px;
+    border-radius: 50%;
+    margin-top: 0px;
   }

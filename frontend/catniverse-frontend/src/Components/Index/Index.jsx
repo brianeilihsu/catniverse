@@ -216,6 +216,12 @@ function Index() {
           ...prevState,
           [postId]: false,
         }));
+
+        setPostData((prevState) =>
+          prevState.map((post) =>
+            post.id === postId ? { ...post, total_likes: post.total_likes - 1 } : post
+          )
+        );
       } else {
         await axios.post("http://140.136.151.71:8787/api/v1/likes/add-like", null, {
           params: { userId, postId },
@@ -224,6 +230,12 @@ function Index() {
           ...prevState,
           [postId]: true,
         }));
+
+        setPostData((prevState) =>
+          prevState.map((post) =>
+            post.id === postId ? { ...post, total_likes: post.total_likes + 1 } : post
+          )
+        );
       }
     } catch (error) {
       console.error(`Error updating like for post ${postId}:`, error);
@@ -346,11 +358,11 @@ function Index() {
                           src={likedPosts[post.id] ? HeartPicFilled : HeartPic}
                           alt="讚"
                         />
-                        Like
+                        {post.total_likes}
                       </button>
                       <button className="comment-btn" onClick={() => toggleComments(post.id)}>
                         <img className="comment-pic" src={CommentPic} alt="留言" />
-                        Comment
+                        
                       </button>
                     </div>
                     {comments[post.id] && comments[post.id].visible && (
