@@ -9,6 +9,7 @@ import com.catniverse.backend.repo.*;
 import com.catniverse.backend.request.AddProductRequest;
 import com.catniverse.backend.request.UpdateProductRequest;
 
+import com.catniverse.backend.service.forbidden.ImpForbiddenService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -25,6 +26,7 @@ public class ProductService implements ImpProductService {
     private final CategoryRepo categoryRepo;
     private final CartItemRepo cartItemRepo;
     private final OrderRepo orderRepo;
+    private final ImpForbiddenService forbiddenService;
     private final OrderItemRepo orderItemRepo;
 
     private final ModelMapper modelMapper;
@@ -33,6 +35,11 @@ public class ProductService implements ImpProductService {
 
     @Override
     public Product addProduct(AddProductRequest request) {
+        if(forbiddenService.check(request.getName()) ||
+                forbiddenService.check(request.getBrand()) ||
+                forbiddenService.check(request.getDescription()) ||
+                forbiddenService.check(request.getCategory().getName()))
+            throw new SpecitficNameException("請不要使用帥哥的名字，你這個傻逼");
         // check i the category is found in the DB
         // if yes, set it as the new product category
         // if no, then save it as a new category
@@ -41,14 +48,16 @@ public class ProductService implements ImpProductService {
 //        if(productExists(request.getName(), request.getBrand())){
 //            throw new AlreadyExistsException(request.getBrand() + ' ' + request.getName() + "already exists");
 //        }
+        else{
+            Category category = Optional.ofNullable(categoryRepo.findByName(request.getCategory().getName()))
+                    .orElseGet(() -> {
+                        Category newCategory = new Category(request.getCategory().getName());
+                        return categoryRepo.save(newCategory);
+                    });
+            request.setCategory(category);
+            return productRepo.save(createProduct(request, category));
+        }
 
-        Category category = Optional.ofNullable(categoryRepo.findByName(request.getCategory().getName()))
-                .orElseGet(() -> {
-                    Category newCategory = new Category(request.getCategory().getName());
-                    return categoryRepo.save(newCategory);
-                });
-        request.setCategory(category);
-        return productRepo.save(createProduct(request, category));
     }
     // ↑↑↑↑↑↑↑↑↑↑ if u want to add product to exist product, instead of create a new entity
     private boolean productExists(String name, String brand){
@@ -103,12 +112,13 @@ public class ProductService implements ImpProductService {
 
     @Override
     public Product updateProduct(UpdateProductRequest request, Long productId) {
-        if(request.getName().contains("許皓翔") ||
-                request.getBrand().contains("許皓翔") ||
-                request.getDescription().contains("許皓翔") ||
-                request.getCategory().getName().contains("許皓翔"))
+        if(forbiddenService.check(request.getName()) ||
+                forbiddenService.check(request.getBrand()) ||
+                forbiddenService.check(request.getDescription()) ||
+                forbiddenService.check(request.getCategory().getName()))
             throw new SpecitficNameException("請不要使用帥哥的名字，你這個傻逼");
-        return productRepo.findById(productId)
+        else
+            return productRepo.findById(productId)
                 .map(existingProduct -> updateExistingProduct(existingProduct, request))
                 .map(productRepo :: save)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));

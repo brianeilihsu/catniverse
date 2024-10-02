@@ -7,7 +7,6 @@ import com.catniverse.backend.model.Comment;
 import com.catniverse.backend.request.addCommentRequest;
 import com.catniverse.backend.response.ApiResponse;
 import com.catniverse.backend.service.comment.ImpCommentService;
-import jdk.swing.interop.SwingInterOpUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

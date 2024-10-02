@@ -23,7 +23,7 @@ public class ForbiddenService implements ImpForbiddenService{
         String inputPinyin = convertToPinyin(input);
         String forbiddenPinyin = convertToPinyin(forbiddenWord);
 
-        return inputPinyin.equals(forbiddenPinyin);
+        return inputPinyin.contains(forbiddenPinyin);
     }
 
     // 將字串轉換為拼音

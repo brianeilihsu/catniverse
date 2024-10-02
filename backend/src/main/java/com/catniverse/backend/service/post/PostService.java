@@ -33,16 +33,18 @@ public class PostService implements ImpPostService{
         if(forbiddenService.check(addPostRequest.getTitle())||
                 forbiddenService.check(addPostRequest.getContent()))
             throw new SpecitficNameException("請不要使用帥哥的名字，你這個傻逼");
+        else {
+            Post post = new Post();
+            post.setTitle(addPostRequest.getTitle());
+            post.setContent(addPostRequest.getContent());
+            post.setAddress(addPostRequest.getAddress());
+            post.setUser(addPostRequest.getUser()); // 假設 AddPostRequest 中有 User 物件
+            post.setCreatedAt(LocalDateTime.now());
 
-        Post post = new Post();
-        post.setTitle(addPostRequest.getTitle());
-        post.setContent(addPostRequest.getContent());
-        post.setAddress(addPostRequest.getAddress());
-        post.setUser(addPostRequest.getUser()); // 假設 AddPostRequest 中有 User 物件
-        post.setCreatedAt(LocalDateTime.now());
+            // 儲存到資料庫
+            return postRepo.save(post);
+        }
 
-        // 儲存到資料庫
-        return postRepo.save(post);
     }
 
     @Override
