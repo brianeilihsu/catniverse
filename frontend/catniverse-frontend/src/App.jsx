@@ -44,13 +44,13 @@ function App() {
   }, [username, navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("username"); 
-    localStorage.removeItem("userId"); 
+    localStorage.clear(); 
     setUsername("");
     setUserid("");  
     isLoggingOut.current = true;  
     navigate("/"); 
   };
+  
 
   return (
     <div>

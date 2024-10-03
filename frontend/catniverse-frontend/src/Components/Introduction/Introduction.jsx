@@ -5,7 +5,12 @@ import catImage from "../../Image/cat(1).png";
 function Introduction() {
   return (
     <div>
-      <img src={catImage} alt="可愛的貓咪" className="header-image" />
+      <img 
+        src={catImage} 
+        alt="可愛的貓咪" 
+        className="header-image" 
+        style={{width:"45%", height:"auto"}}
+      />
       <div className="content_">
         <div className="container">
           <div className="feature card welcome-card">
@@ -29,7 +34,7 @@ function Introduction() {
             </p>
           </div>
 
-          <div className="feature card">
+          <div className="feature-card">
             <h2>我們的主要功能：</h2>
             <ul>
               <li>上傳流浪貓照片：用戶可以上傳在各地遇到的流浪貓照片。</li>
@@ -39,7 +44,7 @@ function Introduction() {
             </ul>
           </div>
 
-          <div className="feature card">
+          <div className="feature-card">
             <h2>如何參與：</h2>
             <ol>
               <li>註冊帳號</li>

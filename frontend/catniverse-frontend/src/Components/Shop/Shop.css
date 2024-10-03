@@ -20,8 +20,9 @@
     background-color: rgb(245, 243, 243);
     border-radius: 5px;
     min-height: 25px;
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     margin-bottom: 10px;
+    width: 27.5%;
   }
   
   .search-btn {

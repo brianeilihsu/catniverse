@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import "./Upload.css";
+import backPic from "../../Image/back.png";
 
 function Upload() {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ function Upload() {
   const [errors, setErrors] = useState({});
   const [city, setCity] = useState(""); 
   const [district, setDistrict] = useState(""); 
+  const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
   const cities = {
@@ -147,7 +149,14 @@ function Upload() {
           name="form"
           onSubmit={handleSubmit}
         >
-
+          <div className="backLogo">
+            <Link to={`/profile/${userId}`} className="back-container">
+              <button className="back-btn">
+                <img className="backPic" src={backPic} alt="back" />
+              </button>
+              <p>Back</p>
+            </Link>
+          </div>
           <input
             type="text"
             id="title"

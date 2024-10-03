@@ -1,62 +1,91 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import productPic from "../../Image/132402_0.jpg";
-import productPic2 from "../../Image/132403_0.jpg";
-import productPic3 from "../../Image/132404_0.jpg";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import axios from "axios";
+import productPic from "../../Image/132402_0.jpg"; 
 import backPic from "../../Image/back.png";
 import "./Order.css";
 
 function Order() {
-  // State to manage expansion for each order date
-  const [expandedOrders, setExpandedOrders] = useState({
-    "2019/05/11 13:45": false,
-    "2019/05/13 01:55": false,
-  });
+  const [expandedOrders, setExpandedOrders] = useState({});
+  const [ordersByDate, setOrdersByDate] = useState([]); 
+  const [productImageUrls, setProductImageUrls] = useState({}); 
+  const userId = localStorage.getItem("userId");
+  const token = localStorage.getItem("token");
+  const location = useLocation();
+  const { productData } = location.state || { productData: [] };
 
-  // Define orders with different times and statuses
-  const ordersByDate = [
-    {
-      date: "2019/05/11 13:45",
-      total: 123,
-      status: "Shipped",
-      orderList: [
-        {
-          picURL: productPic,
-          name: "product1",
-          quantity: 1,
-          price: 50,
-          brand: ["A店"],
-        },
-        {
-          picURL: productPic2,
-          name: "product2",
-          quantity: 1,
-          price: 1552,
-          brand: ["B店"],
-        },
-      ],
-    },
-    {
-      date: "2019/05/13 01:55",
-      total: 1663,
-      status: "Cancelled",
-      orderList: [
-        {
-          picURL: productPic3,
-          name: "product3",
-          quantity: 3,
-          price: 510,
-          brand: ["C店"],
-        },
-      ],
-    },
-  ];
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await axios.get(
+          `http://140.136.151.71:8787/api/v1/orders/${userId}/user-orders`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, 
+            },
+          }
+        );
+        const orderData = response.data.data;
+        const parsedOrders = orderData.map((order) => ({
+          date: order.orderDate,
+          total: order.totalAmount,
+          status: order.status,
+          orderList: order.items.map((item) => ({
+            productId: item.productId,
+            picURL: productImageUrls[item.productId] || productPic, 
+            name: item.productName,
+            quantity: item.quantity,
+            price: item.price,
+            brand: [item.productBrand],
+          })),
+        }));
+        setOrdersByDate(parsedOrders);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      }
+    };
 
-  // Function to toggle expanded state for each order date
+    if (userId && token) {
+      fetchOrders();
+    }
+  }, [userId, token, productImageUrls]);
+
+  const fetchImages = async (downloadUrl) => {
+    try {
+      const response = await axios.get(
+        `http://140.136.151.71:8787${downloadUrl}`,
+        { responseType: "blob" }
+      );
+      return URL.createObjectURL(response.data); 
+    } catch (error) {
+      console.error("Error fetching image:", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchProductImages = async () => {
+      const newProductImageUrls = {};
+
+      for (const product of productData) {
+        if (product.images && product.images.length > 0) {
+          const downloadUrl = product.images[0].downloadUrl;
+          const imageUrl = await fetchImages(downloadUrl);
+          newProductImageUrls[product.id] = imageUrl; 
+        }
+      }
+
+      setProductImageUrls(newProductImageUrls);
+    };
+
+    if (productData.length > 0) {
+      fetchProductImages();
+    }
+  }, [productData]);
+
   const toggleExpand = (date) => {
     setExpandedOrders((prev) => ({
       ...prev,
-      [date]: !prev[date], // Toggle between expanded and collapsed states
+      [date]: !prev[date], 
     }));
   };
 
@@ -67,55 +96,25 @@ function Order() {
         <div className="backLogo">
           <Link to={`/shop`} className="back-container">
             <button className="back-btn">
-              <img className="backPic" src={backPic} />
+              <img className="backPic" src={backPic} alt="Back" />
             </button>
             <p>Back</p>
           </Link>
         </div>
         <h1 className="order-header">My orders</h1>
         <div className="orderpage">
-          {ordersByDate.map((order, index) => (
-            <ul key={index} className="order-list">
-              {/* Add order status to the top right */}
-              <div className="order-status">
-                <span>{order.status}</span>
-              </div>
+          {ordersByDate.length > 0 ? (
+            ordersByDate.map((order, index) => (
+              <ul key={index} className="order-list">
+                <div className="order-status">
+                  <span>{order.status}</span>
+                </div>
 
-              {/* Always show the first product */}
-              {order.orderList.slice(0, 1).map((o, idx) => (
-                <li key={idx} className="cart-item">
-                  <img
-                    className="product-pic-inOrder"
-                    src={o.picURL}
-                    alt="product pic"
-                  />
-                  <div className="product-details">
-                    <div className="product-tags">
-                      {o.brand.map((tag, idx) => (
-                        <span key={idx} className="product-tag">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <h2 className="order-product-name">{o.name}</h2>
-                    <div className="order-prices">
-                      <span className="order-price">${o.price}</span>
-                    </div>
-                  </div>
-                  <div className="order-product-quantity">
-                    <span className="order-quantity">x{o.quantity}</span>
-                  </div>
-                </li>
-              ))}
-
-              {/* Conditionally show other products if expanded */}
-              {expandedOrders[order.date] &&
-                order.orderList.length > 1 &&
-                order.orderList.slice(1).map((o, idx) => (
+                {order.orderList.slice(0, 1).map((o, idx) => (
                   <li key={idx} className="cart-item">
                     <img
                       className="product-pic-inOrder"
-                      src={o.picURL}
+                      src={productImageUrls[o.productId] || productPic}
                       alt="product pic"
                     />
                     <div className="product-details">
@@ -137,28 +136,68 @@ function Order() {
                   </li>
                 ))}
 
-              {/* Show expand/collapse button only if there is more than 1 product */}
-              {order.orderList.length > 1 && (
-                <div className="expend">
-                  <button
-                    className="expend-btn"
-                    onClick={() => toggleExpand(order.date)}
-                  >
-                    {expandedOrders[order.date] ? "⇧ collapse ⇧" : "⇩ expend ⇩"}
-                  </button>
-                </div>
-              )}
+                {expandedOrders[order.date] &&
+                  order.orderList.length > 1 &&
+                  order.orderList.slice(1).map((o, idx) => (
+                    <li key={idx} className="cart-item">
+                      <img
+                        className="product-pic-inOrder"
+                        src={productImageUrls[o.productId] || productPic}
+                        alt="product pic"
+                      />
+                      <div className="product-details">
+                        <div className="product-tags">
+                          {o.brand.map((tag, idx) => (
+                            <span key={idx} className="product-tag">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                        <h2 className="order-product-name">{o.name}</h2>
+                        <div className="order-prices">
+                          <span className="order-price">${o.price}</span>
+                        </div>
+                      </div>
+                      <div className="order-product-quantity">
+                        <span className="order-quantity">x{o.quantity}</span>
+                      </div>
+                    </li>
+                  ))}
 
-              <div className="order-total-prices">
-                date: {order.date}
-                <b>
-                  <span className="order-total-price">
-                    Total ${order.total}
-                  </span>
-                </b>
-              </div>
-            </ul>
-          ))}
+                {order.orderList.length > 1 && (
+                  <div className="expend">
+                    <button
+                      className="expend-btn"
+                      onClick={() => toggleExpand(order.date)}
+                    >
+                      {expandedOrders[order.date]
+                        ? "⇧ collapse ⇧"
+                        : "⇩ expend ⇩"}
+                    </button>
+                  </div>
+                )}
+
+                <div className="order-total-prices">
+                  date: 
+                  {new Date(order.date).toLocaleString("zh-TW", {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        })}
+                  <b>
+                    <span className="order-total-price">
+                      Total ${order.total}
+                    </span>
+                  </b>
+                </div>
+              </ul>
+            ))
+          ) : (
+            <p>No orders found.</p>
+          )}
         </div>
         <br />
       </div>

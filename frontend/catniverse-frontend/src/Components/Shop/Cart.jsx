@@ -26,13 +26,11 @@ function Cart() {
             }
           );
           const cartData = response.data.data;
-          console.log(cartData);
   
           setCartItems(cartData.items);
           setSelectedItems(new Array(cartData.items.length).fill(false));
           setQuantities(cartData.items.map((item) => item.quantity));
   
-          // Fetch images for each product
           const imagePromises = cartData.items.map(async (item) => {
             if (item.product.images && item.product.images.length > 0) {
               const downloadUrl = item.product.images[0].downloadUrl;
@@ -149,6 +147,57 @@ function Cart() {
     }
   };
 
+  const handleBuy = async () => {
+    const selectedCartItems = cartItems.filter((_, index) => selectedItems[index]);
+  
+    if (selectedCartItems.length === 0) {
+      alert("Please select at least one item to place an order.");
+      return;
+    }
+  
+    try {
+      const userId = localStorage.getItem("userId"); 
+      const orderResponse = await axios.post(
+        `http://140.136.151.71:8787/api/v1/orders/order`,
+        null,
+        {
+          params: {
+            userId: userId,  
+          },
+          headers: {
+            Authorization: `Bearer ${token}`, 
+          },
+        }
+      );
+  
+      if (orderResponse.status === 200) {
+        console.log("Order created successfully", orderResponse.data);
+        alert("Order created successfully!");
+  
+        // Clear the cart after order is successfully created
+        const clearCartResponse = await axios.delete(
+          `http://140.136.151.71:8787/api/v1/carts/${cartId}/clear`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+  
+        if (clearCartResponse.status === 200) {
+          console.log("Cart cleared successfully");
+          setCartItems([]);  
+          setSelectedItems([]);
+          setQuantities([]);
+          alert("Cart cleared successfully!");
+        }
+      }
+    } catch (error) {
+      console.error("Error during order creation or cart clearing:", error);
+      alert("Failed to create order or clear cart. Please try again.");
+    }
+  };  
+
   return (
     <div>
       <br/>
@@ -212,7 +261,7 @@ function Cart() {
 
           <div className="cart-total-price">
             Total ${calculateTotalPrice()}{" "}
-            <button className="cart-buy-btn">Buy</button>
+            <button className="cart-buy-btn" onClick={handleBuy}>Buy</button>
           </div>
         </div>
       </div>

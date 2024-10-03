@@ -8,9 +8,9 @@ import orderPic from "../../Image/search.png";
 import uploadPic from "../../Image/product.png";
 
 function Shop() {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(""); // 搜索输入
   const [isAdmin, setIsAdmin] = useState(false);
-  const [productData, setProductData] = useState([]);
+  const [productData, setProductData] = useState([]); // 商品数据
   const [userData, setUserData] = useState({});
   const navigate = useNavigate();
 
@@ -24,6 +24,7 @@ function Shop() {
       setIsAdmin(true);
     }
 
+    // 初始化获取所有商品数据
     const fetchProductData = async () => {
       try {
         const response = await axios.get(
@@ -69,8 +70,63 @@ function Shop() {
     }
   }, [userData]);
 
+  // 监听输入框的变化，如果输入框为空，动态获取所有商品
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      try {
+        const response = await axios.get(
+          `http://140.136.151.71:8787/api/v1/products/all`
+        );
+        const products = response.data.data;
+        setProductData(products);
+      } catch (error) {
+        console.error(`Error fetching all products:`, error);
+      }
+    };
+
+    if (name.trim() === "") {
+      // 如果输入框为空，动态获取所有商品
+      fetchAllProducts();
+    }
+  }, [name]);
+
+  // 过滤商品的函数，只有点击Search时才会触发
+  const fetchFilteredProducts = async () => {
+    try {
+      let response;
+      if (name.includes("/")) {
+        const [category, brand] = name.split("/"); 
+        response = await axios.get(
+          `http://140.136.151.71:8787/api/v1/products/products/by/category-and-brand`,
+          { params: { category, brand } }
+        );
+      } else if (name.includes("-")) {
+        const [brand, productName] = name.split("-"); 
+        response = await axios.get(
+          `http://140.136.151.71:8787/api/v1/products/products/by/brand-and-name`,
+          { params: { brand, name: productName } }
+        );
+      } else {
+        response = await axios.get(
+          `http://140.136.151.71:8787/api/v1/products/products/${name}/products`
+        );
+      }
+      const products = response.data.data;
+      setProductData(products);
+    } catch (error) {
+      console.error(`Error fetching filtered product data:`, error);
+    }
+  };
+
+  // 当用户点击Search按钮时，调用 fetchFilteredProducts
+  const handleSearch = () => {
+    if (name.trim() !== "") {
+      fetchFilteredProducts();
+    }
+  };
+
   function handleNameChange(event) {
-    setName(event.target.value);
+    setName(event.target.value); 
   }
 
   const handleUpload = () => {
@@ -82,7 +138,7 @@ function Shop() {
   };
 
   const handleOrder = () => {
-    navigate("/order");
+    navigate("/order", { state: { productData } });
   };
 
   return (
@@ -93,15 +149,21 @@ function Shop() {
           className="search-in"
           value={name}
           onChange={handleNameChange}
-          placeholder="Search"
+          placeholder="Search (e.g. category/brand or brand-name)"
         />
-        <button className="search-btn">Search</button>
+        <button className="search-btn" onClick={handleSearch}>
+          Search
+        </button>
       </div>
 
       <div className="product-list">
-        {productData.map((product) => (
-          <Product key={product.id} product={product} />
-        ))}
+        {productData.length > 0 ? (
+          productData.map((product) => (
+            <Product key={product.id} product={product} />
+          ))
+        ) : (
+          <p>No products found</p>
+        )}
       </div>
 
       {isAdmin && (

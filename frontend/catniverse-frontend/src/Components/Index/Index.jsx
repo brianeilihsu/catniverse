@@ -175,7 +175,7 @@ function Index() {
       navigate("/login");
       return;
     }
-
+  
     if (!commentText.trim()) return;
   
     try {
@@ -191,12 +191,19 @@ function Index() {
         },
       });
   
+      setPostData((prevState) =>
+        prevState.map((post) =>
+          post.id === postId ? { ...post, total_comments: post.total_comments + 1 } : post
+        )
+      );
+  
       await fetchComments(postId); 
       setCommentText(""); 
     } catch (error) {
       console.error(`Error posting comment for post ${postId}:`, error);
     }
   };
+  
 
   const handleLike = async (postId) => {
     const userId = localStorage.getItem("userId");
@@ -282,7 +289,10 @@ function Index() {
     <div>
       <div className="content">
         <div className="container">
-          <h1 className="index-title">台灣浪貓地圖社群</h1>
+          <h1 
+            className="index-title"
+            style={{fontFamily:"Times New Roman"}}
+          >MeowTaiwan</h1>
 
           <div id="post-list">
             {postData.length > 0 ? (
@@ -310,24 +320,39 @@ function Index() {
 
                     <h4>{post.title}</h4>
 
-                    <Slider {...sliderSettings(sliderRef)}>
-                      {postImageUrls[post.id] &&
-                        postImageUrls[post.id].map((url, index) => (
+                    {postImageUrls[post.id] && Array.isArray(postImageUrls[post.id]) && postImageUrls[post.id].length === 1 ? (
+                      <div
+                        className="g-container"
+                        style={{ display: "flex", justifyContent: "center" }}
+                      >
+                        <img
+                          src={postImageUrls[post.id][0]}
+                          alt="Post image"
+                          className="post-image"
+                          style={{ width: "95%", height: "500px" }}
+                        />
+                      </div>
+                    ) : (
+                      postImageUrls[post.id] && Array.isArray(postImageUrls[post.id]) && (
+                      <Slider {...sliderSettings(sliderRef)}>
+                        {postImageUrls[post.id].map((url, index) => (
                           <div
                             className="g-container"
                             key={index}
-                            style={{ display: "flex", justifyContent: "center"}}
+                            style={{ display: "flex", justifyContent: "center" }}
                           >
                             <img
                               src={url}
                               alt={`Post image ${index}`}
                               className="post-image"
                               onClick={(e) => handleImageClick(e, sliderRef.current)}
+                              style={{ width: "95%", height: "500px" }}
                             />
                           </div>
                         ))}
-                    </Slider>
-
+                      </Slider>
+                      )
+                    )}
                     <div className="post-content">
                       <p className="post-text">{post.content}</p>
                       <p className="post-location">發布地址：{post.address}</p>
@@ -361,13 +386,18 @@ function Index() {
                         {post.total_likes}
                       </button>
                       <button className="comment-btn" onClick={() => toggleComments(post.id)}>
-                        <img className="comment-pic" src={CommentPic} alt="留言" />
-                        
+                        <img 
+                          className="comment-pic" 
+                          src={CommentPic} 
+                          alt="留言" 
+                        />
+                        {post.total_comments}
                       </button>
                     </div>
                     {comments[post.id] && comments[post.id].visible && (
+                      <>
                       <div className="comments-section">
-                        {comments[post.id]?.list?.length > 0 ? (
+                        {comments[post.id]?.list && Array.isArray(comments[post.id].list) ? (
                           postComments.map((comment, index) => (
                             <div className="comment" key={comment.id || index}>
                               <img
@@ -385,29 +415,30 @@ function Index() {
                         ) : (
                           <div>Loading comments...</div>
                         )}
-                        <div className="new-comment">
-                          <input
-                            type="text"
-                            placeholder="寫下你的評論..."
-                            value={commentText}
-                            onChange={(e) => setCommentText(e.target.value)}
-                          />
-                          <button className="send-btn" onClick={() => handleAddComment(post.id)}>
-                            Send
-                          </button>
                         </div>
+                        <div className="new-comment">
+                        <input
+                          type="text"
+                          placeholder="寫下你的評論..."
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                        />
+                        <button className="send-btn" onClick={() => handleAddComment(post.id)}>
+                          Send
+                        </button>
                       </div>
+                    </>
                     )}
                   </div>
                 );
               })
             ) : (
-              <p>目前沒有貼文。</p>
+              <p>There are no posts yet</p>
             )}
           </div>
 
           <a href="#" className="load-more" onClick={loadMorePosts}>
-            載入更多貼文
+            Loading more posts...
           </a>
         </div>
       </div>
