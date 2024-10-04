@@ -24,6 +24,7 @@ function Header({ user, onLogout }) {
   const handleLogout = () => {
     console.log("Logging out");
     onLogout();
+    window.location.reload();
   };
 
   return (
