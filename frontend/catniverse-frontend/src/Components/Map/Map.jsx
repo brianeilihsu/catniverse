@@ -1,87 +1,113 @@
-import { useState, useEffect } from "react";
-import Header from "../Header/Header";
-import { simplemaps_countrymap_mapdata } from "./mapData";
-import TaiwanMapSVG from "../../Image/tw.svg";
-import './Map.css';
+import React, { useState, useRef, useEffect } from "react";
+import 'croppie/croppie.css';
+import Croppie from "croppie";
 
-function Map() {
-  const [tooltipContent, setTooltipContent] = useState("");
+const Map = () => {
+  const [imageSrc, setImageSrc] = useState(null);
+  const [croppedImage, setCroppedImage] = useState(null);
+  const [imageInfo, setImageInfo] = useState({ width: 0, height: 0, size: 0 });
+  const [croppedInfo, setCroppedInfo] = useState({ size: 0 });
+  const [file, setFile] = useState(null);
 
-  // 處理每個區域的動態效果
-  const handleMouseOver = (regionId) => {
-    const regionData = simplemaps_countrymap_mapdata.state_specific[regionId];
-    if (regionData) {
-      setTooltipContent(`${regionData.name}`);
+  const cropContainerRef = useRef(null);
+  const croppieInstance = useRef(null);  // Ref for the croppie instance
+
+  // Initialize Croppie when imageSrc changes
+  useEffect(() => {
+    if (imageSrc && cropContainerRef.current) {
+      if (croppieInstance.current) {
+        croppieInstance.current.destroy();  // Destroy previous instance if any
+      }
+      // Create Croppie instance
+      croppieInstance.current = new Croppie(cropContainerRef.current, {
+        viewport: { width: 300, height: 200, type: "square" },
+        boundary: { width: 350, height: 350 },
+        url: imageSrc
+      });
     }
-  };
+  }, [imageSrc]);
 
-  const handleMouseOut = () => {
-    setTooltipContent("");
-  };
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
 
-  // 將地圖區域的樣式動態綁定
-  const getRegionStyle = (regionId) => {
-    const regionData = simplemaps_countrymap_mapdata.state_specific[regionId];
-    if (regionData) {
-      return {
-        fill: regionData.color,
-        cursor: "pointer",
+    if (file && file.type.startsWith("image")) {
+      setFile(file);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImageSrc(event.target.result);  // 將 base64 圖片設為 Croppie 的來源
       };
+      reader.readAsDataURL(file);  // 讀取檔案並轉換成 base64 URL
+    } else {
+      alert("請上傳一個圖片檔案！");
     }
-    return {};
+  };
+
+  const handleCrop = async () => {
+    if (croppieInstance.current) {
+      const croppedDataUrl = await croppieInstance.current.result({
+        type: "canvas",
+        format: "jpeg",
+        quality: 0.85,
+        size: { width: 300, height: 200 },  // 裁剪的寬度與高度
+      });
+      setCroppedImage(croppedDataUrl);
+      setCroppedInfo({ size: Math.round((croppedDataUrl.length * 0.75) / 1000) }); // 計算裁剪後圖片大小
+    }
+  };
+
+  const handleImageLoaded = (img) => {
+    const width = img.naturalWidth;
+    const height = img.naturalHeight;
+    const size = Math.round(file.size / 1000);  // 計算圖片大小 KB
+    setImageInfo({ width, height, size });
   };
 
   return (
     <div>
-      <Header />
-      <div className="map-container">
-        <h2>台灣互動地圖</h2>
-        <div style={{ position: "relative" }}>
-          <img
-            src={TaiwanMapSVG}
-            alt="Taiwan Map"
-            style={{ width: "100%", height: "auto" }}
-            useMap="#taiwan-map"
-          />
-          {/* 添加互動區域 */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 800 600"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            {/* 假設 Changhua 的 path 是以下這段 */}
-            <path
-              id="TWCHA"
-              d="M563.1 480.3l4.2 1.3 2.9 2.5 1.9 4.6 0.7 5.5 3.3 3.9 8.5 2.5 3.2 2.6 2.3 3.6 1.4 2.9 0 2.8 0.9 2.5 3.1 0.5 3.9 2.6 0.1 1 0 2.6-3.1 1.1-0.9 2.1 0.4 2.9-1.4 3.3-1.2 3.9-0.1 4.1-0.8 4.7-0.7 9.7 1.5 4.5 2.6 2.4 2.8 1 4.1 2.1-0.7 2.5-2.8 1.1-1.8 1.7-1.7 1.1-0.7 0.5-8.7-1.7-4.2 0.1-8.7-4.4-14.2-1.6-8.4-3.2-4.8-1.3-5.4-0.3-15.9 1.9-5.5-3.2 0.6-1 1.1-5.1 0.9-2.1 5.1-4.9 1.5-2.1 1.9-5.6 3-5.6 4.2-11.6 1.9-3.3 2.2-2.2 1.8-1.2 1.5-0.8 1.2-1 0.4-2.2 0.9-2 3.7-2.9 0.8-2.2 0.4-7.2 0.7-2 1.9-1.9 8.2-9.5z" // 使用真實的 path
-              style={getRegionStyle("TWCHA")}
-              onMouseOver={() => handleMouseOver("TWCHA")}
-              onMouseOut={handleMouseOut}
-            />
-            
-            {/* 其他區域... */}
-          </svg>
+      <label className="btn btn-info">
+        <input
+          id="upload_img"
+          style={{ display: "none" }}
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+        />
+        <i className="fa fa-photo"></i> 上傳圖片
+      </label>
+
+      {/* 顯示原始圖片資訊 */}
+      {file && (
+        <div>
+          <p>原始圖片尺寸: {imageInfo.width} x {imageInfo.height}</p>
+          <p>檔案大小: 約 {imageInfo.size} KB</p>
         </div>
-        {tooltipContent && (
-          <div
-            style={{
-              position: "absolute",
-              top: "10px",
-              left: "10px",
-              background: "white",
-            }}
-          >
-            {tooltipContent}
-          </div>
-        )}
-      </div>
+      )}
+
+      {/* Croppie 裁剪區 */}
+      {imageSrc && (
+        <div id="oldImg" ref={cropContainerRef} style={{ height: "350px", width: "350px" }}>
+          {/* 這裡將會初始化 Croppie */}
+        </div>
+      )}
+
+      {/* 裁剪按鈕 */}
+      {imageSrc && (
+        <button id="crop_img" className="btn btn-info" onClick={handleCrop}>
+          <i className="fa fa-scissors"></i> 裁剪圖片
+        </button>
+      )}
+
+      {/* 顯示裁剪後的圖片和資訊 */}
+      {croppedImage && (
+        <div>
+          <h3>裁剪後的圖片預覽：</h3>
+          <img src={croppedImage} alt="Cropped" />
+          <p>裁剪圖片尺寸: 300 x 200</p>
+          <p>檔案大小: 約 {croppedInfo.size} KB</p>
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default Map;

@@ -124,6 +124,7 @@ function Product({ product }) {
                                         src={url}
                                         alt={`Product image ${index}`}
                                         style={{ width: "100%", height: "auto" }}
+                                        loading="lazy"
                                     />
                                 </div>
                             ))
@@ -132,6 +133,7 @@ function Product({ product }) {
                                 src={productPic} 
                                 alt="Default product pic"
                                 style={{ width: "100%", height: "auto" }}
+                                loading="lazy"
                             />
                         )}
                         <div className="modal-details">

@@ -37,3 +37,30 @@ textarea {
 .select-row select:last-child {
   margin-right: 0; 
 }
+
+.image-crop-container {
+  display: flex;
+  margin-bottom: 20px;  /* Adds spacing between different images */
+}
+
+.image-crop-section {
+  width: 100%;  /* Adjusts to the container's width */
+  max-width: 800px;  /* Ensures it does not exceed 800px */
+  margin: 0 auto;  /* Centers the cropping section */
+}
+
+.justify-btn {
+  display: flex;
+  margin-top: 40px;
+  margin-bottom: 10px;
+}
+
+.image-preview-section img {
+  width: 100%;  
+  height: auto;  
+}
+
+.btn-info {
+  margin-right: 10px;
+}
+

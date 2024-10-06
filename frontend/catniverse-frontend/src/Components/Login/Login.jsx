@@ -66,6 +66,7 @@ function Login({ setUsername }) {
   const handleLogin = async (e) => {
 
     e.preventDefault();
+    console.log(email, " ", password);
     
     try {
       const response = await axios.post("http://140.136.151.71:8787/api/v1/auth/login", {
@@ -79,14 +80,22 @@ function Login({ setUsername }) {
       const userId = response.data.data.id;
       localStorage.setItem("userId", userId); 
 
-      const response2 = await axios.get(`http://140.136.151.71:8787/api/v1/users/${userId}/user`);
+      
+
+      const response2 = await axios.get(`http://140.136.151.71:8787/api/v1/users/${userId}/user`, {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        }
+      });      
 
       if (response2.data && response2.data.data.username) {
         const username = response2.data.data.username;
         localStorage.setItem("username", username); 
         setUsername(username);
         setMessage('Login successful! Token saved.');
-        fetchRole(email);
+        if (email) {
+          fetchRole(email);
+        }
         navigate("/");
       } else {
         console.error('Failed to fetch username');
@@ -124,9 +133,7 @@ function Login({ setUsername }) {
             onChange={handleGetPassword}
             required
           />
-          <button type="login-button" onClick={handleLogin}>
-            Login
-          </button>
+          <button className="login-button" type="submit" onClick={handleLogin}>Login</button>
         </form>
         <div className="links">
           <Link to="/register">Register a new account</Link>

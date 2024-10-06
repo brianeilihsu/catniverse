@@ -18,7 +18,7 @@ function Cart() {
       if (cartId && token) {
         try {
           const response = await axios.get(
-            `http://140.136.151.71:8787/api/v1/carts/${cartId}/mycart`,
+            `http://140.136.151.71:8787/api/v1/carts/user-cart`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -89,7 +89,7 @@ function Cart() {
   
     try {
       const response = await axios.put(
-        `http://140.136.151.71:8787/api/v1/cartItems/cart/${cartId}/item/${itemId}/update`,
+        `http://140.136.151.71:8787/api/v1/cartItems/item/update/${itemId}`,
         null,
         {
           params: {
@@ -126,7 +126,7 @@ function Cart() {
       const deletePromises = itemsToDelete.map(async (item, index) => {
         const itemId = item.product.id;
         await axios.delete(
-          `http://140.136.151.71:8787/api/v1/cartItems/cart/${cartId}/item/${itemId}/remove`,
+          `http://140.136.151.71:8787/api/v1/cartItems/item/remove/${itemId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -174,7 +174,6 @@ function Cart() {
         console.log("Order created successfully", orderResponse.data);
         alert("Order created successfully!");
   
-        // Clear the cart after order is successfully created
         const clearCartResponse = await axios.delete(
           `http://140.136.151.71:8787/api/v1/carts/${cartId}/clear`,
           {

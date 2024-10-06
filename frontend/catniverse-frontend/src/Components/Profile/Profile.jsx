@@ -23,6 +23,7 @@ function Profile() {
   const [likedPosts, setLikedPosts] = useState({});
   const [comments, setComments] = useState({});
   const [commentText, setCommentText] = useState("");
+  const token = localStorage.getItem("token");
   const sliderRefs = useRef({});
 
   useEffect(() => {
@@ -41,7 +42,7 @@ function Profile() {
           const downloadUrls = post.postImages.map((img) => img.downloadUrl);
           fetchPostImages(downloadUrls, post.id);
   
-          checkIfLiked(post.id, userId);
+          checkIfLiked(post.id);
         });
       } catch (error) {
         console.error(`Error fetching user data for userId ${userId}:`, error);
@@ -131,7 +132,11 @@ function Profile() {
 
   const handleDeleteComment = async (commentId) => {
     try {
-      const response = await axios.delete(`http://140.136.151.71:8787/api/v1/comments/delete/${commentId}`);
+      const response = await axios.delete(`http://140.136.151.71:8787/api/v1/comments/delete/${commentId}`,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
   
       if (response.status === 200) {
         setComments((prevComments) => {
@@ -195,7 +200,10 @@ function Profile() {
     try {
       if (isLiked) {
         await axios.delete("http://140.136.151.71:8787/api/v1/likes/remove-like", {
-          params: { userId, postId },
+          params: { postId },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
   
         setLikedPosts((prevState) => ({
@@ -209,7 +217,10 @@ function Profile() {
         }));
       } else {
         await axios.post("http://140.136.151.71:8787/api/v1/likes/add-like", null, {
-          params: { userId, postId },
+          params: { postId },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
   
         setLikedPosts((prevState) => ({
@@ -227,10 +238,13 @@ function Profile() {
     }
   };  
 
-  const checkIfLiked = async (postId, userId) => {
+  const checkIfLiked = async (postId) => {
     try {
       const response = await axios.get("http://140.136.151.71:8787/api/v1/likes/existed", {
-        params: { userId, postId },
+        params: { postId },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (response.data.data) {
         setLikedPosts((prevState) => ({
@@ -303,28 +317,26 @@ function Profile() {
       navigate("/login");
       return;
     }
-
+  
     if (!commentText.trim()) return;
-
+  
     try {
-      const commentData = {
-        userId: userId,
-        postId: postId,
-        content: commentText,
-      };
-
-      await axios.post(`http://140.136.151.71:8787/api/v1/comments/add`, commentData, {
+      await axios.post(`http://140.136.151.71:8787/api/v1/comments/add/${postId}`, 
+      null, 
+      {
+        params: { content: commentText }, 
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
       });
-
+  
       setCommentText("");
       fetchComments(postId); 
     } catch (error) {
       console.error(`Error posting comment for post ${postId}:`, error);
     }
-  };
+  };  
 
   const toggleComments = (postId) => {
     setComments((prevState) => ({
@@ -349,10 +361,12 @@ function Profile() {
               alt="用户头像" 
               className="profile-picture" 
               style={{width:"100px", height:"100px", borderRadius:"50%"}}
+              loading="lazy"
             />
             <div className="profile-info">
               <h1>{userData.username}</h1>
               <p>Email: {userData.email}</p>
+              <p>Personal profile: {userData.bio}</p>
               <p>Join date: {new Date(userData.joinDate).toLocaleDateString("zh-TW")}</p>
               <p>Number of posts: {userData.posts ? userData.posts.length : 0}</p>
             </div>
@@ -379,6 +393,7 @@ function Profile() {
                         alt="Post image"
                         className="profilePost-image"
                         style={{ width: "100%", height: "220px" }}
+                        loading="lazy"
                       />
                     </div>
                   ) : (
@@ -392,6 +407,7 @@ function Profile() {
                               className="profilePost-image"
                               style={{ width: "100%", height: "220px" }}
                               onClick={(e) => handleImageClick(e, sliderRefs.current[post.id])}
+                              loading="lazy"
                             />
                           </div>
                         ))}
@@ -418,8 +434,10 @@ function Profile() {
             {postImageUrls[selectedPost.id] && postImageUrls[selectedPost.id].length === 1 ? (
               <img
                 src={postImageUrls[selectedPost.id][0]}
+                className="modalPost-image"
                 alt="Post image"
                 style={{ width: "500px", height: "660px" }}
+                loading="lazy"
               />
             ) : (
               <Slider {...sliderSettings} ref={(slider) => (sliderRefs.current[selectedPost.id] = slider)}>
@@ -432,6 +450,7 @@ function Profile() {
                         alt={`Post image ${index}`}
                         style={{ width: "500px", height: "660px"}}
                         onClick={(e) => handleImageClick(e, sliderRefs.current[selectedPost.id])}
+                        loading="lazy"
                       />
                     </div>
                   ))}
@@ -493,6 +512,7 @@ function Profile() {
                             alt="評論者頭像"
                             className="comment-avatar"
                             style={{ width: "32px", height: "32px", borderRadius: "50%" }}
+                            loading="lazy"
                           />
                           <div className="comment-content">
                             <div className="title-and-btn">

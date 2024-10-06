@@ -8,10 +8,14 @@ import orderPic from "../../Image/search.png";
 import uploadPic from "../../Image/product.png";
 
 function Shop() {
-  const [name, setName] = useState(""); // 搜索输入
+  const [name, setName] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [productData, setProductData] = useState([]); // 商品数据
+  const [productData, setProductData] = useState([]);
   const [userData, setUserData] = useState({});
+  const [selectedCategory, setSelectedCategory] = useState(""); 
+  const [selectedBrand, setSelectedBrand] = useState(""); 
+  const [categories, setCategories] = useState([]); 
+  const [brands, setBrands] = useState([]); 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,7 +28,6 @@ function Shop() {
       setIsAdmin(true);
     }
 
-    // 初始化获取所有商品数据
     const fetchProductData = async () => {
       try {
         const response = await axios.get(
@@ -32,6 +35,11 @@ function Shop() {
         );
         const products = response.data.data;
         setProductData(products);
+
+        const uniqueCategories = [...new Set(products.map((product) => product.category.name))];
+        const uniqueBrands = [...new Set(products.map((product) => product.brand))];
+        setCategories(uniqueCategories);
+        setBrands(uniqueBrands);
       } catch (error) {
         console.error(`Error fetching product data:`, error);
       }
@@ -70,63 +78,76 @@ function Shop() {
     }
   }, [userData]);
 
-  // 监听输入框的变化，如果输入框为空，动态获取所有商品
-  useEffect(() => {
-    const fetchAllProducts = async () => {
-      try {
-        const response = await axios.get(
-          `http://140.136.151.71:8787/api/v1/products/all`
-        );
-        const products = response.data.data;
-        setProductData(products);
-      } catch (error) {
-        console.error(`Error fetching all products:`, error);
-      }
-    };
-
-    if (name.trim() === "") {
-      // 如果输入框为空，动态获取所有商品
-      fetchAllProducts();
-    }
-  }, [name]);
-
-  // 过滤商品的函数，只有点击Search时才会触发
   const fetchFilteredProducts = async () => {
     try {
       let response;
-      if (name.includes("/")) {
-        const [category, brand] = name.split("/"); 
-        response = await axios.get(
-          `http://140.136.151.71:8787/api/v1/products/products/by/category-and-brand`,
-          { params: { category, brand } }
-        );
-      } else if (name.includes("-")) {
-        const [brand, productName] = name.split("-"); 
-        response = await axios.get(
-          `http://140.136.151.71:8787/api/v1/products/products/by/brand-and-name`,
-          { params: { brand, name: productName } }
-        );
-      } else {
+      if (!selectedCategory && !selectedBrand && name.trim() === "") {
+        response = await axios.get(`http://140.136.151.71:8787/api/v1/products/all`);
+      } else if (selectedCategory && selectedBrand) {
+        try {
+          response = await axios.get(
+            `http://140.136.151.71:8787/api/v1/products/products/by/category-and-brand`,
+            { params: { category: selectedCategory, brand: selectedBrand } }
+          );
+        } catch(e) {
+          alert("搜尋失敗，沒有符合條件的商品！");
+        }
+      } else if (selectedBrand && name.trim() !== "") {
+        try {
+          response = await axios.get(
+            `http://140.136.151.71:8787/api/v1/products/products/by/brand-and-name`,
+            { params: { brand: selectedBrand, name } }
+          );
+        } catch(e) {
+          alert("搜尋失敗，沒有符合條件的商品！");
+        }
+      } else if (name.trim() !== "") {
         response = await axios.get(
           `http://140.136.151.71:8787/api/v1/products/products/${name}/products`
         );
+      } else if (selectedCategory) {
+        response = await axios.get(
+          `http://140.136.151.71:8787/api/v1/products/product/${selectedCategory}/all/products`
+        );
+      } else if (selectedBrand) {
+        response = await axios.get(
+          `http://140.136.151.71:8787/api/v1/products/product/by-brand`,
+          { params: { brand: selectedBrand } }
+        );
       }
+
       const products = response.data.data;
+      
+      if (products.length === 0) {
+        alert("搜尋失敗，沒有符合條件的商品！");
+      }
+      
       setProductData(products);
     } catch (error) {
       console.error(`Error fetching filtered product data:`, error);
     }
   };
 
-  // 当用户点击Search按钮时，调用 fetchFilteredProducts
-  const handleSearch = () => {
-    if (name.trim() !== "") {
+  useEffect(() => {
+    if (!name && !selectedCategory && !selectedBrand) {
       fetchFilteredProducts();
     }
+  }, [name, selectedCategory, selectedBrand]); 
+
+  const handleSearch = () => {
+    fetchFilteredProducts();
   };
 
   function handleNameChange(event) {
-    setName(event.target.value); 
+    setName(event.target.value);
+  }
+
+  function handleCategoryChange(event) {
+    setSelectedCategory(event.target.value);
+  }
+
+  function handleBrandChange(event) {
+    setSelectedBrand(event.target.value);
   }
 
   const handleUpload = () => {
@@ -149,11 +170,46 @@ function Shop() {
           className="search-in"
           value={name}
           onChange={handleNameChange}
-          placeholder="Search (e.g. category/brand or brand-name)"
+          placeholder="Search (e.g. product name)"
         />
         <button className="search-btn" onClick={handleSearch}>
           Search
         </button>
+      </div>
+
+      <div className="searchKey">
+        <select
+          className="categorySearch"
+          value={selectedCategory}
+          onChange={handleCategoryChange}
+        >
+          <option value="">Select Category</option>
+          {categories.length > 0 ? (
+            categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))
+          ) : (
+            <option>No category found</option>
+          )}
+        </select>
+        <select
+          className="brandSearch"
+          value={selectedBrand}
+          onChange={handleBrandChange}
+        >
+          <option value="">Select Brand</option>
+          {brands.length > 0 ? (
+            brands.map((brand) => (
+              <option key={brand} value={brand}>
+                {brand}
+              </option>
+            ))
+          ) : (
+            <option>No brand found</option>
+          )}
+        </select>
       </div>
 
       <div className="product-list">

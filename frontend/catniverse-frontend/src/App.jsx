@@ -18,12 +18,12 @@ import Index from "./Components/Index/Index";
 import Header from "./Components/Header/Header";
 
 function App() {
-  const location = useLocation(); 
-  const navigate = useNavigate();  
-  const noHeaderRoutes = ["/login", "/register"];
+  const location = useLocation();
+  const navigate = useNavigate();
+  const noHeaderRoutes = ["/login", "/register", "/map"];
   const [username, setUsername] = useState("");
   const [userid, setUserid] = useState("");
-  const isLoggingOut = useRef(false); 
+  const isLoggingOut = useRef(false);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
@@ -38,19 +38,65 @@ function App() {
 
   useEffect(() => {
     if (!username && isLoggingOut.current) {
-      navigate("/");  
-      isLoggingOut.current = false; 
+      navigate("/");
+      isLoggingOut.current = false;
     }
   }, [username, navigate]);
 
   const handleLogout = () => {
-    localStorage.clear(); 
+    localStorage.clear();
     setUsername("");
-    setUserid("");  
-    isLoggingOut.current = true;  
-    navigate("/"); 
+    setUserid("");
+    isLoggingOut.current = true;
+    navigate("/");
   };
-  
+
+  // 用于区分刷新与关闭页面
+  useEffect(() => {
+    let isPageClosing = true; // 标记是否正在关闭页面
+
+    const markPageReload = () => {
+      // 标记页面加载，用于区分刷新与关闭
+      sessionStorage.setItem("isPageReload", "true");
+    };
+
+    const handleBeforeUnload = (event) => {
+      if (!sessionStorage.getItem("isPageReload")) {
+        localStorage.clear(); // 页面关闭时清除 localStorage
+      }
+      // 显示默认的关闭提示（可选）
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    const handleUnload = () => {
+      if (isPageClosing) {
+        sessionStorage.removeItem("isPageReload"); // 页面关闭时移除标记
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        isPageClosing = true; // 页面即将不可见，可能正在关闭
+      } else {
+        isPageClosing = false; // 页面重新可见，用户没有关闭页面
+      }
+    };
+
+    // 初始化页面加载时标记
+    markPageReload();
+
+    // 监听页面关闭和刷新
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("unload", handleUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("unload", handleUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   return (
     <div>

@@ -1,22 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import "./Upload.css";
+import "croppie/croppie.css";
+import Croppie from "croppie";
+import "./Upload.css"; // 自定義的樣式
 import backPic from "../../Image/back.png";
 
 function Upload() {
   const [formData, setFormData] = useState({
-    userId:"",
+    userId: "",
     title: "",
     content: "",
-    address: "", 
+    address: "",
   });
 
-  const [imageFiles, setImageFiles] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [city, setCity] = useState(""); 
-  const [district, setDistrict] = useState(""); 
+  const [imageFiles, setImageFiles] = useState([]); // 多圖片文件
+  const [imageSrcs, setImageSrcs] = useState([]); // 每個文件對應的 base64 編碼
+  const [croppedImages, setCroppedImages] = useState([]); // 每個裁剪後的 blob 圖片 URL
+  const [croppieInstances, setCroppieInstances] = useState([]); // 每個 Croppie 實例
+  const fileInputRef = useRef(null); // 引用文件輸入框
+
+  const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
@@ -47,7 +52,6 @@ function Upload() {
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
-
     if (storedUserId) {
       setFormData((prevFormData) => ({
         ...prevFormData,
@@ -56,90 +60,189 @@ function Upload() {
     }
   }, []);
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    const errors = {};
+  // Initialize Croppie when imageSrcs changes
+  useEffect(() => {
+    imageSrcs.forEach((src, index) => {
+      const cropContainerRef = document.getElementById(
+        `cropContainer-${index}`
+      );
+      if (cropContainerRef && !croppieInstances[index]) {
+        const newCroppie = new Croppie(cropContainerRef, {
+          viewport: { width: 250, height: 250, type: "square" },
+          boundary: { width: 400, height: 300 },
+          enableResize: false,
+          enableZoom: true,
+          url: src,
+        });
 
-    const validImageTypes = ["image/jpeg", "image/png", "image/gif"];
-
-    files.forEach((file) => {
-      if (!validImageTypes.includes(file.type)) {
-        errors.image = "只能上傳 JPEG、PNG 或 GIF 圖片。";
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        errors.image = "圖片大小不能超過 5MB。";
+        setCroppieInstances((prevInstances) => {
+          const updatedInstances = [...prevInstances];
+          updatedInstances[index] = newCroppie;
+          return updatedInstances;
+        });
       }
     });
+  }, [imageSrcs, croppieInstances]);
 
-    if (Object.keys(errors).length === 0) {
-      setImageFiles(files);
-      setImagePreviews(files.map((file) => URL.createObjectURL(file)));
-    } else {
-      setErrors(errors);
+  // Handle image change
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+
+    const fileReaders = files.map((file, index) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          resolve({ index, result: event.target.result });
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(fileReaders)
+      .then((results) => {
+        setImageFiles(files);
+        const srcs = results.map((r) => r.result);
+        setImageSrcs(srcs);
+      })
+      .catch((error) => {
+        console.error("圖片讀取失敗：", error);
+      });
+  };
+
+  const handleCrop = async (index) => {
+    if (croppieInstances[index]) {
+      const croppedBlob = await croppieInstances[index].result({
+        type: "blob", 
+        format: "png", 
+        quality: 1,
+        size: { width: 1000, height: 1000 }, 
+      });
+
+      // 使用 createObjectURL 來顯示裁剪後的圖片
+      const croppedImageUrl = URL.createObjectURL(croppedBlob);
+
+      setCroppedImages((prevCropped) => {
+        const updatedCropped = [...prevCropped];
+        updatedCropped[index] = croppedImageUrl; // 儲存圖片 URL 而非 base64
+        return updatedCropped;
+      });
+    }
+  };
+
+  // 移除指定索引的裁剪和文件
+  const handleCancelCrop = (index) => {
+    if (croppieInstances[index]) {
+      croppieInstances[index].destroy(); // 銷毀 Croppie 實例
+      const updatedInstances = [...croppieInstances];
+      updatedInstances[index] = null;
+      setCroppieInstances(updatedInstances);
+    }
+
+    // 只移除指定索引的文件，而不是重置整個文件選擇框
+    setImageSrcs((prevSrcs) => prevSrcs.filter((_, idx) => idx !== index));
+    setCroppedImages((prevCropped) =>
+      prevCropped.filter((_, idx) => idx !== index)
+    );
+
+    // 移除指定索引的文件
+    setImageFiles((prevFiles) => prevFiles.filter((_, idx) => idx !== index));
+
+    // 更新文件選擇器值
+    const updatedFileList = Array.from(fileInputRef.current.files).filter(
+      (_, idx) => idx !== index
+    );
+
+    const dataTransfer = new DataTransfer();
+    updatedFileList.forEach((file) => {
+      dataTransfer.items.add(file); // 添加其餘文件回到 DataTransfer
+    });
+    fileInputRef.current.files = dataTransfer.files; // 更新 input 的 files
+  };
+
+  const handleFormSubmit = async () => {
+    const address = `${city}${district}`; // 新增地址字段
+    const updatedFormData = {
+      ...formData,
+      address,
+    };
+
+    try {
+      const response = await axios.post(
+        `http://140.136.151.71:8787/api/v1/posts/add/${updatedFormData.userId}`,
+        updatedFormData, 
+        {
+          headers: {
+            "Content-Type": "application/json", 
+          },
+        }
+      );
+      console.log("表單文字上傳成功", response.data);
+      return response.data.data.id; 
+    } catch (error) {
+      console.error("文字表單上傳失敗：", error);
+      throw error; 
+    }
+  };
+
+  const handleImageUpload = async (croppedBlob, index, postId) => {
+    const imageFile = new File([croppedBlob], `croppedImage${index}.png`, {
+      type: "image/png",
+    });
+
+    const imageFormData = new FormData();
+    imageFormData.append("postId", postId);
+    imageFormData.append("files", imageFile); // 附加圖片文件
+
+    try {
+      const response = await axios.post(
+        `http://140.136.151.71:8787/api/v1/post-images/upload`,
+        imageFormData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log("圖片上傳成功", response.data);
+    } catch (error) {
+      console.error("圖片上傳失敗：", error);
+      throw error; 
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const address = `${city}${district}`; 
+    try {
+      const postId = await handleFormSubmit();
 
-    const updatedFormData = {
-      ...formData,
-      address, 
-    };
+      for (let i = 0; i < croppedImages.length; i++) {
+        if (croppedImages[i]) {
+          const blobUrl = croppedImages[i];
+          const response = await fetch(blobUrl);
+          const croppedBlob = await response.blob(); // 將圖片 URL 轉為 blob
 
-    const formErrors = {};
-    setErrors(formErrors);
-
-    if (Object.keys(formErrors).length === 0) {
-      try {
-        const postResponse = await axios.post(
-          `http://140.136.151.71:8787/api/v1/posts/add/${formData.userId}`,
-          updatedFormData, 
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        const postId = postResponse.data.data.id;
-
-        for (let i = 0; i < imageFiles.length; i++) {
-          const imageData = new FormData();
-          imageData.append("postId", postId);
-          imageData.append("files", imageFiles[i]);
-
-          await axios.post(
-            `http://140.136.151.71:8787/api/v1/post-images/upload`,
-            imageData,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data",
-              },
-            }
-          );
+          await handleImageUpload(croppedBlob, i, postId);
         }
-
-        alert("貼文和圖片成功！");
-        navigate("/");
-      } catch (error) {
-        console.error("上傳貼文失敗：", error);
-        alert("上傳貼文失敗");
       }
-    } else {
-      alert("修正表單錯誤。");
+
+      alert("表單和圖片分別上傳成功！");
+      navigate("/");
+    } catch (error) {
+      console.error("上傳過程失敗：", error);
+      alert("上傳過程失敗");
     }
   };
 
   const handleCityChange = (e) => {
-    setCity(e.target.value); 
-    setDistrict(""); 
+    setCity(e.target.value);
+    setDistrict("");
   };
 
   return (
     <div className="content">
-      <br/>
+      <br />
       <main>
         <form
           className="container"
@@ -163,7 +266,9 @@ function Upload() {
             name="title"
             placeholder="標題"
             value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, title: e.target.value })
+            }
             required
           />
 
@@ -172,12 +277,19 @@ function Upload() {
             name="content"
             placeholder="貼文內容"
             value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, content: e.target.value })
+            }
             required
           />
 
           <div className="select-row">
-            <select name="city" value={city} onChange={handleCityChange} required>
+            <select
+              name="city"
+              value={city}
+              onChange={handleCityChange}
+              required
+            >
               <option value="">選擇縣市</option>
               {Object.keys(cities).map((cityName) => (
                 <option key={cityName} value={cityName}>
@@ -207,25 +319,57 @@ function Upload() {
             type="file"
             id="chooseImage"
             accept="image/*"
-            name="file"
-            onChange={handleImageChange}
             multiple
+            onChange={handleImageChange}
+            ref={fileInputRef} 
           />
+          {imageSrcs.map((src, index) => (
+            <div key={index} className="image-crop-container">
+              {/* Flexbox Container for Crop and Preview */}
+              <div className="image-crop-section">
+                <div
+                  id={`cropContainer-${index}`}
+                  style={{ height: "300px", width: "400px" }}
+                >
+                  {/* Croppie container for each image */}
+                </div>
 
-          {errors.image && <p style={{ color: "red" }}>{errors.image}</p>}
+                <div className="justify-btn">
+                  <button
+                    id={`crop_img_${index}`}
+                    className="btn-info"
+                    type="button"
+                    onClick={() => handleCrop(index)}
+                  >
+                    <i className="fa fa-scissors"></i> 裁剪圖片
+                  </button>
+                  <button
+                    className="btn-danger"
+                    type="button"
+                    onClick={() => handleCancelCrop(index)}
+                  >
+                    取消圖片
+                  </button>
+                </div>
+              </div>
 
-          <div className="image-preview">
-            {imagePreviews.map((preview, index) => (
-              <img
-                key={index}
-                src={preview}
-                alt="Preview"
-                style={{ width: "100px", margin: "5px" }}
-              />
-            ))}
-          </div>
+              {/* 顯示裁剪後的預覽 */}
+              {croppedImages[index] && (
+                <div className="image-preview-section">
+                  <h3 className="Hthree">裁剪後的圖片預覽：</h3>
+                  <img
+                    src={croppedImages[index]}
+                    alt={`Cropped Preview ${index}`}
+                    style={{ width: "250px" }}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
 
-          <button className="submit-btn" type="submit">發布</button>
+          <button className="submit-btn" type="submit">
+            Post
+          </button>
         </form>
       </main>
     </div>

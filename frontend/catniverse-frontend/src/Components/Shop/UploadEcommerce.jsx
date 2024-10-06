@@ -349,6 +349,7 @@ const ProductManagement = () => {
                             alt={`Product image ${index}`}
                             className="product-image"
                             style={{ width: "100%", height: "auto" }}
+                            loading="lazy"
                           />
                         </div>
                       ))
