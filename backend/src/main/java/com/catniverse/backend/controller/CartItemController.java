@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
+@CrossOrigin
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("${api.prefix}/cartItems")
@@ -32,7 +33,7 @@ public class CartItemController {
             Cart cart = cartService.initializeNewCart(user);
 
             cartItemService.addItemToCart(cart.getId(), productId, quantity);
-            return ResponseEntity.ok(new ApiResponse("Add Item Success", null));
+            return ResponseEntity.ok(new ApiResponse("Successfully Add Item to Cart id: " + cart.getId(), cart.getId()));
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         } catch (JwtException e){
@@ -40,23 +41,22 @@ public class CartItemController {
         }
     }
 
-    @DeleteMapping("/cart/{cartId}/item/{itemId}/remove")
-    public ResponseEntity<ApiResponse> removeItemFromCart(@PathVariable Long cartId,
-                                                          @PathVariable Long itemId) {
+    @DeleteMapping("/item/remove/{itemId}")
+    public ResponseEntity<ApiResponse> removeItemFromCart(@PathVariable Long itemId) {
         try {
-            cartItemService.removeItemFromCart(cartId, itemId);
+            User user = userService.getAuthenticatedUser();
+            cartItemService.removeItemFromCart(user.getCart().getId(), itemId);
             return ResponseEntity.ok(new ApiResponse("Remove Item Success", null));
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
 
-    @PutMapping("/cart/{cartId}/item/{itemId}/update")
-    public ResponseEntity<ApiResponse> updateItemQuantity(@PathVariable Long cartId,
-                                                          @PathVariable Long itemId,
-                                                          @RequestParam Integer quantity) {
+    @PutMapping("/item/update/{itemId}")
+    public ResponseEntity<ApiResponse> updateItemQuantity(@PathVariable Long itemId, @RequestParam Integer quantity) {
         try {
-            cartItemService.updateItemQuantity(cartId, itemId, quantity);
+            User user = userService.getAuthenticatedUser();
+            cartItemService.updateItemQuantity(user.getCart().getId(), itemId, quantity);
             return ResponseEntity.ok(new ApiResponse("Update Item Success", null));
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));

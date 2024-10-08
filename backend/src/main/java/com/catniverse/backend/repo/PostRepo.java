@@ -9,4 +9,6 @@ public interface PostRepo extends JpaRepository<Post, Long> {
     List<Post> findPostsByUserId(Long userId);
 
     List<Post> findByTitleContainingIgnoreCase(String title);
+
+    List<Post> findByAddressContaining(String address);
 }

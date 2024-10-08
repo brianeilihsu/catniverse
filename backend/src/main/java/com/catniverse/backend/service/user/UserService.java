@@ -1,5 +1,6 @@
 package com.catniverse.backend.service.user;
 
+import com.catniverse.backend.dto.PostDto;
 import com.catniverse.backend.dto.UserDto;
 import com.catniverse.backend.exceptions.AlreadyExistsException;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
@@ -9,6 +10,7 @@ import com.catniverse.backend.repo.UserRepo;
 import com.catniverse.backend.request.CreateUserRequest;
 import com.catniverse.backend.request.UserUpdateRequest;
 import com.catniverse.backend.service.forbidden.ImpForbiddenService;
+import com.catniverse.backend.service.post.PostService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
@@ -16,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -25,6 +28,7 @@ public class UserService implements ImpUserService{
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
     private final ImpForbiddenService forbiddenService;
+    private final PostService postService;
 
 
     @Override
@@ -72,7 +76,10 @@ public class UserService implements ImpUserService{
 
     @Override
     public UserDto convertUserToDto(User user) {
-        return modelMapper.map(user, UserDto.class);
+        UserDto userDto = modelMapper.map(user, UserDto.class);
+        List<PostDto> postDtos = postService.getConvertedPosts(user.getPosts());
+        userDto.setPosts(postDtos);
+        return userDto;
     }
 
     @Override

@@ -3,8 +3,11 @@ package com.catniverse.backend.controller;
 import com.catniverse.backend.dto.CartDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.model.Cart;
+import com.catniverse.backend.model.User;
 import com.catniverse.backend.response.ApiResponse;
 import com.catniverse.backend.service.cart.ImpCartService;
+import com.catniverse.backend.service.user.ImpUserService;
+import com.catniverse.backend.service.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +23,13 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @RequestMapping("${api.prefix}/carts")
 public class CartController {
     private final ImpCartService cartService;
+    private final ImpUserService userService;
 
-    @GetMapping("/{cartId}/mycart")
-    public ResponseEntity<ApiResponse> getCart(@PathVariable Long cartId) {
+    @GetMapping("/user-cart")
+    public ResponseEntity<ApiResponse> getCart() {
         try {
-            Cart cart = cartService.getCart(cartId);
+            User user = userService.getAuthenticatedUser();
+            Cart cart = cartService.getCart(user.getCart().getId());
             CartDto cartDto = cartService.convertToDto(cart);
             return ResponseEntity.ok(new ApiResponse("Success", cartDto));
         } catch (ResourceNotFoundException e) {
@@ -32,10 +37,11 @@ public class CartController {
         }
     }
     @Transactional
-    @DeleteMapping("/{cartId}/clear")
-    public ResponseEntity<ApiResponse> clearCart(@PathVariable Long cartId) {
+    @DeleteMapping("/clear")
+    public ResponseEntity<ApiResponse> clearCart() {
         try {
-            cartService.clearCart(cartId);
+            User user = userService.getAuthenticatedUser();
+            cartService.clearCart(user.getCart().getId());
             return ResponseEntity.ok(new ApiResponse("Clear Cart Success", null));
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));

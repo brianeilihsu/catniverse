@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,8 @@ public class Post {
     private String title;
     private String content;
     private String address;
+    //private BigDecimal latitude;
+    //private BigDecimal longitude;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

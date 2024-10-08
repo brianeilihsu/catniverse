@@ -13,8 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -26,9 +26,30 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class PostController {
     private final ImpPostService postService;
     private final ImpUserService userService;
-    @GetMapping("/all")
-    public ResponseEntity<ApiResponse> getAllPosts() {
+    @GetMapping("/popular")
+    public ResponseEntity<ApiResponse> getPopularPosts() {
         List<Post> posts = postService.getAllPosts();
+        List<PostDto> convertedPosts = postService.getConvertedPosts(posts)
+                .stream()
+                .sorted((p1, p2) -> Integer.compare(p2.getTotal_likes()+ p2.getTotal_comments()
+                                                    , p1.getTotal_likes()+ p1.getTotal_comments()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+    }
+
+    @GetMapping("/latest")
+    public ResponseEntity<ApiResponse> getLatestPosts() {
+        List<Post> posts = postService.getAllPosts();
+        List<PostDto> convertedPosts = postService.getConvertedPosts(posts)
+                .stream()
+                .sorted((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+    }
+
+    @GetMapping("/region")
+    public ResponseEntity<ApiResponse> getRegionPosts(@RequestParam String address) {
+        List<Post> posts = postService.findByAddress(address);
         List<PostDto> convertedPosts = postService.getConvertedPosts(posts);
         return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
     }
@@ -37,7 +58,7 @@ public class PostController {
     public ResponseEntity<ApiResponse> getUserPosts(@PathVariable Long userId) {
         List<Post> posts = postService.getPostsByUserId(userId);
         List<PostDto> convertedPosts = postService.getConvertedPosts(posts);
-        return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+        return ResponseEntity.ok(new ApiResponse("number of posts: " + convertedPosts.size(), convertedPosts));
     }
 
     @PostMapping("/add/{userId}")

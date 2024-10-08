@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 public class ForbiddenService implements ImpForbiddenService{
 
     private static final String[] FORBIDDEN_WORDS = {
-            "皓翔", "豪祥"// 可以繼續添加更多禁用字詞
+            "號翔", "豪祥"// 可以繼續添加更多禁用字詞
     };
 
     @Override

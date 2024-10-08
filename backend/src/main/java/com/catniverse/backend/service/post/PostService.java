@@ -75,6 +75,11 @@ public class PostService implements ImpPostService{
     }
 
     @Override
+    public List<Post> findByAddress(String address) {
+        return postRepo.findByAddressContaining(address);
+    }
+
+    @Override
     public List<PostDto> getConvertedPosts(List<Post> posts) {
         return posts.stream().map(this::convertToDto).toList();
     }
@@ -89,6 +94,8 @@ public class PostService implements ImpPostService{
         postDto.setPostImages(postImagesDto);
         postDto.setUserId(post.getUser().getId());
         postDto.setTotal_likes(post.getLikes().size());
+        postDto.setTotal_comments(post.getComments().size());
         return postDto;
     }
+
 }

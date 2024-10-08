@@ -9,7 +9,7 @@ import com.catniverse.backend.model.User;
 import com.catniverse.backend.repo.CommentRepo;
 import com.catniverse.backend.repo.PostRepo;
 import com.catniverse.backend.repo.UserRepo;
-import com.catniverse.backend.request.addCommentRequest;
+import com.catniverse.backend.service.forbidden.ImpForbiddenService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -22,6 +22,7 @@ import java.util.List;
 public class CommentService implements ImpCommentService{
     private final PostRepo postRepo;
     private final CommentRepo commentRepo;
+    private final ImpForbiddenService forbiddenService;
     private final UserRepo userRepo;
     private final ModelMapper modelMapper;
 
@@ -32,24 +33,30 @@ public class CommentService implements ImpCommentService{
     }
 
     @Override
-    public Comment addComment(addCommentRequest commentRequest) {
-        if(commentRequest.getContent().contains("許皓翔"))
+    public Comment addComment(Long userId, Long postId, String content) {
+        if(forbiddenService.check(content))
             throw new SpecitficNameException("請不要使用帥哥的名字，你這個傻逼");
+
         Comment comment = new Comment();
-        User user = userRepo.findById(commentRequest.getUserId()).orElseThrow(() -> new ResourceNotFoundException("User Not Found with Id: " + commentRequest.getUserId()));
-        Post post = postRepo.findById(commentRequest.getPostId()).orElseThrow(() -> new ResourceNotFoundException("Post Not Found with Id: " + commentRequest.getPostId()));
+        User user = userRepo.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User Not Found with Id: " + userId));
+        Post post = postRepo.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post Not Found with Id: " + postId));
         comment.setUser(user);
         comment.setPost(post);
-        comment.setContent(commentRequest.getContent());
+        comment.setContent(content);
         comment.setCreatedAt(LocalDateTime.now());
         commentRepo.save(comment);
         return comment;
     }
 
     @Override
-    public void deleteCommentById(Long commentId) {
-        commentRepo.findById(commentId).ifPresentOrElse(commentRepo::delete,
-                ()-> {throw new ResourceNotFoundException("Comment Not Found with Id: " + commentId);});
+    public void deleteCommentById(Long userId,Long commentId){
+        Comment comment = commentRepo.findById(commentId).orElseThrow(() -> new ResourceNotFoundException("Comment Not Found with Id: " + commentId));
+        if(comment.getUser().getId().equals(userId)){
+            commentRepo.delete(comment);
+        }
+        else
+            throw new RuntimeException("Unauthorized to delete comment");
+
     }
 
     @Override

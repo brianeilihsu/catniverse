@@ -39,4 +39,22 @@ public class LikeService implements ImpLikeService{
         likeRepo.findByUserIdAndPostId(userId, postId)
                 .ifPresentOrElse(likeRepo :: delete, () -> {throw new ResourceNotFoundException("like not found");});
     }
+
+    @Override
+    public Long isExisted(Long userId, Long postId) {
+        if(userRepo.findById(userId).isEmpty())
+            throw new ResourceNotFoundException("Not Found User with id: "+ userId);
+        else if (postRepo.findById(postId).isEmpty()) {
+            throw new ResourceNotFoundException("Not found post with id: " + postId );
+        }
+        else {
+            Like like = likeRepo.findByUserIdAndPostId(userId, postId)
+                    .orElseThrow(() -> new ResourceNotFoundException("not found like with userId: " + userId + " and postId: " + postId));
+            return like.getId();
+        }
+    }
+
+
+
+
 }
