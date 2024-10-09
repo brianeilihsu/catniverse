@@ -84,3 +84,8 @@ ul li::before {
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
 }
+
+.black_welcome {
+  text-align: center;
+  font-size: 20px;
+}

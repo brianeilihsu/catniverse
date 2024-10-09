@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import Slider from "react-slick";
 import "./Profile.css";
 import uploadPic from "../../Image/post.png";
 import XPic from "../../Image/x-mark.png";
@@ -9,6 +8,7 @@ import settingPic from "../../Image/settings.png";
 import HeartPic from "../../Image/comment-heart.png";
 import HeartPicFilled from "../../Image/heart.png";
 import CommentPic from "../../Image/comment.png";
+const Slider = React.lazy(() => import('react-slick'));
 
 function Profile() {
   const navigate = useNavigate();
@@ -25,8 +25,23 @@ function Profile() {
   const [commentText, setCommentText] = useState("");
   const token = localStorage.getItem("token");
   const sliderRefs = useRef({});
+  const observerRefs = useRef({});
+
+  const sliderSettings = {
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: false,
+    dots: false,
+  };
 
   useEffect(() => {
+    if (!sessionStorage.getItem('hasReloaded')) {
+      sessionStorage.setItem('hasReloaded', 'true');
+      window.location.reload(); 
+    }
+
     const fetchUserData = async (userId) => {
       try {
         const response = await axios.get(`http://140.136.151.71:8787/api/v1/users/${userId}/user`);
@@ -38,12 +53,14 @@ function Profile() {
           setUserImageUrls(avatarUrl);
         }
   
-        user.posts.forEach((post) => {
-          const downloadUrls = post.postImages.map((img) => img.downloadUrl);
-          fetchPostImages(downloadUrls, post.id);
-  
-          checkIfLiked(post.id);
-        });
+        if (user.posts.length > 0) {
+          // 加載第一張圖片，防止首屏圖片懶加載出現問題
+          user.posts.forEach((post) => {
+            const downloadUrls = post.postImages.map((img) => img.downloadUrl);
+            fetchPostImages(downloadUrls, post.id);
+            checkIfLiked(post.id);
+          });
+        }
       } catch (error) {
         console.error(`Error fetching user data for userId ${userId}:`, error);
       }
@@ -57,7 +74,7 @@ function Profile() {
         console.error("Error fetching image:", error);
       }
     };
-
+  
     const fetchPostImages = async (downloadUrls, postId) => {
       try {
         const imageBlobPromises = downloadUrls.map(async (downloadUrl) => {
@@ -65,20 +82,60 @@ function Profile() {
           return URL.createObjectURL(response.data);
         });
         const blobUrls = await Promise.all(imageBlobPromises);
+    
+        // 將圖片URL存入狀態
         setPostImageUrls((prevState) => ({
           ...prevState,
           [postId]: blobUrls,
         }));
+    
+        // 確認 userData.posts 存在且不是空數組，然後再訪問 posts[0].id
+        if (userData.posts && userData.posts.length > 0 && postId === userData.posts[0]?.id && blobUrls.length > 0) {
+          preloadImage(blobUrls[0]);  // 預加載第一張圖片
+        }
+    
+        // Apply lazy loading with IntersectionObserver
+        applyIntersectionObserver(postId);
       } catch (error) {
         console.error("Error fetching images:", error);
       }
+    };    
+  
+    const preloadImage = (url) => {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = url;
+      document.head.appendChild(link);
     };
-    const userId = localStorage.getItem("userId"); 
+  
+    const applyIntersectionObserver = (postId) => {
+      const postImages = document.querySelectorAll(`[data-post-id="${postId}"] img.lazyload`);
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;  // 懶加載真正的圖片
+            img.classList.remove('lazyload');
+            obs.unobserve(img);
+          }
+        });
+      });
+  
+      postImages.forEach((img) => observer.observe(img));
+      observerRefs.current[postId] = observer;
+    };
+  
+    const userId = localStorage.getItem("userId");
   
     if (id && userId) {
       fetchUserData(id);
     }
-  }, [id]);
+  
+    return () => {
+      Object.values(observerRefs.current).forEach(observer => observer.disconnect());
+    };
+  }, [id]);  
 
   const toMember = () => {
     navigate("/member");
@@ -134,7 +191,7 @@ function Profile() {
     try {
       const response = await axios.delete(`http://140.136.151.71:8787/api/v1/comments/delete/${commentId}`,{
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
   
@@ -166,16 +223,6 @@ function Profile() {
       alert("Error occurred while deleting the comment");
     }
   };
-  
-
-  const sliderSettings = {
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    arrows: false,
-    dots: false,
-  };
 
   const handleImageClick = (e, sliderRef) => {
     const clickX = e.clientX;
@@ -202,7 +249,7 @@ function Profile() {
         await axios.delete("http://140.136.151.71:8787/api/v1/likes/remove-like", {
           params: { postId },
           headers: {
-            Authorization: `Bearer ${token}`,
+            'Authorization': `Bearer ${token}`,
           },
         });
   
@@ -219,7 +266,7 @@ function Profile() {
         await axios.post("http://140.136.151.71:8787/api/v1/likes/add-like", null, {
           params: { postId },
           headers: {
-            Authorization: `Bearer ${token}`,
+            'Authorization': `Bearer ${token}`,
           },
         });
   
@@ -243,7 +290,7 @@ function Profile() {
       const response = await axios.get("http://140.136.151.71:8787/api/v1/likes/existed", {
         params: { postId },
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
       if (response.data.data) {
@@ -327,7 +374,7 @@ function Profile() {
         params: { content: commentText }, 
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
   
@@ -357,7 +404,7 @@ function Profile() {
           </button>
           <div className="profile-header">
             <img 
-              src={userImageUrls} 
+              src={userImageUrls.replace(".png", ".webp")} 
               alt="用户头像" 
               className="profile-picture" 
               style={{width:"100px", height:"100px", borderRadius:"50%"}}
@@ -376,7 +423,7 @@ function Profile() {
           <div className="posts">
             {userData.posts && userData.posts.length > 0 ? (
               userData.posts.map((post) => (
-                <div className="post" key={post.id}>
+                <div className="mypost" key={post.id}>
                   <div className="title-and-btn" onClick={() => handlePostClick(post)}>
                     <h3>{post.title}</h3>
                     {showOutDelete && (
@@ -389,7 +436,14 @@ function Profile() {
                   {postImageUrls[post.id] && postImageUrls[post.id].length === 1 ? (
                     <div className="g-container" style={{ display: "flex", justifyContent: "center" }}>
                       <img
-                        src={postImageUrls[post.id][0]}
+                        src={postImageUrls[post.id][0].replace(".png", "-lowres.webp")}  
+                        data-src={postImageUrls[post.id][0].replace(".png", ".webp")} 
+                        srcSet={`
+                          ${postImageUrls[post.id][0].replace(".png", "-320w.webp")} 320w,
+                          ${postImageUrls[post.id][0].replace(".png", "-640w.webp")} 640w,
+                          ${postImageUrls[post.id][0].replace(".png", "-1024w.webp")} 1024w
+                        `}
+                        sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
                         alt="Post image"
                         className="profilePost-image"
                         style={{ width: "100%", height: "220px" }}
@@ -397,21 +451,30 @@ function Profile() {
                       />
                     </div>
                   ) : (
-                    <Slider {...sliderSettings} ref={(slider) => (sliderRefs.current[post.id] = slider)}>
-                      {postImageUrls[post.id] &&
-                        postImageUrls[post.id].map((url, index) => (
-                          <div key={index}>
-                            <img
-                              src={url}
-                              alt={`Post image ${index}`}
-                              className="profilePost-image"
-                              style={{ width: "100%", height: "220px" }}
-                              onClick={(e) => handleImageClick(e, sliderRefs.current[post.id])}
-                              loading="lazy"
-                            />
-                          </div>
-                        ))}
-                    </Slider>
+                    <React.Suspense fallback={<div>Loading slider...</div>}>
+                      <Slider {...sliderSettings} ref={(slider) => (sliderRefs.current[post.id] = slider)}>
+                        {postImageUrls[post.id] &&
+                          postImageUrls[post.id].map((url, index) => (
+                            <div key={index}>
+                              <img
+                                src={url.replace(".png", "-lowres.webp")}
+                                data-src={url.replace(".png", ".webp")}
+                                srcSet={`
+                                  ${url.replace(".png", "-320w.webp")} 320w,
+                                  ${url.replace(".png", "-640w.webp")} 640w,
+                                  ${url.replace(".png", "-1024w.webp")} 1024w
+                                `}
+                                sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
+                                alt={`Post image ${index}`}
+                                className="profilePost-image"
+                                style={{ width: "100%", height: "220px" }}
+                                onClick={(e) => handleImageClick(e, sliderRefs.current[post.id])}
+                                loading="lazy"
+                              />
+                            </div>
+                          ))}
+                      </Slider>
+                    </React.Suspense>
                   )}
                 </div>
               ))
@@ -433,7 +496,7 @@ function Profile() {
             <div className="modal-image">
             {postImageUrls[selectedPost.id] && postImageUrls[selectedPost.id].length === 1 ? (
               <img
-                src={postImageUrls[selectedPost.id][0]}
+                src={postImageUrls[selectedPost.id][0].replace(".png", ".webp")}
                 className="modalPost-image"
                 alt="Post image"
                 style={{ width: "500px", height: "660px" }}
@@ -445,7 +508,7 @@ function Profile() {
                   postImageUrls[selectedPost.id].map((url, index) => (
                     <div key={index}>
                       <img
-                        src={url}
+                        src={url.replace(".png", ".webp")}
                         className="modalPost-image"
                         alt={`Post image ${index}`}
                         style={{ width: "500px", height: "660px"}}
@@ -508,7 +571,7 @@ function Profile() {
                       comments[selectedPost.id].list.map((comment, index) => (
                         <div className="comment" key={comment.id || index}>
                           <img
-                            src={comment.userAvatar}
+                            src={comment.userAvatar.replace(".png", ".webp")}
                             alt="評論者頭像"
                             className="comment-avatar"
                             style={{ width: "32px", height: "32px", borderRadius: "50%" }}

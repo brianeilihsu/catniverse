@@ -59,14 +59,17 @@
     gap: 20px;
 }
 
-.post {
+.mypost {
     background-color: white;
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 1em;
 }
 
-.post:hover {
+.mypost:hover {
     cursor: pointer;
 }
 

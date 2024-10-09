@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import Slider from "react-slick";
 import HeartPic from "../../Image/comment-heart.png";
 import HeartPicFilled from "../../Image/heart.png";
 import CommentPic from "../../Image/comment.png";
+import defaultAvatar from "../../Image/account.png";
 import "./Index.css";
+
+// 使用 React.lazy 來懶加載 Slider
+const Slider = React.lazy(() => import("react-slick"));
 
 function Index() {
   const [postData, setPostData] = useState([]);
@@ -18,39 +21,55 @@ function Index() {
   const [comments, setComments] = useState({});
   const [commentText, setCommentText] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("");
+  const observerRef = useRef(null);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // 強制刷新頁面
+    if (!sessionStorage.getItem('hasReloaded')) {
+      sessionStorage.setItem('hasReloaded', 'true');
+      window.location.reload();
+    }
+
+    // 懶加載 Slider 模組，不需要使用 IntersectionObserver
+    if (observerRef.current) return;
+
+    observerRef.current = true; // 避免多次初始化
+
+    handlePopularPost(); // Fetch popular posts
+  }, []);
+
   const fetchPostData = async (posts) => {
     setPostData(posts);
-    
+
     const userId = localStorage.getItem("userId");
-    
+
     const postPromises = posts.map(async (post) => {
       const userPromise = fetchUserData(post.userId);
       const commentsPromise = fetchComments(post.id);
-      const imagePromise = post.postImages && post.postImages.length > 0 
-          ? fetchPostImages(post.postImages.map((img) => img.downloadUrl), post.id)
-          : Promise.resolve();
-  
+      const imagePromise = post.postImages && post.postImages.length > 0
+        ? fetchPostImages(post.postImages.map((img) => img.downloadUrl), post.id)
+        : Promise.resolve();
+
       const likedPromise = userId ? checkIfLiked(post.id) : Promise.resolve();
-  
+
       return Promise.all([userPromise, commentsPromise, imagePromise, likedPromise]);
     });
-    
-    await Promise.all(postPromises); 
+
+    await Promise.all(postPromises);
   };
-  
-  
 
   const fetchPostImages = async (downloadUrls, postId) => {
     try {
       const imageBlobPromises = downloadUrls.map(async (downloadUrl) => {
-        const response = await axios.get(`http://140.136.151.71:8787${downloadUrl}`, { responseType: "blob" });
+        const response = await axios.get(`http://140.136.151.71:8787${downloadUrl.replace(".png", ".webp")}`, {
+          responseType: "blob",
+        });
         return URL.createObjectURL(response.data);
       });
-  
-      const blobUrls = await Promise.all(imageBlobPromises); // 並行處理所有圖片
+
+      const blobUrls = await Promise.all(imageBlobPromises);
       setPostImageUrls((prevState) => ({
         ...prevState,
         [postId]: blobUrls,
@@ -58,29 +77,27 @@ function Index() {
     } catch (error) {
       console.error("Error fetching images:", error);
     }
-  };  
+  };
 
   const fetchUserData = async (userId) => {
     if (userData[userId]) return;
     try {
-      if (!userData[userId]) {
-        const response = await axios.get(
-          `http://140.136.151.71:8787/api/v1/users/${userId}/user`
-        );
-        const user = response.data.data;
+      const response = await axios.get(
+        `http://140.136.151.71:8787/api/v1/users/${userId}/user`
+      );
+      const user = response.data.data;
 
-        setUserData((prevState) => ({
+      setUserData((prevState) => ({
+        ...prevState,
+        [userId]: user,
+      }));
+
+      if (user.userAvatar && user.userAvatar.downloadUrl) {
+        const avatarUrl = await fetchImage(user.userAvatar.downloadUrl);
+        setUserImageUrls((prevState) => ({
           ...prevState,
-          [userId]: user,
+          [userId]: avatarUrl,
         }));
-
-        if (user.userAvatar && user.userAvatar.downloadUrl) {
-          const avatarUrl = await fetchImage(user.userAvatar.downloadUrl);
-          setUserImageUrls((prevState) => ({
-            ...prevState,
-            [userId]: avatarUrl,
-          }));
-        }
       }
     } catch (error) {
       console.error(`Error fetching user data for userId ${userId}:`, error);
@@ -99,10 +116,6 @@ function Index() {
     }
   };
 
-  useEffect(() => {
-    handlePopularPost();
-  }, []);
-
   const handlePopularPost = async () => {
     try {
       const response = await axios.get(
@@ -115,7 +128,6 @@ function Index() {
     }
   };
 
-  // Fetch latest posts
   const handleLatestPost = async () => {
     try {
       const response = await axios.get(
@@ -128,7 +140,6 @@ function Index() {
     }
   };
 
-  // Fetch region-based posts
   const handleRegionPost = async (e) => {
     const region = e.target.value;
     setSelectedRegion(region);
@@ -234,9 +245,9 @@ function Index() {
       navigate("/login");
       return;
     }
-  
+
     if (!commentText.trim()) return;
-  
+
     try {
       const response = await axios.post(
         `http://140.136.151.71:8787/api/v1/comments/add/${postId}`,
@@ -249,7 +260,7 @@ function Index() {
           },
         }
       );
-  
+
       if (response.status === 200) {
         setPostData((prevState) =>
           prevState.map((post) =>
@@ -259,12 +270,12 @@ function Index() {
           )
         );
         await fetchComments(postId);
-        setCommentText(""); 
+        setCommentText("");
       }
     } catch (error) {
       console.error(`Error posting comment for post ${postId}:`, error);
     }
-  };  
+  };
 
   const handleLike = async (postId) => {
     const userId = localStorage.getItem("userId");
@@ -384,7 +395,7 @@ function Index() {
         </select>
       </div>
       <div className="content">
-        <div className="container">
+        <div className="NoContainer">
           <br />
           <div id="post-list">
             {postData.length > 0 ? (
@@ -402,13 +413,23 @@ function Index() {
                         style={{ textDecoration: "none", color: "inherit" }}
                       >
                         <img
-                          src={avatarUrl}
+                          src={avatarUrl ? avatarUrl.replace(".png", "-lowres.webp") : defaultAvatar}  // 如果有 avatarUrl，則替換為低解析度圖片，否則使用預設圖片
+                          data-src={avatarUrl ? avatarUrl.replace(".png", ".webp") : defaultAvatar}  // 延遲加載圖片
+                          srcSet={avatarUrl ? `
+                            ${avatarUrl.replace(".png", "-50w.webp")} 50w,
+                            ${avatarUrl.replace(".png", "-100w.webp")} 100w
+                          ` : `
+                            ${defaultAvatar} 50w,
+                            ${defaultAvatar} 100w
+                          `}
+                          sizes="50px"
                           alt="使用者頭像"
                           className="user-avatar"
                           style={{
                             width: "50px",
                             height: "50px",
                             borderRadius: "50%",
+                            backgroundColor: "#f0f0f0",  // 背景佔位符
                           }}
                           loading="lazy"
                         />
@@ -426,48 +447,62 @@ function Index() {
                     <h4>{post.title}</h4>
 
                     {postImageUrls[post.id] &&
-                    Array.isArray(postImageUrls[post.id]) &&
-                    postImageUrls[post.id].length === 1 ? (
-                      <div
-                        className="g-container"
-                        style={{ display: "flex", justifyContent: "center" }}
-                      >
-                        <img
-                          src={postImageUrls[post.id][0]}
-                          alt="Post image"
-                          className="post-image"
-                          style={{ width: "95%", height: "500px" }}
-                          loading="lazy"
-                        />
-                      </div>
-                    ) : (
-                      postImageUrls[post.id] &&
-                      Array.isArray(postImageUrls[post.id]) && (
-                        <Slider {...sliderSettings(sliderRef)}>
-                          {postImageUrls[post.id].map((url, index) => (
-                            <div
-                              className="g-container"
-                              key={index}
-                              style={{
-                                display: "flex",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <img
-                                src={url}
-                                alt={`Post image ${index}`}
-                                className="post-image"
-                                onClick={(e) =>
-                                  handleImageClick(e, sliderRef.current)
-                                }
-                                style={{ width: "95%", height: "500px" }}
-                                loading="lazy"
-                              />
-                            </div>
-                          ))}
-                        </Slider>
-                      )
-                    )}
+                      Array.isArray(postImageUrls[post.id]) &&
+                      postImageUrls[post.id].length === 1 ? (
+                        <div
+                          className="g-container"
+                          style={{ display: "flex", justifyContent: "center" }}
+                        >
+                          <img
+                            src={postImageUrls[post.id][0].replace(".png", "-lowres.webp")}  
+                            data-src={postImageUrls[post.id][0].replace(".png", ".webp")}  
+                            srcSet={`  
+                              ${postImageUrls[post.id][0].replace(".png", "-320w.webp")} 320w,
+                              ${postImageUrls[post.id][0].replace(".png", "-640w.webp")} 640w,
+                              ${postImageUrls[post.id][0].replace(".png", "-1024w.webp")} 1024w
+                            `}
+                            sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"  
+                            alt="Post image"
+                            className="post-image"
+                            style={{ width: "95%", height: "500px", aspectRatio: "16/9", backgroundColor: "#f0f0f0" }}  // 指定寬高比例並加上背景佔位符
+                            loading="lazy"
+                          />
+                        </div>
+                      ) : (
+                        postImageUrls[post.id] &&
+                        Array.isArray(postImageUrls[post.id]) && (
+                          <Suspense fallback={<div>Loading slider...</div>}>
+                            <Slider {...sliderSettings(sliderRef)}>
+                              {postImageUrls[post.id].map((url, index) => (
+                                <div
+                                  className="g-container"
+                                  key={index}
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                  }}
+                                >
+                                  <img
+                                    src={url.replace(".png", "-lowres.webp")}  // 使用低分辨率圖片作為佔位符
+                                    data-src={url.replace(".png", ".webp")}  // 目標圖片 URL
+                                    srcSet={`  
+                                      ${url.replace(".png", "-320w.webp")} 320w,
+                                      ${url.replace(".png", "-640w.webp")} 640w,
+                                      ${url.replace(".png", "-1024w.webp")} 1024w
+                                    `}
+                                    sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"  // 響應式圖片的尺寸
+                                    alt={`Post image ${index}`}
+                                    className="post-image"
+                                    onClick={(e) => handleImageClick(e, sliderRef.current)}
+                                    style={{ width: "95%", height: "500px", aspectRatio: "16/9", backgroundColor: "#f0f0f0" }}  // 指定寬高比例並加上背景佔位符
+                                    loading="lazy"
+                                  />
+                                </div>
+                              ))}
+                            </Slider>
+                          </Suspense>
+                        )
+                      )}
                     <div className="post-content">
                       <p className="post-text">{post.content}</p>
                       <p className="post-location">發布地址：{post.address}</p>
@@ -518,10 +553,7 @@ function Index() {
                           {comments[post.id]?.list &&
                           Array.isArray(comments[post.id].list) ? (
                             postComments.map((comment, index) => (
-                              <div
-                                className="comment"
-                                key={comment.id || index}
-                              >
+                              <div className="comment" key={comment.id || index}>
                                 <img
                                   src={comment.userAvatar}
                                   alt="評論者頭像"
@@ -530,6 +562,7 @@ function Index() {
                                     width: "32px",
                                     height: "32px",
                                     borderRadius: "50%",
+                                    backgroundColor: "#f0f0f0",  
                                   }}
                                   loading="lazy"
                                 />

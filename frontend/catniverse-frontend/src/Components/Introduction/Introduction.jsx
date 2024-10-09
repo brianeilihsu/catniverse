@@ -14,7 +14,7 @@ function Introduction() {
       <div className="content_">
         <div className="container">
           <div className="feature card welcome-card">
-            <p className="black welcome">
+            <p className="black_welcome">
               <b>歡迎來到台灣浪貓地圖！我們是一個致力於關注台灣流浪貓議題的社群平台。</b>
               <br />
               我們的目標是透過群眾力量，共同繪製出台灣各地流浪貓的分布圖，提供一個讓愛貓人士分享資訊、互助合作的空間。

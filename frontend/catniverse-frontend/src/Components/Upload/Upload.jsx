@@ -3,8 +3,9 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import "croppie/croppie.css";
 import Croppie from "croppie";
-import "./Upload.css"; // 自定義的樣式
+import "./Upload.css"; 
 import backPic from "../../Image/back.png";
+import imageCompression from 'browser-image-compression';
 
 function Upload() {
   const [formData, setFormData] = useState({
@@ -14,15 +15,16 @@ function Upload() {
     address: "",
   });
 
-  const [imageFiles, setImageFiles] = useState([]); // 多圖片文件
-  const [imageSrcs, setImageSrcs] = useState([]); // 每個文件對應的 base64 編碼
-  const [croppedImages, setCroppedImages] = useState([]); // 每個裁剪後的 blob 圖片 URL
-  const [croppieInstances, setCroppieInstances] = useState([]); // 每個 Croppie 實例
-  const fileInputRef = useRef(null); // 引用文件輸入框
+  const [imageFiles, setImageFiles] = useState([]); 
+  const [imageSrcs, setImageSrcs] = useState([]); 
+  const [croppedImages, setCroppedImages] = useState([]); 
+  const [croppieInstances, setCroppieInstances] = useState([]); 
+  const fileInputRef = useRef(null); 
 
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
   const userId = localStorage.getItem("userId");
+  const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
   const cities = {
@@ -60,7 +62,6 @@ function Upload() {
     }
   }, []);
 
-  // Initialize Croppie when imageSrcs changes
   useEffect(() => {
     imageSrcs.forEach((src, index) => {
       const cropContainerRef = document.getElementById(
@@ -84,7 +85,6 @@ function Upload() {
     });
   }, [imageSrcs, croppieInstances]);
 
-  // Handle image change
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
 
@@ -119,121 +119,111 @@ function Upload() {
         size: { width: 1000, height: 1000 }, 
       });
 
-      // 使用 createObjectURL 來顯示裁剪後的圖片
-      const croppedImageUrl = URL.createObjectURL(croppedBlob);
+      const compressedBlob = await imageCompression(croppedBlob, {
+        maxSizeMB: 1,  
+        maxWidthOrHeight: 1000, 
+        useWebWorker: true,  
+      });
+
+      const croppedImageUrl = URL.createObjectURL(compressedBlob);
 
       setCroppedImages((prevCropped) => {
         const updatedCropped = [...prevCropped];
-        updatedCropped[index] = croppedImageUrl; // 儲存圖片 URL 而非 base64
+        updatedCropped[index] = croppedImageUrl; 
         return updatedCropped;
       });
     }
   };
 
-  // 移除指定索引的裁剪和文件
   const handleCancelCrop = (index) => {
     if (croppieInstances[index]) {
-      croppieInstances[index].destroy(); // 銷毀 Croppie 實例
+      croppieInstances[index].destroy(); 
       const updatedInstances = [...croppieInstances];
       updatedInstances[index] = null;
       setCroppieInstances(updatedInstances);
     }
 
-    // 只移除指定索引的文件，而不是重置整個文件選擇框
     setImageSrcs((prevSrcs) => prevSrcs.filter((_, idx) => idx !== index));
     setCroppedImages((prevCropped) =>
       prevCropped.filter((_, idx) => idx !== index)
     );
 
-    // 移除指定索引的文件
     setImageFiles((prevFiles) => prevFiles.filter((_, idx) => idx !== index));
 
-    // 更新文件選擇器值
     const updatedFileList = Array.from(fileInputRef.current.files).filter(
       (_, idx) => idx !== index
     );
 
     const dataTransfer = new DataTransfer();
     updatedFileList.forEach((file) => {
-      dataTransfer.items.add(file); // 添加其餘文件回到 DataTransfer
+      dataTransfer.items.add(file); 
     });
-    fileInputRef.current.files = dataTransfer.files; // 更新 input 的 files
+    fileInputRef.current.files = dataTransfer.files;
   };
 
-  const handleFormSubmit = async () => {
-    const address = `${city}${district}`; // 新增地址字段
+  const handleFormSubmitWithImages = async (croppedBlobs) => {
+    const address = `${city}${district}`; 
     const updatedFormData = {
       ...formData,
       address,
     };
-
-    try {
-      const response = await axios.post(
-        `http://140.136.151.71:8787/api/v1/posts/add/${updatedFormData.userId}`,
-        updatedFormData, 
-        {
-          headers: {
-            "Content-Type": "application/json", 
-          },
-        }
-      );
-      console.log("表單文字上傳成功", response.data);
-      return response.data.data.id; 
-    } catch (error) {
-      console.error("文字表單上傳失敗：", error);
-      throw error; 
+  
+    const formDataWithImages = new FormData();
+  
+    for (const key in updatedFormData) {
+      formDataWithImages.append(key, updatedFormData[key]);
     }
-  };
 
-  const handleImageUpload = async (croppedBlob, index, postId) => {
-    const imageFile = new File([croppedBlob], `croppedImage${index}.png`, {
-      type: "image/png",
+    croppedBlobs.forEach((croppedBlob, index) => {
+      const imageFile = new File([croppedBlob], `croppedImage${index}.png`, {
+        type: "image/png",
+      });
+      formDataWithImages.append("files", imageFile);
     });
-
-    const imageFormData = new FormData();
-    imageFormData.append("postId", postId);
-    imageFormData.append("files", imageFile); // 附加圖片文件
-
+  
     try {
       const response = await axios.post(
-        `http://140.136.151.71:8787/api/v1/post-images/upload`,
-        imageFormData,
+        `http://140.136.151.71:8787/api/v1/posts/add`,
+        formDataWithImages, 
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            'Authorization': `Bearer ${token}`,
+
           },
         }
       );
-      console.log("圖片上傳成功", response.data);
+      console.log("表單和圖片上傳成功", response.data);
     } catch (error) {
-      console.error("圖片上傳失敗：", error);
-      throw error; 
+      console.error("上傳失敗：", error);
+      throw error;
     }
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     try {
-      const postId = await handleFormSubmit();
-
-      for (let i = 0; i < croppedImages.length; i++) {
-        if (croppedImages[i]) {
-          const blobUrl = croppedImages[i];
-          const response = await fetch(blobUrl);
-          const croppedBlob = await response.blob(); // 將圖片 URL 轉為 blob
-
-          await handleImageUpload(croppedBlob, i, postId);
-        }
-      }
-
-      alert("表單和圖片分別上傳成功！");
+      const croppedBlobs = await Promise.all(
+        croppedImages.map(async (imageUrl) => {
+          if (imageUrl) {
+            const response = await fetch(imageUrl);
+            return await response.blob(); 
+          }
+          return null;
+        })
+      );
+  
+      await handleFormSubmitWithImages(croppedBlobs.filter(blob => blob)); 
+  
+      alert("表單和圖片一起上傳成功！");
       navigate("/");
     } catch (error) {
       console.error("上傳過程失敗：", error);
       alert("上傳過程失敗");
     }
-  };
+  };  
 
   const handleCityChange = (e) => {
     setCity(e.target.value);
@@ -325,13 +315,11 @@ function Upload() {
           />
           {imageSrcs.map((src, index) => (
             <div key={index} className="image-crop-container">
-              {/* Flexbox Container for Crop and Preview */}
               <div className="image-crop-section">
                 <div
                   id={`cropContainer-${index}`}
                   style={{ height: "300px", width: "400px" }}
                 >
-                  {/* Croppie container for each image */}
                 </div>
 
                 <div className="justify-btn">
@@ -353,7 +341,6 @@ function Upload() {
                 </div>
               </div>
 
-              {/* 顯示裁剪後的預覽 */}
               {croppedImages[index] && (
                 <div className="image-preview-section">
                   <h3 className="Hthree">裁剪後的圖片預覽：</h3>
@@ -361,6 +348,7 @@ function Upload() {
                     src={croppedImages[index]}
                     alt={`Cropped Preview ${index}`}
                     style={{ width: "250px" }}
+                    loading="lazy"
                   />
                 </div>
               )}

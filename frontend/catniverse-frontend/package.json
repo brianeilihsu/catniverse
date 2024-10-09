@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "axios": "^1.7.5",
+    "browser-image-compression": "^2.0.2",
     "cors": "^2.8.5",
     "croppie": "^2.6.5",
     "react": "^18.3.1",
