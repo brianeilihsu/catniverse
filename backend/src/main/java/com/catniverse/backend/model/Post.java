@@ -21,6 +21,8 @@ public class Post {
     private String title;
     private String content;
     private String address;
+    private boolean tipped;
+    private boolean stray;
     //private BigDecimal latitude;
     //private BigDecimal longitude;
 

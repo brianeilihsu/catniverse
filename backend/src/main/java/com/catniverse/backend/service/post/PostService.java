@@ -36,6 +36,8 @@ public class PostService implements ImpPostService{
             Post post = new Post();
             post.setTitle(addPostRequest.getTitle());
             post.setContent(addPostRequest.getContent());
+            post.setTipped(addPostRequest.isTipped());
+            post.setStray(addPostRequest.isStray());
             post.setAddress(addPostRequest.getAddress());
             post.setUser(addPostRequest.getUser()); // 假設 AddPostRequest 中有 User 物件
             post.setCreatedAt(LocalDateTime.now());

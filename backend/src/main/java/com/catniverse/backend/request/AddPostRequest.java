@@ -10,6 +10,8 @@ public class AddPostRequest {
     private String title;
     private String content;
     private String address;
+    private boolean tipped;//剪耳
+    private boolean stray;//流浪
     private User user;
     private LocalDateTime createdAt;
 }

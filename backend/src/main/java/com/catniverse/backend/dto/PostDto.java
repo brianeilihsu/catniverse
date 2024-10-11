@@ -13,6 +13,8 @@ public class PostDto {
     private String title;
     private String content;
     private String address;
+    private boolean tipped;
+    private boolean stray;
     private int total_likes; // 我要怎麼取得likes的總數?
     private int total_comments;
 

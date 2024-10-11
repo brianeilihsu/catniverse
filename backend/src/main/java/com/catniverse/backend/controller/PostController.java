@@ -1,6 +1,7 @@
 package com.catniverse.backend.controller;
 
 import com.catniverse.backend.dto.PostDto;
+import com.catniverse.backend.dto.PostImageDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.exceptions.SpecitficNameException;
 import com.catniverse.backend.model.Post;
@@ -8,10 +9,13 @@ import com.catniverse.backend.model.User;
 import com.catniverse.backend.request.AddPostRequest;
 import com.catniverse.backend.response.ApiResponse;
 import com.catniverse.backend.service.post.ImpPostService;
+import com.catniverse.backend.service.postImage.ImpPostImageService;
 import com.catniverse.backend.service.user.ImpUserService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,6 +30,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class PostController {
     private final ImpPostService postService;
     private final ImpUserService userService;
+    private final ImpPostImageService postImageService;
+
     @GetMapping("/popular")
     public ResponseEntity<ApiResponse> getPopularPosts() {
         List<Post> posts = postService.getAllPosts();
@@ -61,13 +67,14 @@ public class PostController {
         return ResponseEntity.ok(new ApiResponse("number of posts: " + convertedPosts.size(), convertedPosts));
     }
 
-    @PostMapping("/add/{userId}")
-    public ResponseEntity<ApiResponse> addPost(@RequestBody AddPostRequest postRequest,
-                                               @PathVariable Long userId) {
+    @Transactional
+    @PostMapping("/add")
+    public ResponseEntity<ApiResponse> addPost(@ModelAttribute AddPostRequest postRequest,@RequestParam List<MultipartFile> files) {
         try {
-            User user = userService.getUserById(userId);
+            User user = userService.getAuthenticatedUser();
             postRequest.setUser(user);
             Post post = postService.addPost(postRequest);
+            postImageService.savePostImages(post.getId(), files);
             PostDto postDto = postService.convertToDto(post);
             return ResponseEntity.ok(new ApiResponse("add post success", postDto));
         }catch (SpecitficNameException e){
