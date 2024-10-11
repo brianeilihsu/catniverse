@@ -26,7 +26,7 @@ textarea {
 .select-row {
   display: flex;
   justify-content: space-between; 
-  margin-bottom: 1em; 
+  
 }
 
 .select-row select {
@@ -62,5 +62,11 @@ textarea {
 
 .btn-info {
   margin-right: 10px;
+}
+
+.checkbox {
+  font-weight: lighter;
+  padding: 0px;
+  margin: 0px 15px 0px 5px;
 }
 

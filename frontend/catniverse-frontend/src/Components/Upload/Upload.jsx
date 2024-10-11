@@ -20,6 +20,8 @@ function Upload() {
   const [croppedImages, setCroppedImages] = useState([]); 
   const [croppieInstances, setCroppieInstances] = useState([]); 
   const fileInputRef = useRef(null); 
+  const [earStatus, setEarStatus] = useState(null); 
+  const [strayCatStatus, setStrayCatStatus] = useState(null);
 
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
@@ -166,6 +168,8 @@ function Upload() {
     const updatedFormData = {
       ...formData,
       address,
+      tipped: earStatus,
+      stray: strayCatStatus,
     };
   
     const formDataWithImages = new FormData();
@@ -230,137 +234,197 @@ function Upload() {
     setDistrict("");
   };
 
+  const handleEarStatusChange = (e) => {
+    const selectedStatus = e.target.value === "已剪耳" ? true : false;
+    setEarStatus(selectedStatus);
+  
+    if (selectedStatus) {
+      setStrayCatStatus(true);
+    } else {
+      setStrayCatStatus(null);
+    }
+  };
+  
+  const handleStrayCatStatusChange = (e) => {
+    setStrayCatStatus(e.target.value === "流浪貓" ? true : false);
+  };
+
   return (
     <div className="content">
-      <br />
-      <main>
-        <form
-          className="container"
-          encType="multipart/form-data"
-          method="post"
-          id="formBox"
-          name="form"
-          onSubmit={handleSubmit}
-        >
-          <div className="backLogo">
-            <Link to={`/profile/${userId}`} className="back-container">
-              <button className="back-btn">
-                <img className="backPic" src={backPic} alt="back" />
-              </button>
-              <p>Back</p>
-            </Link>
-          </div>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            placeholder="標題"
-            value={formData.title}
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
-            required
-          />
+    <br />
+    <main>
+      <form
+        className="container"
+        encType="multipart/form-data"
+        method="post"
+        id="formBox"
+        name="form"
+        onSubmit={handleSubmit}
+      >
+        <div className="backLogo">
+          <Link to={`/profile/${userId}`} className="back-container">
+            <button className="back-btn">
+              <img className="backPic" src={backPic} alt="back" />
+            </button>
+            <p>Back</p>
+          </Link>
+        </div>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          placeholder="標題"
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          required
+        />
 
-          <textarea
-            id="content"
-            name="content"
-            placeholder="貼文內容"
-            value={formData.content}
-            onChange={(e) =>
-              setFormData({ ...formData, content: e.target.value })
-            }
-            required
-          />
+        <textarea
+          id="content"
+          name="content"
+          placeholder="貼文內容"
+          value={formData.content}
+          onChange={(e) =>
+            setFormData({ ...formData, content: e.target.value })
+          }
+          required
+        />
 
-          <div className="select-row">
-            <select
-              name="city"
-              value={city}
-              onChange={handleCityChange}
-              required
-            >
-              <option value="">選擇縣市</option>
-              {Object.keys(cities).map((cityName) => (
-                <option key={cityName} value={cityName}>
-                  {cityName}
+        <div className="select-row">
+          <select
+            name="city"
+            value={city}
+            onChange={handleCityChange}
+            required
+          >
+            <option value="">選擇縣市</option>
+            {Object.keys(cities).map((cityName) => (
+              <option key={cityName} value={cityName}>
+                {cityName}
+              </option>
+            ))}
+          </select>
+
+          <select
+            name="district"
+            value={district}
+            onChange={(e) => setDistrict(e.target.value)}
+            required
+            disabled={!city}
+          >
+            <option value="">選擇區域</option>
+            {city &&
+              cities[city].map((districtName) => (
+                <option key={districtName} value={districtName}>
+                  {districtName}
                 </option>
               ))}
-            </select>
+          </select>
+        </div>
 
-            <select
-              name="district"
-              value={district}
-              onChange={(e) => setDistrict(e.target.value)}
-              required
-              disabled={!city}
-            >
-              <option value="">選擇區域</option>
-              {city &&
-                cities[city].map((districtName) => (
-                  <option key={districtName} value={districtName}>
-                    {districtName}
-                  </option>
-                ))}
-            </select>
+        <div className="checkbox-section">
+          <label className="checkbox">
+            <input
+              type="radio"
+              name="earStatus"
+              value="已剪耳"
+              checked={earStatus === true}
+              onChange={handleEarStatusChange}
+            />
+            已剪耳
+          </label>
+          <label className="checkbox">
+            <input
+              type="radio"
+              name="earStatus"
+              value="未剪耳"
+              checked={earStatus === false}
+              onChange={handleEarStatusChange}
+            />
+            未剪耳
+          </label>
+        </div>
+
+        {earStatus === false && (
+          <div className="checkbox-section">
+            <label className="checkbox">
+              <input
+                type="radio"
+                name="strayCatStatus"
+                value="流浪貓"
+                checked={strayCatStatus === true}
+                onChange={handleStrayCatStatusChange}
+              />
+              流浪貓
+            </label>
+            <label className="checkbox">
+              <input
+                type="radio"
+                name="strayCatStatus"
+                value="非流浪貓"
+                checked={strayCatStatus === false}
+                onChange={handleStrayCatStatusChange}
+              />
+              非流浪貓
+            </label>
           </div>
+        )}
 
-          <input
-            type="file"
-            id="chooseImage"
-            accept="image/*"
-            multiple
-            onChange={handleImageChange}
-            ref={fileInputRef} 
-          />
-          {imageSrcs.map((src, index) => (
-            <div key={index} className="image-crop-container">
-              <div className="image-crop-section">
-                <div
-                  id={`cropContainer-${index}`}
-                  style={{ height: "300px", width: "400px" }}
+        <input
+          type="file"
+          id="chooseImage"
+          accept="image/*"
+          multiple
+          onChange={handleImageChange}
+          ref={fileInputRef}
+        />
+        {imageSrcs.map((src, index) => (
+          <div key={index} className="image-crop-container">
+            <div className="image-crop-section">
+              <div
+                id={`cropContainer-${index}`}
+                style={{ height: "300px", width: "400px" }}
+              ></div>
+
+              <div className="justify-btn">
+                <button
+                  id={`crop_img_${index}`}
+                  className="btn-info"
+                  type="button"
+                  onClick={() => handleCrop(index)}
                 >
-                </div>
-
-                <div className="justify-btn">
-                  <button
-                    id={`crop_img_${index}`}
-                    className="btn-info"
-                    type="button"
-                    onClick={() => handleCrop(index)}
-                  >
-                    <i className="fa fa-scissors"></i> 裁剪圖片
-                  </button>
-                  <button
-                    className="btn-danger"
-                    type="button"
-                    onClick={() => handleCancelCrop(index)}
-                  >
-                    取消圖片
-                  </button>
-                </div>
+                  <i className="fa fa-scissors"></i> 裁剪圖片
+                </button>
+                <button
+                  className="btn-danger"
+                  type="button"
+                  onClick={() => handleCancelCrop(index)}
+                >
+                  取消圖片
+                </button>
               </div>
-
-              {croppedImages[index] && (
-                <div className="image-preview-section">
-                  <h3 className="Hthree">裁剪後的圖片預覽：</h3>
-                  <img
-                    src={croppedImages[index]}
-                    alt={`Cropped Preview ${index}`}
-                    style={{ width: "250px" }}
-                    loading="lazy"
-                  />
-                </div>
-              )}
             </div>
-          ))}
 
-          <button className="submit-btn" type="submit">
-            Post
-          </button>
-        </form>
-      </main>
-    </div>
+            {croppedImages[index] && (
+              <div className="image-preview-section">
+                <h3 className="Hthree">裁剪後的圖片預覽：</h3>
+                <img
+                  src={croppedImages[index]}
+                  alt={`Cropped Preview ${index}`}
+                  style={{ width: "250px" }}
+                  loading="lazy"
+                />
+              </div>
+            )}
+          </div>
+        ))}
+
+        <button className="submit-btn" type="submit">
+          Post
+        </button>
+      </form>
+    </main>
+  </div>
   );
 }
 

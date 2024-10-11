@@ -25,6 +25,12 @@ function Index() {
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
+  const taiwanRegions = [
+    "台北市", "新北市", "桃園市", "台中市", "台南市", "高雄市", "基隆市", 
+    "新竹市", "新竹縣", "苗栗縣", "彰化縣", "南投縣", "雲林縣", "嘉義市", 
+    "嘉義縣", "屏東縣", "宜蘭縣", "花蓮縣", "台東縣", "澎湖縣", "金門縣", "連江縣"
+  ];
+
   useEffect(() => {
     // 強制刷新頁面
     if (!sessionStorage.getItem('hasReloaded')) {
@@ -143,20 +149,24 @@ function Index() {
   const handleRegionPost = async (e) => {
     const region = e.target.value;
     setSelectedRegion(region);
-
+  
     try {
-      const response = await axios.get(
-        `http://140.136.151.71:8787/api/v1/posts/region`,
-        {
-          params: { region },
-        }
-      );
-      const posts = response.data.data;
-      fetchPostData(posts);
+      if (region) {
+        const response = await axios.get(
+          `http://140.136.151.71:8787/api/v1/posts/region`,
+          {
+            params: { address: region },  
+          }
+        );
+        const posts = response.data.data;
+        fetchPostData(posts);  
+      } else {
+        handlePopularPost(); 
+      }
     } catch (error) {
       console.error("Error fetching region-based posts: ", error);
     }
-  };
+  };  
 
   const checkIfLiked = async (postId) => {
     try {
@@ -386,12 +396,13 @@ function Index() {
         <button className="latest" onClick={handleLatestPost}>
           latest
         </button>
-        <select
-          className="region"
-          value={selectedRegion}
-          onChange={handleRegionPost}
-        >
-          <option value="">region</option>
+        <select className="region" value={selectedRegion} onChange={handleRegionPost}>
+          <option value="">選擇縣市</option>
+          {taiwanRegions.map((region) => (
+            <option key={region} value={region}>
+              {region}
+            </option>
+          ))}
         </select>
       </div>
       <div className="content">
@@ -413,8 +424,8 @@ function Index() {
                         style={{ textDecoration: "none", color: "inherit" }}
                       >
                         <img
-                          src={avatarUrl ? avatarUrl.replace(".png", "-lowres.webp") : defaultAvatar}  // 如果有 avatarUrl，則替換為低解析度圖片，否則使用預設圖片
-                          data-src={avatarUrl ? avatarUrl.replace(".png", ".webp") : defaultAvatar}  // 延遲加載圖片
+                          src={avatarUrl ? avatarUrl.replace(".png", "-lowres.webp") : defaultAvatar}  
+                          data-src={avatarUrl ? avatarUrl.replace(".png", ".webp") : defaultAvatar}  
                           srcSet={avatarUrl ? `
                             ${avatarUrl.replace(".png", "-50w.webp")} 50w,
                             ${avatarUrl.replace(".png", "-100w.webp")} 100w
@@ -429,7 +440,7 @@ function Index() {
                             width: "50px",
                             height: "50px",
                             borderRadius: "50%",
-                            backgroundColor: "#f0f0f0",  // 背景佔位符
+                            backgroundColor: "#f0f0f0",  
                           }}
                           loading="lazy"
                         />
@@ -483,14 +494,14 @@ function Index() {
                                   }}
                                 >
                                   <img
-                                    src={url.replace(".png", "-lowres.webp")}  // 使用低分辨率圖片作為佔位符
-                                    data-src={url.replace(".png", ".webp")}  // 目標圖片 URL
+                                    src={url.replace(".png", "-lowres.webp")}  
+                                    data-src={url.replace(".png", ".webp")}  
                                     srcSet={`  
                                       ${url.replace(".png", "-320w.webp")} 320w,
                                       ${url.replace(".png", "-640w.webp")} 640w,
                                       ${url.replace(".png", "-1024w.webp")} 1024w
                                     `}
-                                    sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"  // 響應式圖片的尺寸
+                                    sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"  
                                     alt={`Post image ${index}`}
                                     className="post-image"
                                     onClick={(e) => handleImageClick(e, sliderRef.current)}
@@ -604,9 +615,11 @@ function Index() {
             )}
           </div>
 
-          <button className="load-more" onClick={loadMorePosts}>
-            Loading more posts...
-          </button>
+          {postData.length > visibleCount && (
+            <button className="load-more" onClick={loadMorePosts}>
+              Loading more posts...
+            </button>
+          )}
         </div>
       </div>
     </div>
