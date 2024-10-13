@@ -6,6 +6,10 @@ import Croppie from "croppie";
 import "./Upload.css"; 
 import backPic from "../../Image/back.png";
 import imageCompression from 'browser-image-compression';
+import ReactMapGL, { Marker, NavigationControl, Popup } from 'react-map-gl';
+import mapboxSdk from '@mapbox/mapbox-sdk';
+import mapboxGeocoding from '@mapbox/mapbox-sdk/services/geocoding';
+const TOKEN = 'pk.eyJ1Ijoic2hlZHlqdWFuYTk5IiwiYSI6ImNtMTRnY2U5ajB4ZzYyanBtMjBrMXd1a3UifQ.OcvE1wSjJs8Z1VpQDM12tg';
 
 function Upload() {
   const [formData, setFormData] = useState({
@@ -22,37 +26,20 @@ function Upload() {
   const fileInputRef = useRef(null); 
   const [earStatus, setEarStatus] = useState(null); 
   const [strayCatStatus, setStrayCatStatus] = useState(null);
+  const [viewport, setViewport] = useState({
+    latitude: 25.033, 
+    longitude: 121.5654, 
+    zoom: 10,
+  });
 
-  const [city, setCity] = useState("");
-  const [district, setDistrict] = useState("");
+  const [newPlace, setNewPlace] = useState(null);
+  const [popupInfo, setPopupInfo] = useState(null); 
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [newAddress, setNewAddress] = useState("");
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
-
-  const cities = {
-    "台北市": ["中正區", "大同區", "中山區", "萬華區", "信義區", "松山區", "大安區", "南港區", "北投區", "士林區", "文山區"],
-    "新北市": ["板橋區", "三重區", "中和區", "永和區", "新莊區", "新店區", "土城區", "蘆洲區", "汐止區", "三峽區", "樹林區", "淡水區", "瑞芳區", "五股區", "泰山區", "林口區"],
-    "桃園市": ["桃園區", "中壢區", "平鎮區", "八德區", "楊梅區", "蘆竹區", "龜山區", "大溪區", "大園區", "觀音區", "龍潭區", "新屋區", "復興區"],
-    "台中市": ["中區", "東區", "南區", "西區", "北區", "西屯區", "南屯區", "北屯區", "豐原區", "東勢區", "大甲區", "清水區", "沙鹿區", "梧棲區", "后里區", "神岡區", "潭子區", "大雅區", "新社區", "石岡區", "外埔區", "大安區", "烏日區", "大肚區", "龍井區", "霧峰區", "太平區", "大里區", "和平區"],
-    "台南市": ["中西區", "東區", "南區", "北區", "安平區", "安南區", "永康區", "歸仁區", "新化區", "左鎮區", "玉井區", "楠西區", "南化區", "仁德區", "關廟區", "龍崎區", "官田區", "麻豆區", "佳里區", "西港區", "七股區", "將軍區", "學甲區", "北門區", "新營區", "後壁區", "白河區", "東山區", "六甲區", "下營區", "柳營區", "鹽水區", "善化區", "大內區", "山上區", "新市區", "安定區"],
-    "高雄市": ["楠梓區", "左營區", "鼓山區", "三民區", "鹽埕區", "前金區", "新興區", "苓雅區", "前鎮區", "小港區", "旗津區", "鳳山區", "大寮區", "鳥松區", "林園區", "仁武區", "大樹區", "大社區", "岡山區", "路竹區", "橋頭區", "梓官區", "彌陀區", "永安區", "燕巢區", "田寮區", "阿蓮區", "茄萣區", "湖內區", "旗山區", "美濃區", "內門區", "杉林區", "甲仙區", "六龜區", "茂林區", "桃源區", "那瑪夏區"],
-    "基隆市": ["中正區", "信義區", "仁愛區", "中山區", "安樂區", "暖暖區", "七堵區"],
-    "新竹市": ["東區", "北區", "香山區"],
-    "新竹縣": ["竹北市", "湖口鄉", "新豐鄉", "新埔鎮", "關西鎮", "芎林鄉", "寶山鄉", "竹東鎮", "五峰鄉", "橫山鄉", "尖石鄉", "北埔鄉", "峨眉鄉"],
-    "苗栗縣": ["苗栗市", "竹南鎮", "頭份市", "後龍鎮", "卓蘭鎮", "通霄鎮", "苑裡鎮", "造橋鄉", "三灣鄉", "南庄鄉", "大湖鄉", "公館鄉", "銅鑼鄉", "頭屋鄉", "三義鄉", "西湖鄉", "獅潭鄉", "泰安鄉"],
-    "彰化縣": ["彰化市", "鹿港鎮", "和美鎮", "線西鄉", "伸港鄉", "福興鄉", "秀水鄉", "花壇鄉", "芬園鄉", "員林市", "溪湖鎮", "田中鎮", "大村鄉", "埔鹽鄉", "埔心鄉", "永靖鄉", "社頭鄉", "二水鄉", "田尾鄉", "埤頭鄉", "芳苑鄉", "二林鎮", "大城鄉", "竹塘鄉", "溪州鄉"],
-    "南投縣": ["南投市", "埔里鎮", "草屯鎮", "竹山鎮", "集集鎮", "名間鄉", "鹿谷鄉", "中寮鄉", "魚池鄉", "國姓鄉", "水里鄉", "信義鄉", "仁愛鄉"],
-    "雲林縣": ["斗六市", "斗南鎮", "虎尾鎮", "西螺鎮", "土庫鎮", "北港鎮", "莿桐鄉", "林內鄉", "古坑鄉", "大埤鄉", "崙背鄉", "二崙鄉", "麥寮鄉", "臺西鄉", "東勢鄉", "褒忠鄉", "四湖鄉", "口湖鄉", "水林鄉", "元長鄉"],
-    "嘉義市": ["東區", "西區"],
-    "嘉義縣": ["太保市", "朴子市", "布袋鎮", "大林鎮", "民雄鄉", "溪口鄉", "新港鄉", "六腳鄉", "東石鄉", "義竹鄉", "鹿草鄉", "水上鄉", "中埔鄉", "竹崎鄉", "梅山鄉", "番路鄉", "大埔鄉", "阿里山鄉"],
-    "屏東縣": ["屏東市", "潮州鎮", "東港鎮", "恆春鎮", "萬丹鄉", "長治鄉", "麟洛鄉", "九如鄉", "里港鄉", "鹽埔鄉", "高樹鄉", "萬巒鄉", "內埔鄉", "竹田鄉", "新埤鄉", "枋寮鄉", "新園鄉", "崁頂鄉", "林邊鄉", "南州鄉", "佳冬鄉", "琉球鄉", "車城鄉", "滿州鄉", "枋山鄉", "三地門鄉", "霧臺鄉", "瑪家鄉", "泰武鄉", "來義鄉", "春日鄉", "獅子鄉", "牡丹鄉"],
-    "宜蘭縣": ["宜蘭市", "頭城鎮", "羅東鎮", "蘇澳鎮", "礁溪鄉", "壯圍鄉", "員山鄉", "冬山鄉", "五結鄉", "三星鄉", "大同鄉", "南澳鄉"],
-    "花蓮縣": ["花蓮市", "鳳林鎮", "玉里鎮", "新城鄉", "吉安鄉", "壽豐鄉", "光復鄉", "豐濱鄉", "瑞穗鄉", "富里鄉", "秀林鄉", "萬榮鄉", "卓溪鄉"],
-    "台東縣": ["台東市", "成功鎮", "關山鎮", "卑南鄉", "鹿野鄉", "池上鄉", "東河鄉", "長濱鄉", "太麻里鄉", "大武鄉", "綠島鄉", "海端鄉", "延平鄉", "金峰鄉", "達仁鄉", "蘭嶼鄉"],
-    "澎湖縣": ["馬公市", "湖西鄉", "白沙鄉", "西嶼鄉", "望安鄉", "七美鄉"],
-    "金門縣": ["金沙鎮", "金湖鎮", "金寧鄉", "金城鎮", "烈嶼鄉", "烏坵鄉"],
-    "連江縣": ["南竿鄉", "北竿鄉", "莒光鄉", "東引鄉"]
-  };
+  const geocodingClient = mapboxGeocoding({ accessToken: TOKEN });
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -63,6 +50,45 @@ function Upload() {
       }));
     }
   }, []);
+
+  const formatAddress = (address) => {
+    const parts = address.split(", ").map((part) => part.trim()); 
+
+    const [street, number, district, city] = parts;
+    setNewAddress(`${city}${district}${street}${number}號`);
+
+    return `${city}${district}${street}${number}號`;
+  };
+
+  const fetchAddress = async (lat, lng) => {
+    try {
+      const response = await geocodingClient
+        .reverseGeocode({
+          query: [lng, lat],
+          limit: 1, 
+          language: ["zh"],
+        })
+        .send();
+
+      const place = response.body.features[0];
+      const rawAddress = place?.place_name || "無法取得地址";
+      const formattedAddress = formatAddress(rawAddress); 
+
+      setPopupInfo({ lat, lng, address: formattedAddress });
+      setSelectedLocation(formattedAddress); 
+    } catch (error) {
+      console.error("取得地址失敗", error);
+      setPopupInfo({ lat, lng, address: "無法取得地址" });
+      setSelectedLocation("無法取得地址");
+    }
+  };
+
+  const handleAddClick = (event) => {
+    const { lng, lat } = event.lngLat;
+    setNewPlace({ lat, lng });
+    fetchAddress(lat, lng); 
+  };
+
 
   useEffect(() => {
     imageSrcs.forEach((src, index) => {
@@ -164,12 +190,11 @@ function Upload() {
   };
 
   const handleFormSubmitWithImages = async (croppedBlobs) => {
-    const address = `${city}${district}`; 
     const updatedFormData = {
       ...formData,
-      address,
       tipped: earStatus,
       stray: strayCatStatus,
+      address: newAddress,
     };
   
     const formDataWithImages = new FormData();
@@ -229,11 +254,6 @@ function Upload() {
     }
   };  
 
-  const handleCityChange = (e) => {
-    setCity(e.target.value);
-    setDistrict("");
-  };
-
   const handleEarStatusChange = (e) => {
     const selectedStatus = e.target.value === "已剪耳" ? true : false;
     setEarStatus(selectedStatus);
@@ -290,37 +310,45 @@ function Upload() {
           required
         />
 
-        <div className="select-row">
-          <select
-            name="city"
-            value={city}
-            onChange={handleCityChange}
-            required
-          >
-            <option value="">選擇縣市</option>
-            {Object.keys(cities).map((cityName) => (
-              <option key={cityName} value={cityName}>
-                {cityName}
-              </option>
-            ))}
-          </select>
+      <ReactMapGL
+        mapboxAccessToken={TOKEN}
+        initialViewState={viewport}
+        mapStyle="mapbox://styles/mapbox/streets-v11"
+        localIdeographFontFamily="'sans-serif'"
+        onDblClick={handleAddClick} // 綁定雙擊事件
+        onMove={(event) => setViewport(event.viewState)} // 更新地圖狀態
+        style={{ width: "100%", height: "400px" }}
+      >
+        {newPlace && (
+          <Marker
+            latitude={newPlace.lat}
+            longitude={newPlace.lng}
+            draggable // 允許拖動
+            onDragEnd={(event) => {
+              const { lat, lng } = event.lngLat;
+              setNewPlace({ lat, lng });
+              fetchAddress(lat, lng); // 拖動後重新取得地址
+            }}
+          />
+        )}
 
-          <select
-            name="district"
-            value={district}
-            onChange={(e) => setDistrict(e.target.value)}
-            required
-            disabled={!city}
+        {popupInfo && (
+          <Popup
+            latitude={popupInfo.lat}
+            longitude={popupInfo.lng}
+            anchor="top"
+            onClose={() => setPopupInfo(null)}
           >
-            <option value="">選擇區域</option>
-            {city &&
-              cities[city].map((districtName) => (
-                <option key={districtName} value={districtName}>
-                  {districtName}
-                </option>
-              ))}
-          </select>
-        </div>
+            <div>{popupInfo.address}</div> 
+          </Popup>
+        )}
+
+        <NavigationControl position="bottom-right" />
+      </ReactMapGL>
+
+      <div className="selected-location">
+        <p>選擇的地點: {selectedLocation}</p>
+      </div>
 
         <div className="checkbox-section">
           <label className="checkbox">

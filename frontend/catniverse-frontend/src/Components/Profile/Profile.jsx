@@ -145,15 +145,21 @@ function Profile() {
     navigate("/upload");
   };
 
-  const handlePostClick = (post) => {
-    setSelectedPost(post);
-    fetchComments(post.id); 
-    setShowModal(true);
+  const handlePostClick = (postId) => {
+    const post = userData.posts.find(p => p.id === postId);
+    if (post) {
+      setSelectedPost(post);
+      fetchComments(post.id);
+      setShowModal(true);
+    }
   };
+  
 
   const handleCloseModal = () => {
+    setSelectedPost(null);
     setShowModal(false);
   };
+  
 
   const handleSettingOut = () => {
     setShowOutDelete(!showOutDelete);
@@ -258,10 +264,19 @@ function Profile() {
           [postId]: false,
         }));
   
+        // 更新 selectedPost 和 userData 中的 total_likes
         setSelectedPost((prevState) => ({
           ...prevState,
           total_likes: prevState.total_likes - 1,
         }));
+  
+        setUserData((prevUserData) => {
+          const updatedPosts = prevUserData.posts.map((post) =>
+            post.id === postId ? { ...post, total_likes: post.total_likes - 1 } : post
+          );
+          return { ...prevUserData, posts: updatedPosts };
+        });
+  
       } else {
         await axios.post("http://140.136.151.71:8787/api/v1/likes/add-like", null, {
           params: { postId },
@@ -275,15 +290,25 @@ function Profile() {
           [postId]: true,
         }));
   
+        // 更新 selectedPost 和 userData 中的 total_likes
         setSelectedPost((prevState) => ({
           ...prevState,
           total_likes: prevState.total_likes + 1,
         }));
+  
+        setUserData((prevUserData) => {
+          const updatedPosts = prevUserData.posts.map((post) =>
+            post.id === postId ? { ...post, total_likes: post.total_likes + 1 } : post
+          );
+          return { ...prevUserData, posts: updatedPosts };
+        });
+  
       }
     } catch (error) {
       console.error(`Error updating like for post ${postId}:`, error);
     }
-  };  
+  };
+  
 
   const checkIfLiked = async (postId) => {
     try {
@@ -424,7 +449,7 @@ function Profile() {
             {userData.posts && userData.posts.length > 0 ? (
               userData.posts.map((post) => (
                 <div className="mypost" key={post.id}>
-                  <div className="title-and-btn" onClick={() => handlePostClick(post)}>
+                  <div className="title-and-btn" onClick={() => handlePostClick(post.id)}>
                     <h3>{post.title}</h3>
                     {showOutDelete && (
                       <button className="X-btn" onClick={(event) => handleDeletePost(event, post.id)}>
