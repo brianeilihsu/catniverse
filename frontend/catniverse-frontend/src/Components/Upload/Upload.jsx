@@ -38,6 +38,7 @@ function Upload() {
   const [popupInfo, setPopupInfo] = useState(null); 
   const [selectedLocation, setSelectedLocation] = useState("");
   const [newAddress, setNewAddress] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("token");
   const latRef = useRef(null);
@@ -269,6 +270,7 @@ function Upload() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
   
     try {
       const croppedBlobs = await Promise.all(
@@ -288,6 +290,8 @@ function Upload() {
     } catch (error) {
       console.error("上傳過程失敗：", error);
       alert("上傳過程失敗");
+    } finally {
+      setIsLoading(false);
     }
   };  
 
