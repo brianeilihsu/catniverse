@@ -26,9 +26,9 @@ function Index() {
   const navigate = useNavigate();
 
   const taiwanRegions = [
-    "台北市", "新北市", "桃園市", "台中市", "台南市", "高雄市", "基隆市", 
+    "臺北市", "新北市", "桃園市", "台中市", "臺南市", "高雄市", "基隆市", 
     "新竹市", "新竹縣", "苗栗縣", "彰化縣", "南投縣", "雲林縣", "嘉義市", 
-    "嘉義縣", "屏東縣", "宜蘭縣", "花蓮縣", "台東縣", "澎湖縣", "金門縣", "連江縣"
+    "嘉義縣", "屏東縣", "宜蘭縣", "花蓮縣", "臺東縣", "澎湖縣", "金門縣", "連江縣"
   ];
 
   useEffect(() => {
@@ -155,7 +155,7 @@ function Index() {
         const response = await axios.get(
           `http://140.136.151.71:8787/api/v1/posts/region`,
           {
-            params: { address: region },  
+            params: { city: region },  
           }
         );
         const posts = response.data.data;
@@ -397,7 +397,7 @@ function Index() {
           latest
         </button>
         <select className="region" value={selectedRegion} onChange={handleRegionPost}>
-          <option value="">選擇縣市</option>
+          <option value="">region</option>
           {taiwanRegions.map((region) => (
             <option key={region} value={region}>
               {region}
@@ -516,7 +516,7 @@ function Index() {
                       )}
                     <div className="post-content">
                       <p className="post-text">{post.content}</p>
-                      <p className="post-location">發布地址：{post.address}</p>
+                      <p className="post-location">發布地址：{post.city}{post.district}{post.street}</p>
                       <p className="post-date">
                         發布於：
                         {new Date(post.createdAt).toLocaleString("zh-TW", {

@@ -58,20 +58,21 @@ function Shop() {
             `http://140.136.151.71:8787/api/v1/users/${userId}/user`
           );
           const user = response.data.data;
-
+    
           setUserData((prevState) => ({
             ...prevState,
             [userId]: user,
           }));
-
-          if (user.cart.cartId) {
+    
+          // 檢查 user.cart 是否存在，然後再讀取 cartId
+          if (user.cart && user.cart.cartId) {
             localStorage.setItem("cartId", user.cart.cartId);
           }
         }
       } catch (error) {
         console.error(`Error fetching user data for userId ${userId}:`, error);
       }
-    };
+    };    
 
     if (userId) {
       fetchUserData(userId);
@@ -81,7 +82,10 @@ function Shop() {
   const fetchFilteredProducts = async () => {
     try {
       let response;
-      if (!selectedCategory && !selectedBrand && name.trim() === "") {
+      const noSearchCriteria = !selectedCategory && !selectedBrand && name.trim() === "";  // 判斷是否沒有搜尋條件
+  
+      if (noSearchCriteria) {
+        // 沒有任何搜尋條件，查詢所有商品
         response = await axios.get(`http://140.136.151.71:8787/api/v1/products/all`);
       } else if (selectedCategory && selectedBrand) {
         try {
@@ -89,7 +93,7 @@ function Shop() {
             `http://140.136.151.71:8787/api/v1/products/products/by/category-and-brand`,
             { params: { category: selectedCategory, brand: selectedBrand } }
           );
-        } catch(e) {
+        } catch (e) {
           alert("搜尋失敗，沒有符合條件的商品！");
         }
       } else if (selectedBrand && name.trim() !== "") {
@@ -98,7 +102,7 @@ function Shop() {
             `http://140.136.151.71:8787/api/v1/products/products/by/brand-and-name`,
             { params: { brand: selectedBrand, name } }
           );
-        } catch(e) {
+        } catch (e) {
           alert("搜尋失敗，沒有符合條件的商品！");
         }
       } else if (name.trim() !== "") {
@@ -115,18 +119,20 @@ function Shop() {
           { params: { brand: selectedBrand } }
         );
       }
-
-      const products = response.data.data;
-      
-      if (products.length === 0) {
+  
+      const products = response?.data?.data || [];  // 確保 products 有資料
+  
+      // 只有在有搜尋條件的情況下，且 products 為空時，才提示搜尋失敗
+      if (!noSearchCriteria && products.length === 0) {
         alert("搜尋失敗，沒有符合條件的商品！");
       }
-      
+  
       setProductData(products);
     } catch (error) {
       console.error(`Error fetching filtered product data:`, error);
     }
   };
+  
 
   useEffect(() => {
     if (!name && !selectedCategory && !selectedBrand) {

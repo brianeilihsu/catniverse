@@ -40,15 +40,16 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // 防止表單提交導致頁面刷新
-
+  
+    const passwordRegex = /^[A-Za-z0-9]{6,}$/;  // 至少6個字符，僅限英文字母和數字
+  
     if (!registerData.username || !registerData.email || !registerData.password || !registerData.passwordCheck) {
       alert("所有欄位均為必填項！");
       return;
     }
-
-    if (registerData.password !== registerData.passwordCheck) {
-      alert("密碼與確認密碼不一致");
-
+  
+    if (!passwordRegex.test(registerData.password)) {
+      alert("密碼必須至少包含6個字符，且只能包含英文字母和數字");
       setRegisterData({
         ...registerData,
         password: "",
@@ -56,7 +57,17 @@ function Register() {
       });
       return;
     }
-
+  
+    if (registerData.password !== registerData.passwordCheck) {
+      alert("密碼與確認密碼不一致");
+      setRegisterData({
+        ...registerData,
+        password: "",
+        passwordCheck: ""
+      });
+      return;
+    }
+  
     try {
       const response = await axios.post(
         "http://140.136.151.71:8787/api/v1/users/add",
@@ -78,7 +89,7 @@ function Register() {
         alert("註冊失敗，請稍後再試。");
       }
     }
-  };
+  };  
 
   return (
     <div className="ctr">

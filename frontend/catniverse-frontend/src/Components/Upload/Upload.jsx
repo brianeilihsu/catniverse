@@ -16,7 +16,6 @@ function Upload() {
     userId: "",
     title: "",
     content: "",
-    address: "",
   });
 
   const [imageFiles, setImageFiles] = useState([]); 
@@ -32,12 +31,17 @@ function Upload() {
     zoom: 10,
   });
 
+  const [newCity, setNewCity] = useState(null);
+  const [newDistrict, setNewDistrict] = useState(null);
+  const [newStreet, setNewStreet] = useState(null);
   const [newPlace, setNewPlace] = useState(null);
   const [popupInfo, setPopupInfo] = useState(null); 
   const [selectedLocation, setSelectedLocation] = useState("");
   const [newAddress, setNewAddress] = useState("");
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("token");
+  const latRef = useRef(null);
+  const lngRef = useRef(null);
   const navigate = useNavigate();
   const geocodingClient = mapboxGeocoding({ accessToken: TOKEN });
 
@@ -52,14 +56,34 @@ function Upload() {
   }, []);
 
   const formatAddress = (address) => {
-    const parts = address.split(", ").map((part) => part.trim()); 
-
-    const [street, number, district, city] = parts;
-    setNewAddress(`${city}${district}${street}${number}號`);
-
-    return `${city}${district}${street}${number}號`;
-  };
-
+    const firstSpaceIndex = address.indexOf(" ");
+  
+    if (firstSpaceIndex !== -1 && /^[\d-]+$/.test(address.slice(0, firstSpaceIndex))) {
+      address = address.slice(firstSpaceIndex + 1).trim(); 
+    }
+  
+    let parts = address.split(", ").map((part) => part.trim());
+  
+    parts = parts.filter(part => part !== "台湾" && !/^\d+$/.test(part));
+  
+    if (parts.length >= 3) {
+      const street = parts[0];
+      const district = parts[1];
+      const city = parts[2];
+  
+      const formattedAddress = `${city}${district}${street}`;
+  
+      setNewStreet(street);
+      setNewDistrict(district);
+      setNewCity(city);
+      setNewAddress(formattedAddress); 
+  
+      return formattedAddress;
+    } else {
+      return address;
+    }
+  };  
+  
   const fetchAddress = async (lat, lng) => {
     try {
       const response = await geocodingClient
@@ -69,11 +93,20 @@ function Upload() {
           language: ["zh"],
         })
         .send();
+      
 
       const place = response.body.features[0];
       const rawAddress = place?.place_name || "無法取得地址";
+      
+
+      //alert(lat + " " + lng);
+
+      //alert(`Raw popup data: ${JSON.stringify(place, null, 2)}`);
       const formattedAddress = formatAddress(rawAddress); 
 
+      latRef.current = lat;
+      lngRef.current = lng;
+      //alert("new: " + latRef.current + " " + lngRef.current);
       setPopupInfo({ lat, lng, address: formattedAddress });
       setSelectedLocation(formattedAddress); 
     } catch (error) {
@@ -194,7 +227,11 @@ function Upload() {
       ...formData,
       tipped: earStatus,
       stray: strayCatStatus,
-      address: newAddress,
+      city: newCity,
+      district: newDistrict,
+      street: newStreet,
+      latitude: latRef.current,
+      longitude: lngRef.current,
     };
   
     const formDataWithImages = new FormData();
