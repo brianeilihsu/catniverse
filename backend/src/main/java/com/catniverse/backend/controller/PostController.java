@@ -54,10 +54,17 @@ public class PostController {
     }
 
     @GetMapping("/region")
-    public ResponseEntity<ApiResponse> getRegionPosts(@RequestParam String address) {
-        List<Post> posts = postService.findByAddress(address);
+    public ResponseEntity<ApiResponse> getRegionPosts(@RequestParam String city) {
+        List<Post> posts = postService.findByCity(city);
         List<PostDto> convertedPosts = postService.getConvertedPosts(posts);
         return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+    }
+
+    @GetMapping("/title")
+    public ResponseEntity<ApiResponse> getPostByTitle(@RequestParam String title) {
+        List<Post> posts = postService.getPostsByTitle(title);
+        List<PostDto> convertedPosts = postService.getConvertedPosts(posts);
+        return ResponseEntity.ok(new ApiResponse("find by title successfully", convertedPosts));
     }
 
     @GetMapping("/user-post/{userId}")
@@ -73,6 +80,9 @@ public class PostController {
         try {
             User user = userService.getAuthenticatedUser();
             postRequest.setUser(user);
+            System.out.println("controller2");
+            System.out.println(postRequest.getCity());
+            System.out.println(postRequest.getDistrict());
             Post post = postService.addPost(postRequest);
             postImageService.savePostImages(post.getId(), files);
             PostDto postDto = postService.convertToDto(post);

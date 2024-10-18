@@ -9,6 +9,7 @@ import com.catniverse.backend.model.PostImage;
 import com.catniverse.backend.repo.PostImageRepo;
 import com.catniverse.backend.repo.PostRepo;
 import com.catniverse.backend.request.AddPostRequest;
+import com.catniverse.backend.service.chart.ImpChartService;
 import com.catniverse.backend.service.forbidden.ImpForbiddenService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -21,6 +22,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 public class PostService implements ImpPostService{
+    private final ImpChartService chartService;
     private final PostRepo postRepo;
     private final PostImageRepo postImageRepo;
     private final ModelMapper modelMapper;
@@ -38,9 +40,16 @@ public class PostService implements ImpPostService{
             post.setContent(addPostRequest.getContent());
             post.setTipped(addPostRequest.isTipped());
             post.setStray(addPostRequest.isStray());
-            post.setAddress(addPostRequest.getAddress());
+            post.setCity(addPostRequest.getCity());
+            post.setDistrict(addPostRequest.getDistrict());
+            post.setStreet(addPostRequest.getStreet());
+            post.setLatitude(addPostRequest.getLatitude());
+            post.setLongitude(addPostRequest.getLongitude());
             post.setUser(addPostRequest.getUser()); // 假設 AddPostRequest 中有 User 物件
             post.setCreatedAt(LocalDateTime.now());
+
+            chartService.update(addPostRequest.getCity(), addPostRequest.getDistrict(), addPostRequest.isTipped(), addPostRequest.isStray());
+
 
             // 儲存到資料庫
             return postRepo.save(post);
@@ -77,8 +86,8 @@ public class PostService implements ImpPostService{
     }
 
     @Override
-    public List<Post> findByAddress(String address) {
-        return postRepo.findByAddressContaining(address);
+    public List<Post> findByCity(String city) {
+        return postRepo.findByCity(city);
     }
 
     @Override

@@ -19,5 +19,6 @@ public interface ImpPostService {
     List<PostDto> getConvertedPosts(List<Post> posts);
     PostDto convertToDto(Post post);
 
-    List<Post> findByAddress(String address);
+    List<Post> findByCity(String city);
+
 }

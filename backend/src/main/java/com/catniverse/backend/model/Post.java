@@ -20,11 +20,14 @@ public class Post {
     private Long id;
     private String title;
     private String content;
-    private String address;
+    private String city;
+    private String district;
+    private String street;
+
     private boolean tipped;
     private boolean stray;
-    //private BigDecimal latitude;
-    //private BigDecimal longitude;
+    private double latitude;
+    private double longitude;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

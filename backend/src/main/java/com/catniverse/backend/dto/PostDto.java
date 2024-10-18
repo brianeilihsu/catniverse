@@ -12,7 +12,9 @@ public class PostDto {
     private Long id;
     private String title;
     private String content;
-    private String address;
+    private String city;
+    private String district;
+    private String street;
     private boolean tipped;
     private boolean stray;
     private int total_likes; // 我要怎麼取得likes的總數?

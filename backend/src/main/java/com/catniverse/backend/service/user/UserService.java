@@ -77,8 +77,11 @@ public class UserService implements ImpUserService{
     @Override
     public UserDto convertUserToDto(User user) {
         UserDto userDto = modelMapper.map(user, UserDto.class);
-        List<PostDto> postDtos = postService.getConvertedPosts(user.getPosts());
-        userDto.setPosts(postDtos);
+        if(user.getPosts() != null){
+            List<PostDto> postDtos = postService.getConvertedPosts(user.getPosts());
+            userDto.setPosts(postDtos);
+        }
+
         return userDto;
     }
 
