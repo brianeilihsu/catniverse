@@ -596,7 +596,7 @@ function Profile() {
                       comments[selectedPost.id].list.map((comment, index) => (
                         <div className="comment" key={comment.id || index}>
                           <img
-                            src={comment.userAvatar.replace(".png", ".webp")}
+                            src={comment.userAvatar ? comment.userAvatar.replace(".png", ".webp") : "defaultAvatar.webp"}
                             alt="評論者頭像"
                             className="comment-avatar"
                             style={{ width: "32px", height: "32px", borderRadius: "50%" }}

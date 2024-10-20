@@ -9,6 +9,7 @@ import guidePic6 from "../../Image/logout.png";
 import guidePic7 from "../../Image/profile.png";
 import guidePic8 from "../../Image/register.png";
 import guidePic9 from "../../Image/account.png";
+import guidePic10 from "../../Image/chart.png";
 import "./Header.css";
 
 function Header({ user, onLogout }) {
@@ -45,6 +46,14 @@ function Header({ user, onLogout }) {
             style={{width:"25px", height:"25px"}}
           />
           Map
+        </Link>
+        <Link to="/chart">
+          <img 
+            className="guidePic" 
+            src={guidePic10} alt="Chart" 
+            style={{width:"25px", height:"25px"}}
+          />
+          Chart
         </Link>
         <Link to="/introduction">
           <img 

@@ -16,11 +16,12 @@ import Cart from "./Components/Shop/Cart";
 import Order from "./Components/Shop/Order";
 import Index from "./Components/Index/Index";
 import Header from "./Components/Header/Header";
+import Chart from "./Components/Chart/Chart";
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const noHeaderRoutes = ["/login", "/register", "/map"];
+  const noHeaderRoutes = ["/login", "/register", "/chart"];
   const [username, setUsername] = useState("");
   const [userid, setUserid] = useState("");
   const isLoggingOut = useRef(false);
@@ -72,6 +73,7 @@ function App() {
         <Route path="/uploadEcommerce" element={<UploadEcommerce />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/order" element={<Order />} />
+        <Route path="/chart" element={<Chart/>} />
       </Routes>
     </div>
   );

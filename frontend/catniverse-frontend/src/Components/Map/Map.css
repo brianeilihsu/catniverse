@@ -1,15 +1,120 @@
+/* 全局樣式 */
 h2 {
-    padding-top: 0%;
+  padding-top: 0;
 }
 
+/* 地圖容器樣式 */
 .map-container {
-    width: 66.67%; /* 設置寬度為 2/3 */
-    margin: 0 auto; /* 讓地圖水平居中 */
-  }
-  
-  /* 設置地圖圖片的寬度為 100% 並保持高度自適應 */
-  .map-container img {
-    width: 100%; /* 讓地圖圖片填滿父容器 */
-    height: auto; /* 保持圖片比例 */
-    background-color: #f0f8ff;
-  }
+  width: 60%!important; /* 設置地圖寬度為 35%，使其狹長 */
+  height: 100vh!important; /* 讓地圖高度充滿視窗高度 */
+  margin: 0 auto; /* 讓地圖水平居中 */
+  position: relative; /* 保證地圖和訊息框的相對位置 */
+  transform-origin: right; /* 確保縮放從右邊開始 */
+  transform: scale(1); /* 縮放地圖 */
+  background-color: #f0f8ff; /* 地圖容器的背景色 */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* 增加陰影效果 */
+}
+
+/* 修改導航控制器位置 */
+.mapboxgl-ctrl-top-right {
+  top: auto;
+  bottom: 20px;
+  right: 20px;
+}
+
+/* 貓咪資訊方框 */
+.info-box {
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  top: 20px; /* 調整這個方框的位置 */
+  right: 20px;
+  padding: 10px;
+  border-radius: 10px;
+  z-index: 10;
+  /* 自動調整大小 */
+  width: 150px; 
+  height: auto;
+}
+
+/* 設置字體樣式 */
+.info-box h3 {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+.info-box p {
+  font-size: 14px;
+  margin: 5px 0 0;
+}
+
+/* 選擇台灣縣市、區與里方框 */
+.info-box-select {
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  top: 300px; /* 調整這個方框的位置，避免與貓咪資訊方框重疊 */
+  right: 20px;
+  padding: 10px;
+  border-radius: 10px;
+  z-index: 10;
+  width: 250px; /* 調整寬度以適應內容 */
+  height: auto;
+  max-width: 300px;
+  min-width: 150px;
+}
+
+/* 標籤樣式 */
+.info-box-select label {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* 下拉選單樣式 */
+.info-box-select select {
+  width: 100%;
+  padding: 5px;
+  margin-top: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+/* 縮放控制按鈕樣式 */
+.mapboxgl-ctrl-zoom-in,
+.mapboxgl-ctrl-zoom-out {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  margin: 2px;
+}
+
+.mapboxgl-ctrl-zoom-in::before,
+.mapboxgl-ctrl-zoom-out::before {
+  line-height: 30px; /* 垂直居中符號 */
+}
+
+/* 新增按鈕容器樣式 */
+.button-container {
+  width: 35%; /* 與地圖寬度一致 */
+  margin: 20px auto; /* 上下外邊距和水平居中 */
+  text-align: center; /* 使按鈕居中 */
+}
+
+/* 新增按鈕樣式 */
+.locate-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.locate-button:hover {
+  background-color: #0056b3;
+} 

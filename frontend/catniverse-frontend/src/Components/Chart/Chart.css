@@ -1,0 +1,42 @@
+/* Parent container to align both select and chart side by side */
+.wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+/* Styling for the select container */
+.select-container {
+    flex-grow: 1;
+    width: 10%;
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    font-size: small;
+}
+
+/* Styling for the chart container */
+.charts-container {
+    flex-grow: 4;  /* 讓圖表容器佔據更多空間 */
+    width: 90%;    /* 增加圖表的寬度 */
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    height: 750px;
+}
+
+.all-container {
+    display: flex;
+    width: 100%;    /* 增加圖表的寬度 */
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 0.5%;
+    margin-bottom: 0.5%;
+    height: 850px;
+}
+
+#city-select {
+    font-size: small;
+}
