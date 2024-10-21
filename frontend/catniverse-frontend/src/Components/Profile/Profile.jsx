@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "./Profile.css";
@@ -556,7 +556,7 @@ function Profile() {
                 <h2 className="modalPost-title">{selectedPost.title}</h2>
               </div>
               <p className="modalPost-text">{selectedPost.content}</p>
-              <p className="address">發布地址: {selectedPost.address}</p>
+              <p className="address">發布地址: {selectedPost.city}{selectedPost.district}{selectedPost.street}</p>
               <p className="date">
                 發布於：{new Date(selectedPost.createdAt).toLocaleString("zh-TW", {
                   year: "numeric",
@@ -567,6 +567,7 @@ function Profile() {
                   hour12: false,
                 })}
               </p>
+              <p className="stray">是否為流浪貓: {selectedPost.isStray ? "是" : "否"}</p>
 
               <div className="modalPost-actions">
               <button

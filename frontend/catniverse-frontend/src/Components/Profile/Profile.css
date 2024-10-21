@@ -256,6 +256,11 @@
   .date {
     padding: 0%;
     margin: 0%;
+  }
+
+  .stray {
+    padding: 0%;
+    margin: 0%;
     padding-bottom: 10px;
     border-bottom: 2px solid hsl(0, 71%, 33%);
   }

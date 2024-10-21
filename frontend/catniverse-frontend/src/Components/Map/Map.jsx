@@ -1,30 +1,53 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, Suspense} from "react";
 import mapboxgl from "mapbox-gl";
 import * as turf from "@turf/turf";
 import axios from "axios";
-import { feature } from "topojson-client"; // 匯入 topojson-client 的 feature 函數
+import { feature } from "topojson-client"; 
 import "./Map.css";
 import topoData from "../../../src/taiwan-townships.json";
 import countyBoundaries from "../../../src/countyboundary.json";
-import { regionOptions } from "./regionOptions"; // 引入區域資料
+import { regionOptions } from "./regionOptions"; 
+import HeartPic from "../../Image/comment-heart.png";
+import HeartPicFilled from "../../Image/heart.png";
+import CommentPic from "../../Image/comment.png";
 
 mapboxgl.accessToken =
   "pk.eyJ1Ijoic2hlZHlqdWFuYTk5IiwiYSI6ImNtMTRnY2U5ajB4ZzYyanBtMjBrMXd1a3UifQ.OcvE1wSjJs8Z1VpQDM12tg";
 
+const Slider = React.lazy(() => import('react-slick'));
+
+const sliderSettings = {
+  infinite: true,
+  speed: 500,
+  slidesToShow: 1,
+  slidesToScroll: 1,
+  arrows: false,
+  dots: false,
+};
+
 const Map = () => {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
-  const [selectedCounty, setSelectedCounty] = useState(""); // 選擇的縣市
-  const [selectedRegion, setSelectedRegion] = useState(null); // 選擇的區域
-  const [userLocation, setUserLocation] = useState(null); // 使用者位置狀態
-  const [areaName, setAreaName] = useState(""); // 顯示查詢到的區域名稱
-  const [cats, setCats] = useState([]); // 保存貓咪的數據
+  const [selectedCounty, setSelectedCounty] = useState(""); 
+  const [selectedRegion, setSelectedRegion] = useState(null); 
+  const [userLocation, setUserLocation] = useState(null); 
+  const [areaName, setAreaName] = useState(""); 
+  const [cats, setCats] = useState([]); 
   const [catsImageUrls, setCatsImageUrls] = useState({});
+  const [selectedCat, setSelectedCat] = useState(null); 
+  const [showModal, setShowModal] = useState(false); 
+  const [likedPosts, setLikedPosts] = useState({});
+  const [comments, setComments] = useState({});
+  const [commentText, setCommentText] = useState("");
+  const token = localStorage.getItem("token");
+  const sliderRefs = useRef({});
+  const dataCache = useRef({});
+  const [loading, setLoading] = useState(false);
+  const [notNeuteredCount, setNotNeuteredCount] = useState(0);
+  const [neuteredCount, setNeuteredCount] = useState(0);
 
-  // 使用 topojson-client 將 topoData 轉換為 geojson
-  const twBoundaries = feature(topoData, topoData.objects["TOWN_MOI_1130718"]); // 使用 taiwan-townships.json 來獲取鄉鎮區
+  const twBoundaries = feature(topoData, topoData.objects["TOWN_MOI_1130718"]); 
 
-  // 取得台灣縣市的邏輯 (使用 countyBoundaries)
   const cities = Object.keys(
     countyBoundaries.features.reduce((acc, feature) => {
       acc[feature.properties.COUNTYNAME] = true;
@@ -32,15 +55,14 @@ const Map = () => {
     }, {})
   );
 
-  // 根據選擇的縣市顯示對應的鄉鎮市區選項
   const towns = selectedCounty ? regionOptions[selectedCounty] || [] : [];
 
   const handleCountyChange = (e) => {
     const county = e.target.value;
     setSelectedCounty(county);
-    setSelectedRegion(null); // 清空選擇的鄉鎮市區
-    removeRegionBoundary(); // 移除先前選擇的鄉鎮市區邊界
-    drawCountyBoundary(county); // 選擇縣市時繪製邊界
+    setSelectedRegion(null); 
+    removeRegionBoundary(); 
+    drawCountyBoundary(county); 
   };
 
   const handleRegionChange = (e) => {
@@ -60,24 +82,6 @@ const Map = () => {
       drawRegionBoundary(selectedRegion);
     }
   }, [selectedRegion]);
-
-  useEffect(() => {
-    if (!mapRef.current) {
-      const map = new mapboxgl.Map({
-        container: mapContainerRef.current,
-        style: "mapbox://styles/mapbox/streets-v12",
-        zoom: 7,
-        center: [120.906189, 23.634318],
-        maxBounds: [
-          [118.0, 20.0],
-          [123.5, 26.5],
-        ],
-      });
-
-      map.addControl(new mapboxgl.NavigationControl());
-      mapRef.current = map;
-    }
-  });
 
   useEffect(() => {
     if (!mapRef.current) {
@@ -115,7 +119,6 @@ const Map = () => {
       selectedCounty &&
       cats.length > 0 
     ) {
-      console.log("123");
       cats.forEach((cat) => {
         const catImageUrls =
           catsImageUrls[cat.id] && catsImageUrls[cat.id].length > 0
@@ -135,18 +138,13 @@ const Map = () => {
             .addTo(mapRef.current);
 
           marker.getElement().addEventListener("click", () => {
-            setMessage({
-              location: `${cat.longitude}, ${cat.latitude}`,
-              isStray: cat.isStray ? "是" : "否",
-            });
-            fetchAddress(cat.longitude, cat.latitude);
+            setSelectedCat(cat); 
+            setShowModal(true); 
           });
 
-          markers.push(marker); // 保存标记
+          markers.push(marker);
         }
       });
-
-      console.log("当前标记信息: ", markers);
     }
 
     return () => {
@@ -154,14 +152,170 @@ const Map = () => {
     };
   }, [selectedCounty, cats, catsImageUrls]);
 
-  // 繪製縣市邊界
+  useEffect(() => {
+    if (selectedCat) {
+      fetchComments(selectedCat.id);
+      checkIfLiked(selectedCat.id);
+    }
+  }, [selectedCat]);
+
+  const fetchComments = async (catId) => {
+    try {
+      const response = await axios.get(`http://140.136.151.71:8787/api/v1/comments/from-post/${catId}`);
+      const commentsData = response.data.data || [];
+      const commentsWithUserInfo = await Promise.all(
+        commentsData.map(async (comment) => {
+          const userResponse = await fetchUserDetails(comment.userId);
+          const user = userResponse.data.data;
+          let avatarUrl = null;
+          if (user.userAvatar && user.userAvatar.downloadUrl) {
+            avatarUrl = await fetchImage(user.userAvatar.downloadUrl);
+          }
+          return {
+            ...comment,
+            username: user.username,
+            userAvatar: avatarUrl,
+          };
+        })
+      );
+      setComments((prevState) => ({
+        ...prevState,
+        [catId]: { visible: true, list: commentsWithUserInfo },
+      }));
+    } catch (error) {
+      console.error(`Error fetching comments for post ${catId}:`, error);
+    }
+  };
+
+  const fetchUserDetails = async (userId) => {
+    return axios.get(`http://140.136.151.71:8787/api/v1/users/${userId}/user`);
+  };
+
+  const handleLike = async (catId) => {
+    const isLiked = likedPosts[catId];
+    try {
+      if (isLiked) {
+        await axios.delete("http://140.136.151.71:8787/api/v1/likes/remove-like", {
+          params: { postId: catId },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setLikedPosts((prevState) => ({
+          ...prevState,
+          [catId]: false,
+        }));
+
+        setSelectedCat((prevState) => ({
+          ...prevState,
+          total_likes: prevState.total_likes - 1,
+        }));
+      } else {
+        await axios.post("http://140.136.151.71:8787/api/v1/likes/add-like", null, {
+          params: { postId: catId },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setLikedPosts((prevState) => ({
+          ...prevState,
+          [catId]: true,
+        }));
+
+        setSelectedCat((prevState) => ({
+          ...prevState,
+          total_likes: prevState.total_likes + 1,
+        }));
+      }
+    } catch (error) {
+      console.error(`Error updating like for post ${catId}:`, error);
+    }
+  };
+
+  const checkIfLiked = async (catId) => {
+    try {
+      const response = await axios.get("http://140.136.151.71:8787/api/v1/likes/existed", {
+        params: { postId: catId },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.data.data) {
+        setLikedPosts((prevState) => ({
+          ...prevState,
+          [catId]: true,
+        }));
+      } else {
+        setLikedPosts((prevState) => ({
+          ...prevState,
+          [catId]: false,
+        }));
+      }
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        setLikedPosts((prevState) => ({
+          ...prevState,
+          [catId]: false,
+        }));
+      } else {
+        console.error(`Error checking like status for post ${catId}:`, error);
+      }
+    }
+  };
+
+  const handleCloseModal = () => {
+    setSelectedCat(null); 
+    setShowModal(false); 
+  };
+
+  const handleAddComment = async (catId) => {
+    if (!commentText.trim()) return;
+  
+    try {
+      await axios.post(`http://140.136.151.71:8787/api/v1/comments/add/${catId}`, null, {
+        params: { content: commentText },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      setCommentText("");
+      fetchComments(catId);
+  
+      setSelectedCat((prevSelectedCat) => ({
+        ...prevSelectedCat,
+        total_comments: prevSelectedCat.total_comments + 1,
+      }));
+  
+      setCats((prevCats) =>
+        prevCats.map((cat) =>
+          cat.id === catId ? { ...cat, total_comments: cat.total_comments + 1 } : cat
+        )
+      );
+    } catch (error) {
+      console.error(`Error posting comment for post ${catId}:`, error);
+    }
+  };  
+
+  const toggleComments = (catId) => {
+    setComments((prevState) => ({
+      ...prevState,
+      [catId]: {
+        ...prevState[catId],
+        visible: !prevState[catId]?.visible,
+      },
+    }));
+  };
+
+
   const drawCountyBoundary = (selectedCountyName) => {
     const selectedCountyFeature = countyBoundaries.features.find(
       (feature) => feature.properties.COUNTYNAME === selectedCountyName
     );
 
     if (mapRef.current && selectedCountyFeature) {
-      // 刪除先前的縣市圖層（如果有的話）
       if (mapRef.current.getLayer("selected-county")) {
         mapRef.current.removeLayer("selected-county");
       }
@@ -179,16 +333,15 @@ const Map = () => {
 
       mapRef.current.addLayer({
         id: "selected-county",
-        type: "line", // 使用線條代替陰影
+        type: "line", 
         source: "selected-county",
         layout: {},
         paint: {
-          "line-color": "#0000FF", // 藍色線條
+          "line-color": "#0000FF", 
           "line-width": 3,
         },
       });
 
-      // 讓地圖聚焦到選擇的縣市
       const bounds = new mapboxgl.LngLatBounds();
       selectedCountyFeature.geometry.coordinates[0].forEach((coord) => {
         bounds.extend(coord);
@@ -197,7 +350,6 @@ const Map = () => {
     }
   };
 
-  // 移除縣市邊界圖層
   const removeCountyBoundary = () => {
     if (mapRef.current) {
       if (mapRef.current.getLayer("selected-county")) {
@@ -220,12 +372,10 @@ const Map = () => {
     }
   };
 
-  // 繪製鄉鎮市區邊界
   const drawRegionBoundary = (regionIndex) => {
     const selectedFeature = twBoundaries.features[regionIndex];
 
     if (mapRef.current && selectedFeature) {
-      // 刪除先前的區域圖層（如果有的話）
       if (mapRef.current.getLayer("selected-region")) {
         mapRef.current.removeLayer("selected-region");
       }
@@ -252,7 +402,6 @@ const Map = () => {
         },
       });
 
-      // 讓地圖聚焦到選擇的區域
       const bounds = new mapboxgl.LngLatBounds();
       selectedFeature.geometry.coordinates[0].forEach((coord) => {
         bounds.extend(coord);
@@ -262,39 +411,60 @@ const Map = () => {
   };
 
   const fetchCatsData = async () => {
-    setCatsImageUrls({});
-    try {
-      const response = await axios.get(
-        `http://140.136.151.71:8787/api/v1/posts/region`,
-        {
-          params: { city: selectedCounty },
-        }
-      );
-      const posts = response.data.data;
-      setCats(posts); // 將返回的貓咪數據存入 cats state
-      console.log(posts);
-
-      const imageUrls = {}; // 用來保存每個 post 的圖片
-
-      // 遍歷每個 post
-      for (const post of posts) {
-        if (post.postImages && post.postImages.length > 0) {
-          // 如果該 post 有圖片，處理每張圖片
-          const postImagesUrls = [];
-          for (const image of post.postImages) {
-            const url = await fetchImage(image.downloadUrl); // 獲取圖片 URL
-            postImagesUrls.push(url); // 保存每個 post 的圖片 URL
-          }
-          imageUrls[post.id] = postImagesUrls; // 將該 post 的所有圖片 URL 保存到對應的 post.id 中
-        } else {
-          console.warn(`Post ${post.id} 沒有圖片`);
-        }
-      }
-
-      setCatsImageUrls(imageUrls); // 更新圖片 URLs 狀態
-    } catch (error) {
-      console.error("Error fetching region-based posts: ", error);
+    if (dataCache.current[selectedCounty]) {
+      setCats(dataCache.current[selectedCounty]);  
+      return;
     }
+    setCatsImageUrls({});
+    setLoading(true);
+  const placeholderColor = "#ccc"; 
+
+  try {
+    const response = await axios.get(`http://140.136.151.71:8787/api/v1/posts/region`, {
+      params: { city: selectedCounty },
+    });
+    const posts = response.data.data;
+    setCats(posts);
+    console.log(posts);
+
+    const imageUrls = {}; 
+    let neutered = 0;  
+    let notNeutered = 0; 
+
+    posts.forEach(post => {
+      if (post.postImages && post.postImages.length > 0) {
+        imageUrls[post.id] = [placeholderColor]; 
+      } else {
+        console.warn(`Post ${post.id} 沒有圖片`);
+      }
+      if (post.tipped) {
+        neutered += 1;  
+      } else {
+        notNeutered += 1;  
+      }
+    });
+    setNeuteredCount(neutered);
+    setNotNeuteredCount(notNeutered);
+    setCatsImageUrls(imageUrls);  
+
+    for (const post of posts) {
+      if (post.postImages && post.postImages.length > 0) {
+        const postImagesUrls = [];
+        for (const image of post.postImages) {
+          const url = await fetchImage(image.downloadUrl);  
+          postImagesUrls.push(url);
+        }
+
+        setCatsImageUrls(prevState => ({
+          ...prevState,
+          [post.id]: postImagesUrls,
+        }));
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching region-based posts: ", error);
+  }
+    setLoading(false);
   };
 
   const fetchImage = async (downloadUrl) => {
@@ -329,7 +499,6 @@ const Map = () => {
     if (mapRef.current) {
       const map = mapRef.current;
 
-      // 移除選中的圖層和數據源
       removeCountyBoundary();
       removeRegionBoundary();
 
@@ -341,27 +510,24 @@ const Map = () => {
   };
 
   return (
-    <div>
+    <div className="map">
       <div
         ref={mapContainerRef}
         className="map-container"
         style={{ height: "100vh", width: "100%" }}
       />
-
+      <button className="locate-button" onClick={handleLocateUser}>
+        定位到我
+      </button>
       <div className="info-box">
         <h3>貓咪資訊</h3>
         <p>
-          <strong>是否為流浪貓:</strong> {cats.isStray || "未知"}
+          <strong>未絕育數量:</strong> {notNeuteredCount}
         </p>
         <p>
-          <strong>經緯度:</strong> {cats.location || "未知"}
-        </p>
-        <p>
-          <strong>地址:</strong> {cats.address || "地址獲取中..."}
+          <strong>已絕育數量:</strong> {neuteredCount}
         </p>
       </div>
-
-      {/* 縣市、區域選擇器 */}
       <div className="info-box-select">
         <h3>選擇台灣縣市、區與里</h3>
 
@@ -395,12 +561,124 @@ const Map = () => {
 
         <button onClick={handleReset}>重新選擇</button>
       </div>
+      {loading && <div className="loading-overlay">Loading...</div>} 
+      {showModal && selectedCat && (
+        <div className="overlay">
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <span className="closed-button" onClick={handleCloseModal}>
+              &times;
+            </span>
+            <div className="modal-image">
+              {catsImageUrls[selectedCat.id] && catsImageUrls[selectedCat.id].length === 1 ? (
+                <img
+                  src={catsImageUrls[selectedCat.id][0].replace(".png", ".webp")}
+                  className="modalPost-image"
+                  alt="Cat image"
+                  style={{ width: "500px", height: "660px" }}
+                  loading="lazy"
+                />
+              ) : (
+                <Suspense fallback={<div>Loading slider...</div>}>
+                  <Slider {...sliderSettings} ref={(slider) => (sliderRefs.current[selectedCat.id] = slider)}>
+                    {catsImageUrls[selectedCat.id] &&
+                      catsImageUrls[selectedCat.id].map((url, index) => (
+                        <div key={index}>
+                          <img
+                            src={url.replace(".png", ".webp")}
+                            className="modalPost-image"
+                            alt={`Cat image ${index}`}
+                            style={{ width: "500px", height: "660px" }}
+                            loading="lazy"
+                          />
+                        </div>
+                      ))}
+                  </Slider>
+                </Suspense>
+              )}
+            </div>
+            <div className="modalPost-content" style={{ width: "500px", height: "660px" }}>
+              <div>
+                <h2 className="modalPost-title">{selectedCat.title}</h2>
+              </div>
+              <p className="modalPost-text">{selectedCat.content}</p>
+              <p className="address">發布地址: {selectedCat.city}{selectedCat.district}{selectedCat.street}</p>
+              <p className="date">
+                發布於：{new Date(selectedCat.createdAt).toLocaleString("zh-TW", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })}
+              </p>
+              <p className="stray">是否為流浪貓: {selectedCat.isStray ? "是" : "否"}</p>
 
-      <div className="button-container">
-        <button className="locate-button" onClick={handleLocateUser}>
-          定位到我
-        </button>
-      </div>
+              <div className="modalPost-actions">
+                <button
+                  className="action-btn"
+                  onClick={() => handleLike(selectedCat.id)}
+                  style={{
+                    color: likedPosts[selectedCat.id] ? "#9E1212" : "black",
+                    fontWeight: likedPosts[selectedCat.id] ? "bold" : "normal",
+                  }}
+                >
+                  <img
+                    className="heart-pic"
+                    src={likedPosts[selectedCat.id] ? HeartPicFilled : HeartPic}
+                    alt="讚"
+                  />
+                  {selectedCat.total_likes}
+                </button>
+                <button className="comment-btn" onClick={() => toggleComments(selectedCat.id)}>
+                  <img className="comment-pic" src={CommentPic} alt="留言" />
+                  {selectedCat.total_comments}
+                </button>
+              </div>
+
+              {comments[selectedCat.id] && comments[selectedCat.id].visible && (
+                <>
+                  <div className="comments-section">
+                    {comments[selectedCat.id]?.list?.length > 0 ? (
+                      comments[selectedCat.id].list.map((comment, index) => (
+                        <div className="comment" key={index}>
+                          <img
+                            src={comment.userAvatar ? comment.userAvatar.replace(".png", ".webp") : "defaultAvatar.webp"}
+                            alt="評論者頭像"
+                            className="comment-avatar"
+                            style={{ width: "32px", height: "32px", borderRadius: "50%" }}
+                            loading="lazy"
+                          />
+                          <div className="comment-content">
+                            <div className="title-and-btn">
+                              <div className="comment-author">{comment.username}</div>
+                            </div>
+                            <div className="comment-text">{comment.content}</div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div>Loading comments...</div>
+                    )}
+                  </div>
+                  <div className="new-comment">
+                    <input
+                      type="text"
+                      placeholder="寫下你的評論..."
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      className="writeComment"
+                    />
+                    <button className="send-btn" onClick={() => handleAddComment(selectedCat.id)}>
+                      Send
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

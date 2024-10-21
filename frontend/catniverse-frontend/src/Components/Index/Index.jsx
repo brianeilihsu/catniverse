@@ -7,7 +7,6 @@ import CommentPic from "../../Image/comment.png";
 import defaultAvatar from "../../Image/account.png";
 import "./Index.css";
 
-// 使用 React.lazy 來懶加載 Slider
 const Slider = React.lazy(() => import("react-slick"));
 
 function Index() {
@@ -391,13 +390,13 @@ function Index() {
           MeowTaiwan
         </h1>
         <button className="popular" onClick={handlePopularPost}>
-          popular
+          Popular
         </button>
         <button className="latest" onClick={handleLatestPost}>
-          latest
+          Latest
         </button>
         <select className="region" value={selectedRegion} onChange={handleRegionPost}>
-          <option value="">region</option>
+          <option value="">Region</option>
           {taiwanRegions.map((region) => (
             <option key={region} value={region}>
               {region}
