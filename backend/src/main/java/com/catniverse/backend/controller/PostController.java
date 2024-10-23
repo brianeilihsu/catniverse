@@ -34,44 +34,80 @@ public class PostController {
 
     @GetMapping("/popular")
     public ResponseEntity<ApiResponse> getPopularPosts() {
-        List<Post> posts = postService.getAllPosts();
-        List<PostDto> convertedPosts = postService.getConvertedPosts(posts)
-                .stream()
-                .sorted((p1, p2) -> Integer.compare(p2.getTotal_likes()+ p2.getTotal_comments()
-                                                    , p1.getTotal_likes()+ p1.getTotal_comments()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+        try {
+            List<Post> posts = postService.getAllPosts();
+            List<PostDto> convertedPosts = postService.getConvertedPosts(posts)
+                    .stream()
+                    .sorted((p1, p2) -> Integer.compare(p2.getTotal_likes()+ p2.getTotal_comments()
+                                                        , p1.getTotal_likes()+ p1.getTotal_comments()))
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse( e.getMessage(), null));
+        }
     }
 
     @GetMapping("/latest")
     public ResponseEntity<ApiResponse> getLatestPosts() {
-        List<Post> posts = postService.getAllPosts();
-        List<PostDto> convertedPosts = postService.getConvertedPosts(posts)
-                .stream()
-                .sorted((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+        try {
+            List<Post> posts = postService.getAllPosts();
+            List<PostDto> convertedPosts = postService.getConvertedPosts(posts)
+                    .stream()
+                    .sorted((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()))
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse( e.getMessage(), null));
+        }
     }
 
     @GetMapping("/region")
     public ResponseEntity<ApiResponse> getRegionPosts(@RequestParam String city) {
-        List<Post> posts = postService.findByCity(city);
-        List<PostDto> convertedPosts = postService.getConvertedPosts(posts);
-        return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+        try {
+            List<Post> posts = postService.findByCity(city);
+            List<PostDto> convertedPosts = postService.getConvertedPosts(posts);
+            return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse( e.getMessage(), null));
+        }
     }
 
     @GetMapping("/title")
     public ResponseEntity<ApiResponse> getPostByTitle(@RequestParam String title) {
-        List<Post> posts = postService.getPostsByTitle(title);
-        List<PostDto> convertedPosts = postService.getConvertedPosts(posts);
-        return ResponseEntity.ok(new ApiResponse("find by title successfully", convertedPosts));
+        try {
+            List<Post> posts = postService.getPostsByTitle(title);
+            List<PostDto> convertedPosts = postService.getConvertedPosts(posts);
+            return ResponseEntity.ok(new ApiResponse("find by title successfully", convertedPosts));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse( e.getMessage(), null));
+        }
     }
 
     @GetMapping("/user-post/{userId}")
     public ResponseEntity<ApiResponse> getUserPosts(@PathVariable Long userId) {
-        List<Post> posts = postService.getPostsByUserId(userId);
-        List<PostDto> convertedPosts = postService.getConvertedPosts(posts);
-        return ResponseEntity.ok(new ApiResponse("number of posts: " + convertedPosts.size(), convertedPosts));
+        try {
+            List<Post> posts = postService.getPostsByUserId(userId);
+            List<PostDto> convertedPosts = postService.getConvertedPosts(posts);
+            return ResponseEntity.ok(new ApiResponse("number of posts: " + convertedPosts.size(), convertedPosts));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse( e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/post-id/{postId}")
+    public ResponseEntity<ApiResponse> getPostById(@PathVariable Long postId) {
+
+        try {
+            Post post = postService.getPostById(postId);
+            PostDto postDto = postService.convertToDto(post);
+            return ResponseEntity.ok(new ApiResponse("success", postDto));
+        }
+        catch (ResourceNotFoundException e){
+            return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null ));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse(e.getMessage(), null ));
+        }
     }
 
     @Transactional

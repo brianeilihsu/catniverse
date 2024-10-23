@@ -50,6 +50,11 @@ public class ChartService implements ImpChartService {
     }
 
     @Override
+    public List<Chart> findAll(){
+        return chartRepo.findAll();
+    }
+
+    @Override
     public List<ChartCityDto> getAllData() {
         List<ChartCityDto> chartCityDtos = new ArrayList<>();
         for(String city : TaiwanCitys){

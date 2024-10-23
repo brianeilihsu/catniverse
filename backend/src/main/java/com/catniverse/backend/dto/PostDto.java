@@ -19,6 +19,8 @@ public class PostDto {
     private boolean stray;
     private int total_likes; // 我要怎麼取得likes的總數?
     private int total_comments;
+    private double latitude;
+    private double longitude;
 
     @JsonIgnore
     private User user;

@@ -1,5 +1,6 @@
 package com.catniverse.backend.service.post;
 
+import com.catniverse.backend.dto.MapDto;
 import com.catniverse.backend.dto.PostDto;
 import com.catniverse.backend.model.Post;
 import com.catniverse.backend.request.AddPostRequest;
@@ -21,4 +22,7 @@ public interface ImpPostService {
 
     List<Post> findByCity(String city);
 
+    List<MapDto> getConvertedMaps(List<Post> posts);
+
+    MapDto convertToMapDto(Post post);
 }

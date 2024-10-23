@@ -10,5 +10,6 @@ import java.util.Map;
 public interface ImpChartService {
     public void update(String city, String district, boolean tipped, boolean stray);
     public List<Chart> getCityData(String city);
+    public List<Chart> findAll();
     public List<ChartCityDto> getAllData();
 }

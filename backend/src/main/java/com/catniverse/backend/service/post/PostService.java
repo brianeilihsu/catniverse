@@ -1,5 +1,6 @@
 package com.catniverse.backend.service.post;
 
+import com.catniverse.backend.dto.MapDto;
 import com.catniverse.backend.dto.PostDto;
 import com.catniverse.backend.dto.PostImageDto;
 import com.catniverse.backend.exceptions.ResourceNotFoundException;
@@ -67,7 +68,7 @@ public class PostService implements ImpPostService{
     @Override
     public Post getPostById(Long id) {
         Optional<Post> postOptional = postRepo.findById(id);
-        return postOptional.orElseThrow(()-> new ResourceNotFoundException("Post Not Found")); // 若找不到則回傳 null
+        return postOptional.orElseThrow(()-> new ResourceNotFoundException("Post Not Found with ID: " + id)); // 若找不到則回傳 null
     }
 
     @Override
@@ -95,6 +96,7 @@ public class PostService implements ImpPostService{
         return posts.stream().map(this::convertToDto).toList();
     }
 
+
     @Override
     public PostDto convertToDto(Post post) {
         PostDto postDto = modelMapper.map(post, PostDto.class);
@@ -107,6 +109,20 @@ public class PostService implements ImpPostService{
         postDto.setTotal_likes(post.getLikes().size());
         postDto.setTotal_comments(post.getComments().size());
         return postDto;
+    }
+
+    @Override
+    public List<MapDto> getConvertedMaps(List<Post> posts) {
+        return posts.stream().map(this::convertToMapDto).toList();
+    }
+
+    @Override
+    public MapDto convertToMapDto(Post post) {
+        MapDto mapDto = modelMapper.map(post, MapDto.class);
+        List<PostImage> postImages = postImageRepo.findByPostId(post.getId());
+        mapDto.setPostId(post.getId());
+        mapDto.setDownloadUrl(postImages.getFirst().getDownloadUrl());
+        return mapDto;
     }
 
 }
