@@ -54,7 +54,6 @@ function Profile() {
         }
   
         if (user.posts.length > 0) {
-          // 加載第一張圖片，防止首屏圖片懶加載出現問題
           user.posts.forEach((post) => {
             const downloadUrls = post.postImages.map((img) => img.downloadUrl);
             fetchPostImages(downloadUrls, post.id);
@@ -83,15 +82,13 @@ function Profile() {
         });
         const blobUrls = await Promise.all(imageBlobPromises);
     
-        // 將圖片URL存入狀態
         setPostImageUrls((prevState) => ({
           ...prevState,
           [postId]: blobUrls,
         }));
     
-        // 確認 userData.posts 存在且不是空數組，然後再訪問 posts[0].id
         if (userData.posts && userData.posts.length > 0 && postId === userData.posts[0]?.id && blobUrls.length > 0) {
-          preloadImage(blobUrls[0]);  // 預加載第一張圖片
+          preloadImage(blobUrls[0]);  
         }
     
         // Apply lazy loading with IntersectionObserver
@@ -264,7 +261,6 @@ function Profile() {
           [postId]: false,
         }));
   
-        // 更新 selectedPost 和 userData 中的 total_likes
         setSelectedPost((prevState) => ({
           ...prevState,
           total_likes: prevState.total_likes - 1,

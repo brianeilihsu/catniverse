@@ -124,3 +124,69 @@ h2 {
 .map {
   display: flex;
 }
+
+.cat-select {
+  top: 25px; 
+  right: 30px;
+  display: inline;
+  position: absolute;
+}
+
+.location {
+  margin-right: 5px;
+}
+
+.legend {
+  position: absolute;
+  bottom: 40px;
+  left: 67.5%;
+  background-color: white;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  z-index: 10;
+}
+
+.legend-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.color-box {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.color-1 {
+  background-color: hsl(129, 55%, 40%);
+}
+
+.color-2 {
+  background-color: hsl(129, 60%, 52%);
+}
+
+.color-3 {
+  background-color: hsl(129, 65%, 63%);
+}
+
+.color-4 {
+  background-color: hsl(129, 70%, 72%);
+}
+
+.color-5 {
+  background-color: hsl(129, 80%, 82%);
+}
+
+.color-6 {
+  background-color: hsl(129, 90%, 88%);
+}
