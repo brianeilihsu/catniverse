@@ -116,9 +116,7 @@ public class PostController {
         try {
             User user = userService.getAuthenticatedUser();
             postRequest.setUser(user);
-            System.out.println("controller2");
-            System.out.println(postRequest.getCity());
-            System.out.println(postRequest.getDistrict());
+
             Post post = postService.addPost(postRequest);
             postImageService.savePostImages(post.getId(), files);
             PostDto postDto = postService.convertToDto(post);

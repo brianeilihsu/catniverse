@@ -3,9 +3,7 @@ package com.catniverse.backend.service.chart;
 import com.catniverse.backend.dto.ChartCityDto;
 import com.catniverse.backend.model.Chart;
 import com.catniverse.backend.repo.ChartRepo;
-import com.catniverse.backend.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -23,11 +21,7 @@ public class ChartService implements ImpChartService {
 
     @Override
     public void update(String city, String district, boolean tipped, boolean stray) {
-        System.out.println("chart Service before chart");
         Chart chart = chartRepo.findByCityAndDistrict(city, district);
-        System.out.println("chart Service after chart");
-        System.out.println(city);
-        System.out.println(district);
         if (chart == null) {
             throw new RuntimeException("Chart not found with name " + city + " and district " + district);
         }
@@ -39,6 +33,25 @@ public class ChartService implements ImpChartService {
             chart.setTotal_stray(chart.getTotal_stray() + 1);
             if(tipped){
                 chart.setTotal_tipped_stray(chart.getTotal_tipped_stray() + 1);
+            }
+        }
+        chartRepo.save(chart);
+    }
+
+    @Override
+    public void delete(String city, String district, boolean tipped, boolean stray) {
+        Chart chart = chartRepo.findByCityAndDistrict(city, district);
+        if (chart == null) {
+            throw new RuntimeException("Chart not found with name " + city + " and district " + district);
+        }
+        chart.setTotal_cat(chart.getTotal_cat() - 1);
+        if(tipped){
+            chart.setTotal_tipped(chart.getTotal_tipped() - 1);
+        }
+        if(stray){
+            chart.setTotal_stray(chart.getTotal_stray() - 1);
+            if(tipped){
+                chart.setTotal_tipped_stray(chart.getTotal_tipped_stray() - 1);
             }
         }
         chartRepo.save(chart);

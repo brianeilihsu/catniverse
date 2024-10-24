@@ -61,7 +61,10 @@ public class PostService implements ImpPostService{
     @Override
     public void deletePostById(Long id){
         postRepo.findById(id)
-                .ifPresentOrElse(postRepo::delete,
+                .ifPresentOrElse(post ->{
+                            chartService.delete(post.getCity(), post.getDistrict(), post.isTipped(), post.isStray());
+                            postRepo.deleteById(id);
+                        },
                         () -> { throw new ResourceNotFoundException("Post with id " + id + " not found"); });
     }
 
