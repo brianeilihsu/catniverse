@@ -25,15 +25,34 @@ function Index() {
   const navigate = useNavigate();
 
   const taiwanRegions = [
-    "臺北市", "新北市", "桃園市", "台中市", "臺南市", "高雄市", "基隆市", 
-    "新竹市", "新竹縣", "苗栗縣", "彰化縣", "南投縣", "雲林縣", "嘉義市", 
-    "嘉義縣", "屏東縣", "宜蘭縣", "花蓮縣", "臺東縣", "澎湖縣", "金門縣", "連江縣"
+    "臺北市",
+    "新北市",
+    "桃園市",
+    "台中市",
+    "臺南市",
+    "高雄市",
+    "基隆市",
+    "新竹市",
+    "新竹縣",
+    "苗栗縣",
+    "彰化縣",
+    "南投縣",
+    "雲林縣",
+    "嘉義市",
+    "嘉義縣",
+    "屏東縣",
+    "宜蘭縣",
+    "花蓮縣",
+    "臺東縣",
+    "澎湖縣",
+    "金門縣",
+    "連江縣",
   ];
 
   useEffect(() => {
     // 強制刷新頁面
-    if (!sessionStorage.getItem('hasReloaded')) {
-      sessionStorage.setItem('hasReloaded', 'true');
+    if (!sessionStorage.getItem("hasReloaded")) {
+      sessionStorage.setItem("hasReloaded", "true");
       window.location.reload();
     }
 
@@ -53,13 +72,22 @@ function Index() {
     const postPromises = posts.map(async (post) => {
       const userPromise = fetchUserData(post.userId);
       const commentsPromise = fetchComments(post.id);
-      const imagePromise = post.postImages && post.postImages.length > 0
-        ? fetchPostImages(post.postImages.map((img) => img.downloadUrl), post.id)
-        : Promise.resolve();
+      const imagePromise =
+        post.postImages && post.postImages.length > 0
+          ? fetchPostImages(
+              post.postImages.map((img) => img.downloadUrl),
+              post.id
+            )
+          : Promise.resolve();
 
       const likedPromise = userId ? checkIfLiked(post.id) : Promise.resolve();
 
-      return Promise.all([userPromise, commentsPromise, imagePromise, likedPromise]);
+      return Promise.all([
+        userPromise,
+        commentsPromise,
+        imagePromise,
+        likedPromise,
+      ]);
     });
 
     await Promise.all(postPromises);
@@ -68,9 +96,12 @@ function Index() {
   const fetchPostImages = async (downloadUrls, postId) => {
     try {
       const imageBlobPromises = downloadUrls.map(async (downloadUrl) => {
-        const response = await axios.get(`http://140.136.151.71:8787${downloadUrl.replace(".png", ".webp")}`, {
-          responseType: "blob",
-        });
+        const response = await axios.get(
+          `http://140.136.151.71:8787${downloadUrl.replace(".png", ".webp")}`,
+          {
+            responseType: "blob",
+          }
+        );
         return URL.createObjectURL(response.data);
       });
 
@@ -148,24 +179,24 @@ function Index() {
   const handleRegionPost = async (e) => {
     const region = e.target.value;
     setSelectedRegion(region);
-  
+
     try {
       if (region) {
         const response = await axios.get(
           `http://140.136.151.71:8787/api/v1/posts/region`,
           {
-            params: { city: region },  
+            params: { city: region },
           }
         );
         const posts = response.data.data;
-        fetchPostData(posts);  
+        fetchPostData(posts);
       } else {
-        handlePopularPost(); 
+        handlePopularPost();
       }
     } catch (error) {
       console.error("Error fetching region-based posts: ", error);
     }
-  };  
+  };
 
   const checkIfLiked = async (postId) => {
     try {
@@ -395,7 +426,11 @@ function Index() {
         <button className="latest" onClick={handleLatestPost}>
           Latest
         </button>
-        <select className="region" value={selectedRegion} onChange={handleRegionPost}>
+        <select
+          className="region"
+          value={selectedRegion}
+          onChange={handleRegionPost}
+        >
           <option value="">Region</option>
           {taiwanRegions.map((region) => (
             <option key={region} value={region}>
@@ -423,15 +458,27 @@ function Index() {
                         style={{ textDecoration: "none", color: "inherit" }}
                       >
                         <img
-                          src={avatarUrl ? avatarUrl.replace(".png", "-lowres.webp") : defaultAvatar}  
-                          data-src={avatarUrl ? avatarUrl.replace(".png", ".webp") : defaultAvatar}  
-                          srcSet={avatarUrl ? `
+                          src={
+                            avatarUrl
+                              ? avatarUrl.replace(".png", "-lowres.webp")
+                              : defaultAvatar
+                          }
+                          data-src={
+                            avatarUrl
+                              ? avatarUrl.replace(".png", ".webp")
+                              : defaultAvatar
+                          }
+                          srcSet={
+                            avatarUrl
+                              ? `
                             ${avatarUrl.replace(".png", "-50w.webp")} 50w,
                             ${avatarUrl.replace(".png", "-100w.webp")} 100w
-                          ` : `
+                          `
+                              : `
                             ${defaultAvatar} 50w,
                             ${defaultAvatar} 100w
-                          `}
+                          `
+                          }
                           sizes="50px"
                           alt="使用者頭像"
                           className="user-avatar"
@@ -439,7 +486,7 @@ function Index() {
                             width: "50px",
                             height: "50px",
                             borderRadius: "50%",
-                            backgroundColor: "#f0f0f0",  
+                            backgroundColor: "#f0f0f0",
                           }}
                           loading="lazy"
                         />
@@ -457,65 +504,99 @@ function Index() {
                     <h4>{post.title}</h4>
 
                     {postImageUrls[post.id] &&
-                      Array.isArray(postImageUrls[post.id]) &&
-                      postImageUrls[post.id].length === 1 ? (
-                        <div
-                          className="g-container"
-                          style={{ display: "flex", justifyContent: "center" }}
-                        >
-                          <img
-                            src={postImageUrls[post.id][0].replace(".png", "-lowres.webp")}  
-                            data-src={postImageUrls[post.id][0].replace(".png", ".webp")}  
-                            srcSet={`  
-                              ${postImageUrls[post.id][0].replace(".png", "-320w.webp")} 320w,
-                              ${postImageUrls[post.id][0].replace(".png", "-640w.webp")} 640w,
-                              ${postImageUrls[post.id][0].replace(".png", "-1024w.webp")} 1024w
+                    Array.isArray(postImageUrls[post.id]) &&
+                    postImageUrls[post.id].length === 1 ? (
+                      <div
+                        className="g-container"
+                        style={{ display: "flex", justifyContent: "center" }}
+                      >
+                        <img
+                          src={postImageUrls[post.id][0].replace(
+                            ".png",
+                            "-lowres.webp"
+                          )}
+                          data-src={postImageUrls[post.id][0].replace(
+                            ".png",
+                            ".webp"
+                          )}
+                          srcSet={`  
+                              ${postImageUrls[post.id][0].replace(
+                                ".png",
+                                "-320w.webp"
+                              )} 320w,
+                              ${postImageUrls[post.id][0].replace(
+                                ".png",
+                                "-640w.webp"
+                              )} 640w,
+                              ${postImageUrls[post.id][0].replace(
+                                ".png",
+                                "-1024w.webp"
+                              )} 1024w
                             `}
-                            sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"  
-                            alt="Post image"
-                            className="post-image"
-                            style={{ width: "95%", height: "500px", aspectRatio: "16/9", backgroundColor: "#f0f0f0" }}  // 指定寬高比例並加上背景佔位符
-                            loading="lazy"
-                          />
-                        </div>
-                      ) : (
-                        postImageUrls[post.id] &&
-                        Array.isArray(postImageUrls[post.id]) && (
-                          <Suspense fallback={<div>Loading slider...</div>}>
-                            <Slider {...sliderSettings(sliderRef)}>
-                              {postImageUrls[post.id].map((url, index) => (
-                                <div
-                                  className="g-container"
-                                  key={index}
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                  }}
-                                >
-                                  <img
-                                    src={url.replace(".png", "-lowres.webp")}  
-                                    data-src={url.replace(".png", ".webp")}  
-                                    srcSet={`  
+                          sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
+                          alt="Post image"
+                          className="post-image"
+                          style={{
+                            width: "95%",
+                            height: "500px",
+                            aspectRatio: "16/9",
+                            backgroundColor: "#f0f0f0",
+                          }} 
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      postImageUrls[post.id] &&
+                      Array.isArray(postImageUrls[post.id]) && (
+                        <Suspense fallback={<div>Loading slider...</div>}>
+                          <Slider {...sliderSettings(sliderRef)}>
+                            {postImageUrls[post.id].map((url, index) => (
+                              <div
+                                className="g-container"
+                                key={index}
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <img
+                                  src={url.replace(".png", "-lowres.webp")}
+                                  data-src={url.replace(".png", ".webp")}
+                                  srcSet={`  
                                       ${url.replace(".png", "-320w.webp")} 320w,
                                       ${url.replace(".png", "-640w.webp")} 640w,
-                                      ${url.replace(".png", "-1024w.webp")} 1024w
+                                      ${url.replace(
+                                        ".png",
+                                        "-1024w.webp"
+                                      )} 1024w
                                     `}
-                                    sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"  
-                                    alt={`Post image ${index}`}
-                                    className="post-image"
-                                    onClick={(e) => handleImageClick(e, sliderRef.current)}
-                                    style={{ width: "95%", height: "500px", aspectRatio: "16/9", backgroundColor: "#f0f0f0" }}  // 指定寬高比例並加上背景佔位符
-                                    loading="lazy"
-                                  />
-                                </div>
-                              ))}
-                            </Slider>
-                          </Suspense>
-                        )
-                      )}
+                                  sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
+                                  alt={`Post image ${index}`}
+                                  className="post-image"
+                                  onClick={(e) =>
+                                    handleImageClick(e, sliderRef.current)
+                                  }
+                                  style={{
+                                    width: "95%",
+                                    height: "500px",
+                                    aspectRatio: "16/9",
+                                    backgroundColor: "#f0f0f0",
+                                  }} 
+                                  loading="lazy"
+                                />
+                              </div>
+                            ))}
+                          </Slider>
+                        </Suspense>
+                      )
+                    )}
                     <div className="post-content">
                       <p className="post-text">{post.content}</p>
-                      <p className="post-location">發布地址：{post.city}{post.district}{post.street}</p>
+                      <p className="post-location">
+                        發布地址：{post.city}
+                        {post.district}
+                        {post.street}
+                      </p>
                       <p className="post-date">
                         發布於：
                         {new Date(post.createdAt).toLocaleString("zh-TW", {
@@ -560,34 +641,40 @@ function Index() {
                     {comments[post.id] && comments[post.id].visible && (
                       <>
                         <div className="comments-section">
-                          {comments[post.id]?.list &&
-                          Array.isArray(comments[post.id].list) ? (
-                            postComments.map((comment, index) => (
-                              <div className="comment" key={comment.id || index}>
-                                <img
-                                  src={comment.userAvatar}
-                                  alt="評論者頭像"
-                                  className="comment-avatar"
-                                  style={{
-                                    width: "32px",
-                                    height: "32px",
-                                    borderRadius: "50%",
-                                    backgroundColor: "#f0f0f0",  
-                                  }}
-                                  loading="lazy"
-                                />
-                                <div className="comment-content">
-                                  <div className="comment-author">
-                                    {comment.username}
-                                  </div>
-                                  <div className="comment-text">
-                                    {comment.content}
+                          {comments[post.id]?.list ? (
+                            comments[post.id].list.length > 0 ? (
+                              postComments.map((comment, index) => (
+                                <div
+                                  className="comment"
+                                  key={comment.id || index}
+                                >
+                                  <img
+                                    src={comment.userAvatar || defaultAvatar}
+                                    alt="評論者頭像"
+                                    className="comment-avatar"
+                                    style={{
+                                      width: "32px",
+                                      height: "32px",
+                                      borderRadius: "50%",
+                                      backgroundColor: "#f0f0f0",
+                                    }}
+                                    loading="lazy"
+                                  />
+                                  <div className="comment-content">
+                                    <div className="comment-author">
+                                      {comment.username}
+                                    </div>
+                                    <div className="comment-text">
+                                      {comment.content}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))
+                              ))
+                            ) : (
+                              <div>No comment</div> 
+                            )
                           ) : (
-                            <div>Loading comments...</div>
+                            <div>Loading comments...</div> 
                           )}
                         </div>
                         <div className="new-comment">

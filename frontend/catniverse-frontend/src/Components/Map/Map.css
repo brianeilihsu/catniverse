@@ -190,3 +190,17 @@ h2 {
 .color-6 {
   background-color: hsl(129, 90%, 88%);
 }
+
+.location-btn {
+  position: fixed !important;
+  z-index: 100;
+  cursor: pointer;
+  background-color: transparent;
+  padding: 0% !important;
+  margin: 0% !important;
+}
+
+.location-btn img {
+  max-width: 30px;
+  max-height: 30px;
+}

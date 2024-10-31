@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState, Suspense } from "react";
 import mapboxgl from "mapbox-gl";
-import * as turf from "@turf/turf";
 import axios from "axios";
 import { feature } from "topojson-client";
 import "./Map.css";
@@ -12,6 +11,8 @@ import { countyOptions } from "./countyOptions";
 import HeartPic from "../../Image/comment-heart.png";
 import HeartPicFilled from "../../Image/heart.png";
 import CommentPic from "../../Image/comment.png";
+import mapPic from "../../Image/map.png";
+import defaultAvatar from "../../Image/account.png";
 
 mapboxgl.accessToken =
   "pk.eyJ1Ijoic2hlZHlqdWFuYTk5IiwiYSI6ImNtMTRnY2U5ajB4ZzYyanBtMjBrMXd1a3UifQ.OcvE1wSjJs8Z1VpQDM12tg";
@@ -30,6 +31,7 @@ const sliderSettings = {
 const Map = () => {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
+  const geolocateControlRef = useRef(null);
   const [selectedCounty, setSelectedCounty] = useState("");
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedDistrict, setSelectedDistrict] = useState("");
@@ -55,7 +57,9 @@ const Map = () => {
   const [densityByRegion, setDensityByRegion] = useState({});
   const [countyId, setCountyId] = useState(null);
   const [regionId, setRegionId] = useState(null);
-
+  const [catLat, setCatLat] = useState(null);
+  const [catLng, setCatLng] = useState(null);
+  const directions = useRef(null);
   const twBoundaries = feature(
     townTopoData,
     townTopoData.objects["TOWN_MOI_1130718"]
@@ -76,73 +80,69 @@ const Map = () => {
 
   useEffect(() => {
     removeBoundaries();
-    drawBoundaries();  
-
-  }, [selectedCounty, selectedDistrict, catPositioningEnabled, catDensityEnabled, countyId, selectedRegion]);
+    drawBoundaries();
+  }, [
+    selectedCounty,
+    selectedDistrict,
+    catPositioningEnabled,
+    catDensityEnabled,
+    countyId,
+    selectedRegion,
+  ]);
 
   const drawBoundaries = () => {
     if (catPositioningEnabled) {
-      // 如果同時選擇了縣市和鄉鎮區，則只畫鄉鎮區的邊框
       if (selectedCounty && selectedDistrict) {
-        drawRegionBoundary(selectedRegion); // 畫出鄉鎮區的邊界
-      } 
-      // 如果只選擇了縣市，則畫出縣市的邊框
-      else if (selectedCounty && !selectedDistrict) {
-        drawCountyBoundary(countyId); // 畫出縣市的邊界
+        drawRegionBoundary(selectedRegion);
+      } else if (selectedCounty && !selectedDistrict) {
+        drawCountyBoundary(countyId);
       }
-    } 
-    else if (catDensityEnabled) {
+    } else if (catDensityEnabled) {
       if (selectedDistrict) {
-        drawDensityRegionBoundary(); // 畫出區域的密度邊界
-        drawRegionBoundary(selectedRegion); // 畫出選擇的區域邊界
+        drawDensityRegionBoundary();
+        drawRegionBoundary(selectedRegion);
       } else if (selectedCounty) {
-        drawDensityRegionBoundary(); // 畫出縣市的密度邊界
-        drawCountyBoundary(countyId); // 畫出縣市邊界
-      } 
-      // 如果未選擇任何縣市或鄉鎮區，則畫出貓咪密度的總覽圖
-      else if (!selectedCounty && !selectedDistrict && densityByCounty && Object.keys(densityByCounty).length > 0) {
-        drawDensityByCatCount(); // 畫出貓咪密度的總覽
+        drawDensityRegionBoundary();
+        drawCountyBoundary(countyId);
+      } else if (
+        !selectedCounty &&
+        !selectedDistrict &&
+        densityByCounty &&
+        Object.keys(densityByCounty).length > 0
+      ) {
+        drawDensityByCatCount();
       }
     }
-  };  
-  
+  };
+
   const removeBoundaries = () => {
     removeLayerAndSource("selected-county", "selected-county");
-  
-    // 移除區域邊界
     removeLayerAndSource("selected-region", "selected-region");
-  
-    // 移除密度圖層，先移除所有依賴的圖層，再移除來源
-    removeLayer("selected-city-line");  // 先移除依賴的圖層
+
+    removeLayer("selected-city-line");
     removeLayerAndSource("selected-city-density", "selected-city-density");
-  
-    // 移除密度區域邊界，先移除所有依賴的圖層，再移除來源
+
     removeLayer("region-density-line");
     removeLayerAndSource("region-density-fill", "region-density");
   };
-  
-  // 分離的移除圖層函數
+
   const removeLayer = (layerName) => {
     if (mapRef.current && mapRef.current.getLayer(layerName)) {
       mapRef.current.removeLayer(layerName);
     }
   };
-  
-  // 通用的移除圖層和來源函數
+
   const removeLayerAndSource = (layerName, sourceName) => {
     if (mapRef.current) {
-      // 移除圖層
       if (mapRef.current.getLayer(layerName)) {
         mapRef.current.removeLayer(layerName);
       }
-      // 移除來源
       if (mapRef.current.getSource(sourceName)) {
         mapRef.current.removeSource(sourceName);
       }
     }
-  };  
-  
-  // 處理縣市選擇變更
+  };
+
   const handleCountyChange = (e) => {
     const selectedCity = countyOptions.find(
       (city) => city.name === e.target.value
@@ -154,8 +154,7 @@ const Map = () => {
     setNeuteredCount(0);
     setNotNeuteredCount(0);
   };
-  
-  // 處理區域選擇變更
+
   const handleRegionChange = (e) => {
     if (regionOptions[selectedCounty]) {
       const selectedRegion = regionOptions[selectedCounty].find(
@@ -166,38 +165,35 @@ const Map = () => {
       setNeuteredCount(0);
       setNotNeuteredCount(0);
       setRegionId(Number(e.target.value));
-
     } else {
       console.log("未找到對應的縣市");
     }
   };
-  
-  // 處理貓咪定位模式切換
+
   const handleCatPositioningChange = (e) => {
     const isChecked = e.target.checked;
     setCatPositioningEnabled(isChecked);
-  
+
     if (isChecked) {
-      setCatDensityEnabled(false); // 關閉密度模式
+      setCatDensityEnabled(false);
     } else if (!catDensityEnabled) {
-      setCatPositioningEnabled(true); // 自動啟用定位模式
+      setCatPositioningEnabled(true);
       alert("至少需要啟用一個模式：貓咪定位或貓咪密度");
     }
   };
-  
-  // 處理貓咪密度模式切換
+
   const handleCatDensityChange = (e) => {
     const isChecked = e.target.checked;
     setCatDensityEnabled(isChecked);
-  
+
     if (isChecked) {
-      setCatPositioningEnabled(false); 
-      fetchMapDensity(); 
+      setCatPositioningEnabled(false);
+      fetchMapDensity();
     } else if (!catPositioningEnabled) {
-      setCatDensityEnabled(true); 
+      setCatDensityEnabled(true);
       alert("至少需要啟用一個模式：貓咪定位或貓咪密度");
-    } 
-  };  
+    }
+  };
 
   useEffect(() => {
     if (selectedCounty) {
@@ -210,7 +206,6 @@ const Map = () => {
       fetchCatsData();
     }
   }, [selectedCounty, catPositioningEnabled]);
-
 
   useEffect(() => {
     if (!mapRef.current) {
@@ -239,9 +234,43 @@ const Map = () => {
         { passive: false }
       );
 
+      const geolocateControl = new mapboxgl.GeolocateControl({
+        positionOptions: {
+          enableHighAccuracy: true,
+        },
+        trackUserLocation: true,
+        showAccuracyCircle: false,
+        fitBoundsOptions: null,
+      });
+
+      map.addControl(geolocateControl);
+
+      map.on("load", () => {
+        if (catPositioningEnabled) {
+          geolocateControl.trigger();
+        }
+      });
+
+      geolocateControlRef.current = geolocateControl;
+
+      geolocateControl.on("geolocate", (position) => {
+        const { longitude, latitude } = position.coords;
+        setUserLocation([longitude, latitude]);
+        map.setZoom(7);
+        map.setCenter([120.906189, 23.634318]);
+      });
+
       mapRef.current = map;
     }
-  }, []);
+    if (geolocateControlRef.current) {
+      const visibility = catDensityEnabled ? "hidden" : "visible";
+      document
+        .querySelectorAll(".mapboxgl-user-location")
+        .forEach((element) => {
+          element.style.visibility = visibility;
+        });
+    }
+  }, [catPositioningEnabled, catDensityEnabled]);
 
   useEffect(() => {
     let markers = [];
@@ -271,6 +300,8 @@ const Map = () => {
 
           marker.getElement().addEventListener("click", () => {
             fetchPostData(cat.postId);
+            setCatLat(cat.latitude);
+            setCatLng(cat.longitude);
             setShowModal(true);
           });
 
@@ -471,13 +502,16 @@ const Map = () => {
         total_comments: prevSelectedCat.total_comments + 1,
       }));
 
-      setSelectedPostData((prevPosts) =>
-        prevPosts.map((post) =>
+      if (Array.isArray(prevPosts)) {
+        return prevPosts.map((post) =>
           post.id === postId
             ? { ...post, total_comments: post.total_comments + 1 }
             : post
-        )
-      );
+        );
+      } else {
+        console.error("prevPosts is not an array:", prevPosts);
+        return prevPosts; 
+      }
     } catch (error) {
       console.error(`Error posting comment for post ${catId}:`, error);
     }
@@ -531,7 +565,6 @@ const Map = () => {
     }
   };
 
-
   const drawRegionBoundary = (regionIndex) => {
     const selectedFeature = twBoundaries.features[regionIndex];
 
@@ -575,8 +608,15 @@ const Map = () => {
       // 當密度數據可用時，觸發邊界繪製
       drawBoundaries();
     }
-  }, [densityByCounty, selectedCounty, selectedDistrict, catPositioningEnabled, catDensityEnabled, countyId, selectedRegion]);
-  
+  }, [
+    densityByCounty,
+    selectedCounty,
+    selectedDistrict,
+    catPositioningEnabled,
+    catDensityEnabled,
+    countyId,
+    selectedRegion,
+  ]);
 
   const drawDensityByCatCount = () => {
     const flattenedCounties = Object.values(countyOptions).flat();
@@ -597,7 +637,7 @@ const Map = () => {
       } else if (catCount > 0) {
         color = "hsl(129, 90%, 88%)";
       }
-  
+
       const selectedFeature = twCountyBoundaries.features[county.geometryIndex];
       return {
         type: "Feature",
@@ -609,12 +649,12 @@ const Map = () => {
         },
       };
     });
-  
+
     const geojsonData = {
       type: "FeatureCollection",
       features,
     };
-  
+
     // 檢查並更新資料來源
     if (mapRef.current.getSource("selected-city-density")) {
       mapRef.current.getSource("selected-city-density").setData(geojsonData);
@@ -624,7 +664,7 @@ const Map = () => {
         data: geojsonData,
       });
     }
-  
+
     // 添加填充圖層
     if (!mapRef.current.getLayer("selected-city-density")) {
       mapRef.current.addLayer({
@@ -637,8 +677,7 @@ const Map = () => {
         },
       });
     }
-  
-    // 添加邊框圖層
+
     if (!mapRef.current.getLayer("selected-city-line")) {
       mapRef.current.addLayer({
         id: "selected-city-line",
@@ -651,7 +690,6 @@ const Map = () => {
       });
     }
   };
-  
 
   const fetchCatsData = async () => {
     if (dataCache.current[selectedCounty]) {
@@ -671,7 +709,6 @@ const Map = () => {
       );
       const posts = response.data.data;
       setCats(posts);
-      console.log(posts);
 
       const imageUrls = {};
       let neutered = 0;
@@ -716,34 +753,27 @@ const Map = () => {
         `http://140.136.151.71:8787/api/v1/map/density`
       );
       const posts = response.data.data;
-  
-      let neutered = 0; // 絕育的貓
-      let notNeutered = 0; // 未絕育的貓
-  
-      let districtNeutered = 0; 
-      let districtNotNeutered = 0; 
-  
+
+      let neutered = 0;
+      let notNeutered = 0;
+
+      let districtNeutered = 0;
+      let districtNotNeutered = 0;
+
       posts.forEach((post) => {
-        // 使用 total_tipped 和 total_stray 字段來計算
         if (selectedCounty && post.city === selectedCounty) {
-          neutered += post.total_tipped; 
-          notNeutered += post.total_cat - post.total_tipped; // 未絕育的貓
-          console.log(`縣市: ${post.city}, 區域: ${post.district}`);
-          console.log(`貓咪數量: ${post.total_cat}, 絕育貓數量: ${neutered}, 未絕育貓數量: ${notNeutered}`);
+          neutered += post.total_tipped;
+          notNeutered += post.total_cat - post.total_tipped;
         }
-        // 如果選擇了某個區域，按區域進行計算
         if (selectedDistrict && post.district === selectedDistrict) {
-          districtNeutered = post.total_tipped; // 區域內絕育的貓
-          districtNotNeutered = post.total_cat - post.total_tipped; // 區域內未絕育的貓
-          console.log(`區域內絕育貓數量: ${districtNeutered}, 區域內未絕育貓數量: ${districtNotNeutered}`);
+          districtNeutered = post.total_tipped;
+          districtNotNeutered = post.total_cat - post.total_tipped;
         }
       });
-  
-      // 更新全局計數
+
       setNeuteredCount(neutered);
       setNotNeuteredCount(notNeutered);
-  
-      // 如果選擇了特定區域，則更新區域內的計數
+
       if (selectedDistrict) {
         setNeuteredCount(districtNeutered);
         setNotNeuteredCount(districtNotNeutered);
@@ -751,7 +781,7 @@ const Map = () => {
     } catch (error) {
       console.error("Error fetching region-based posts: ", error);
     }
-  };  
+  };
 
   const fetchPostData = async (postId) => {
     setPostImageUrls({});
@@ -804,24 +834,35 @@ const Map = () => {
     }
   };
 
-  const handleLocateUser = () => {
-    if (userLocation && mapRef.current) {
-      const map = mapRef.current;
-      map.flyTo({
-        center: userLocation,
-        zoom: 14,
-        essential: true,
+  const handleDirection = () => {
+    if (!directions.current && mapRef.current) {
+      directions.current = new MapboxDirections({
+        accessToken: mapboxgl.accessToken,
+        unit: "metric",
+        profile: "mapbox/walking",
       });
+      mapRef.current.addControl(directions.current, "top-left");
+    }
+    setShowModal(false);
+
+    if (userLocation) {
+      directions.current.setOrigin(userLocation);
+      directions.current.setDestination([catLng, catLat]);
     } else {
-      alert("無法獲取您的位置。請確保已啟用位置服務並允許瀏覽器訪問您的位置。");
+      alert("導航功能無法啟用，請確保已經獲取使用者和貓咪的位置信息");
     }
   };
 
   const handleReset = () => {
+    if (directions.current && mapRef.current) {
+      mapRef.current.removeControl(directions.current);
+      directions.current = null;
+    }
+
     setSelectedCounty("");
     setSelectedRegion(null);
     setSelectedDistrict("");
-    setDensityByCounty
+    setDensityByCounty;
     setNeuteredCount(0);
     setNotNeuteredCount(0);
     setLoading(false);
@@ -837,23 +878,7 @@ const Map = () => {
     }
   };
 
-  const zoomToCounty = (countyName) => {
-    const selectedCountyFeature = countyBoundaries.features.find(
-      (feature) => feature.properties.COUNTYNAME === countyName
-    );
-
-    if (selectedCountyFeature && mapRef.current) {
-      const bounds = new mapboxgl.LngLatBounds();
-      selectedCountyFeature.geometry.coordinates[0].forEach((coord) => {
-        bounds.extend(coord);
-      });
-
-      mapRef.current.fitBounds(bounds, { padding: 20 });
-    }
-  };
-
   const drawDensityRegionBoundary = () => {
-
     const features = cities.flatMap((county) => {
       const regionsInCounty = regionOptions[county] || [];
 
@@ -936,9 +961,6 @@ const Map = () => {
         className="map-container"
         style={{ height: "100vh", width: "100%" }}
       />
-      <button className="locate-button" onClick={handleLocateUser}>
-        定位到我
-      </button>
       <div className="cat-select">
         <input
           type="checkbox"
@@ -1069,6 +1091,9 @@ const Map = () => {
               style={{ width: "500px", height: "660px" }}
             >
               <div>
+                <button className="location-btn" onClick={handleDirection}>
+                  <img src={mapPic} alt="Map" />
+                </button>
                 <h2 className="modalPost-title">{selectedPostData.title}</h2>
               </div>
               <p className="modalPost-text">{selectedPostData.content}</p>
@@ -1129,43 +1154,43 @@ const Map = () => {
                 comments[selectedPostData.id].visible && (
                   <>
                     <div className="comments-section">
-                      {comments[selectedPostData.id]?.list?.length > 0 ? (
-                        comments[selectedPostData.id].list.map(
-                          (comment, index) => (
-                            <div className="comment" key={index}>
-                              <img
-                                src={
-                                  comment.userAvatar
-                                    ? comment.userAvatar.replace(
-                                        ".png",
-                                        ".webp"
-                                      )
-                                    : "defaultAvatar.webp"
-                                }
-                                alt="評論者頭像"
-                                className="comment-avatar"
-                                style={{
-                                  width: "32px",
-                                  height: "32px",
-                                  borderRadius: "50%",
-                                }}
-                                loading="lazy"
-                              />
-                              <div className="comment-content">
-                                <div className="title-and-btn">
+                      {comments[selectedPostData.id]?.list ? (
+                        comments[selectedPostData.id].list.length > 0 ? (
+                          comments[selectedPostData.id].list.map(
+                            (comment, index) => (
+                              <div
+                                className="comment"
+                                key={comment.id || index}
+                              >
+                                <img
+                                  src={
+                                    comment.userAvatar || defaultAvatar
+                                  }
+                                  alt="評論者頭像"
+                                  className="comment-avatar"
+                                  style={{
+                                    width: "32px",
+                                    height: "32px",
+                                    borderRadius: "50%",
+                                  }}
+                                  loading="lazy"
+                                />
+                                <div className="comment-content">
                                   <div className="comment-author">
                                     {comment.username}
                                   </div>
-                                </div>
-                                <div className="comment-text">
-                                  {comment.content}
+                                  <div className="comment-text">
+                                    {comment.content}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
+                            )
                           )
+                        ) : (
+                          <div>No comment</div> 
                         )
                       ) : (
-                        <div>Loading comments...</div>
+                        <div>Loading comments...</div> 
                       )}
                     </div>
                     <div className="new-comment">
@@ -1174,11 +1199,10 @@ const Map = () => {
                         placeholder="寫下你的評論..."
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
-                        className="writeComment"
                       />
                       <button
                         className="send-btn"
-                        onClick={() => handleAddComment(selectedCat.id)}
+                        onClick={() => handleAddComment(selectedPostData.id)}
                       >
                         Send
                       </button>
