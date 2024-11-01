@@ -107,15 +107,15 @@ const ProductManagement = () => {
         setErrors(errors);
       }
     } else {
-      setEditedImagePreviews(null); // 沒有選擇圖片時，清除預覽
+      setEditedImagePreviews(null); 
     }
   };
   
   const startEditing = (product) => {
     setEditingProductId(product.id);
     setEditedProduct({ ...product });
-    setEditedImages(""); // Reset image when starting a new edit
-    setEditedImagePreviews(""); // Clear previous image previews
+    setEditedImages(""); 
+    setEditedImagePreviews(""); 
   };
 
   const deleteProduct = async (productId) => {
@@ -148,7 +148,7 @@ const ProductManagement = () => {
         },
       });
       
-      fetchProductData(); // 成功更新後重新獲取數據
+      fetchProductData(); 
 
       setEditingProductId(null);
     } catch (error) {
@@ -173,7 +173,7 @@ const ProductManagement = () => {
         );
   
         console.log('Image updated successfully');
-        fetchProductData(); // 更新圖片後也重新獲取數據
+        fetchProductData(); 
       } catch (error) {
         console.error('Error updating product image:', error);
         alert('Error updating product image');
@@ -211,12 +211,11 @@ const ProductManagement = () => {
       );
       const productId = productResponse.data.data.id;
 
-      // If there are images, upload them
       if(images.length > 0){
         const formData = new FormData();
         formData.append('productId', productId);
         images.forEach((image) => {
-          formData.append('files', image); // Append each file to FormData
+          formData.append('files', image); 
         });
 
         await axios.post(
@@ -232,7 +231,7 @@ const ProductManagement = () => {
       }
 
       alert('Product added successfully!');
-      fetchProductData(); // 成功新增後重新獲取數據
+      fetchProductData(); 
       resetForm();
       setShowForm(false);
     } catch (error) {

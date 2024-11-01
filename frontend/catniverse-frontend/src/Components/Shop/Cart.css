@@ -9,7 +9,20 @@
     margin-top: 20px
 }
 
+.mobile-container_cart {
+  max-width: 900px;
+  max-height: auto;
+  background-color: #fff;
+  padding-top: 14%
+}
+
 .cartpage {
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+  }
+
+  .mobile-cartpage {
     padding-left: 20px;
     padding-right: 20px;
     padding-bottom: 20px;

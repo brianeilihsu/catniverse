@@ -40,13 +40,13 @@ textarea {
 
 .image-crop-container {
   display: flex;
-  margin-bottom: 20px;  /* Adds spacing between different images */
+  margin-bottom: 20px;  
 }
 
 .image-crop-section {
-  width: 100%;  /* Adjusts to the container's width */
-  max-width: 800px;  /* Ensures it does not exceed 800px */
-  margin: 0 auto;  /* Centers the cropping section */
+  width: 100%;  
+  max-width: 800px;  
+  margin: 0 auto;  
 }
 
 .justify-btn {
@@ -68,5 +68,10 @@ textarea {
   font-weight: lighter;
   padding: 0px;
   margin: 0px 15px 0px 5px;
+}
+
+.mobile-upload-container {
+  padding: 30px;
+  padding-top: 60px;
 }
 

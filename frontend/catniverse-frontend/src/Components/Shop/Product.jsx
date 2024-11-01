@@ -7,7 +7,15 @@ function Product({ product }) {
     const [showModal, setShowModal] = useState(false); 
     const [productImageUrls, setProductImageUrls] = useState([]); 
     const [addingToCart, setAddingToCart] = useState(false); 
+    const [isMobile, setIsMobile] = useState(false);
     const [quantity, setQuantity] = useState(1);  
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener("resize", handleResize);
+        handleResize();
+        return () => window.removeEventListener("resize", handleResize);
+      }, []);
 
     useEffect(() => {
         if (product.images && Array.isArray(product.images)) {
@@ -88,19 +96,98 @@ function Product({ product }) {
     const { name, price, solded } = product;
 
     return (
-        <div className="product">
+        <>
+            {isMobile ? (
+                <div className="mobile-product">
+                <div className="mobile-product-img" onClick={handleProductClick} style={{ cursor: 'pointer' }}>
+                    {productImageUrls[product.id] && productImageUrls[product.id].length > 0 ? (
+                        <img
+                            src={productImageUrls[product.id][0]} 
+                            alt={`Product image for ${product.name}`}
+                            style={{ width: "100%", height: "200px" }}
+                        />
+                    ) : (
+                        <img
+                            src={productPic} 
+                            alt="Default product pic"
+                            style={{ width: "100%", height: "200px" }}
+                        />
+                    )}
+                    <h2 className='product-title'>{product.name}</h2> 
+                    <div className="product-info">
+                        <div className='product-sold'>
+                            <i>{product.solded ? "Sold out" : "In stock"}</i> 
+                        </div>
+                        <div className='product-price'>
+                            <b>${product.price}</b> 
+                        </div>
+                    </div>
+                </div>
+                {showModal && (
+                    <div className="mobile-modal-overlay">
+                        <div className="mobile-modal-content">
+                            <span className="close-button" onClick={handleCloseModal}>&times;</span>
+                            {productImageUrls[product.id] && productImageUrls[product.id].length > 0 ? (
+                                productImageUrls[product.id].map((url, index) => (
+                                    <div key={index} className="mobile-modal-img">
+                                        <img
+                                            src={url}
+                                            alt={`Product image ${index}`}
+                                            style={{ width: "100%", height: "350px" }}
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                ))
+                            ) : (
+                                <img
+                                    src={productPic} 
+                                    alt="Default product pic"
+                                    style={{ width: "100%", height: "350px" }}
+                                    loading="lazy"
+                                />
+                            )}
+                            <div className="modal-details">
+                                <h2 className='modal-header'>{name}</h2> 
+                                <div className="modal-price">
+                                    <b>${price}</b> 
+                                </div>
+                                <p className="modal-description">
+                                    {product.description}
+                                </p>
+                                <p className="modal-sold">
+                                    {solded ? "Sold out" : "In stock"} 
+                                </p>
+                                <div className="quantity-controls">
+                                    <button className="d-btn" onClick={handleDecreaseQuantity} disabled={quantity === 1}>-</button>
+                                    <span>{quantity}</span>
+                                    <button className="i-btn" onClick={handleIncreaseQuantity}>+</button>
+                                </div>
+                                <button 
+                                    className="buy-button" 
+                                    disabled={solded || addingToCart} 
+                                    onClick={addToCart}
+                                >
+                                    {solded ? "Sold out" : addingToCart ? "Adding..." : "Add Cart"} 
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+            ) : (
+                <div className="product">
             <div className="product-img" onClick={handleProductClick} style={{ cursor: 'pointer' }}>
                 {productImageUrls[product.id] && productImageUrls[product.id].length > 0 ? (
                     <img
                         src={productImageUrls[product.id][0]} 
                         alt={`Product image for ${product.name}`}
-                        style={{ width: "100%", height: "auto" }}
+                        style={{ width: "100%", height: "200px" }}
                     />
                 ) : (
                     <img
                         src={productPic} 
                         alt="Default product pic"
-                        style={{ width: "100%", height: "auto" }}
+                        style={{ width: "100%", height: "200px" }}
                     />
                 )}
                 <h2 className='product-title'>{product.name}</h2> 
@@ -123,7 +210,7 @@ function Product({ product }) {
                                     <img
                                         src={url}
                                         alt={`Product image ${index}`}
-                                        style={{ width: "100%", height: "auto" }}
+                                        style={{ width: "100%", height: "350px" }}
                                         loading="lazy"
                                     />
                                 </div>
@@ -132,7 +219,7 @@ function Product({ product }) {
                             <img
                                 src={productPic} 
                                 alt="Default product pic"
-                                style={{ width: "100%", height: "auto" }}
+                                style={{ width: "100%", height: "350px" }}
                                 loading="lazy"
                             />
                         )}
@@ -164,6 +251,8 @@ function Product({ product }) {
                 </div>
             )}
         </div>
+            )}
+        </>
     );
 }
 

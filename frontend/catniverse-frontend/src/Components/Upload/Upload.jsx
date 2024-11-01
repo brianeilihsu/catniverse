@@ -39,6 +39,7 @@ function Upload() {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [newAddress, setNewAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("token");
   const latRef = useRef(null);
@@ -54,6 +55,13 @@ function Upload() {
         userId: storedUserId,
       }));
     }
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const formatAddress = (address) => {
@@ -311,7 +319,193 @@ function Upload() {
   };
 
   return (
-    <div className="content">
+    <>
+      {isMobile ? (
+        <div className="mobile-content">
+        <br />
+        <main>
+          <form
+            className="mobile-upload-container"
+            encType="multipart/form-data"
+            method="post"
+            id="formBox"
+            name="form"
+            onSubmit={handleSubmit}
+          >
+            <div className="backLogo">
+              <Link to={`/profile/${userId}`} className="back-container">
+                <button className="back-btn">
+                  <img className="backPic" src={backPic} alt="back" />
+                </button>
+                <p>Back</p>
+              </Link>
+            </div>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              placeholder="標題"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              required
+            />
+    
+            <textarea
+              id="content"
+              name="content"
+              placeholder="貼文內容"
+              value={formData.content}
+              onChange={(e) =>
+                setFormData({ ...formData, content: e.target.value })
+              }
+              required
+            />
+    
+          <ReactMapGL
+            mapboxAccessToken={TOKEN}
+            initialViewState={viewport}
+            mapStyle="mapbox://styles/mapbox/streets-v11"
+            localIdeographFontFamily="'sans-serif'"
+            onDblClick={handleAddClick} 
+            onMove={(event) => setViewport(event.viewState)} 
+            style={{ width: "100%", height: "400px" }}
+          >
+            {newPlace && (
+              <Marker
+                latitude={newPlace.lat}
+                longitude={newPlace.lng}
+                draggable 
+                onDragEnd={(event) => {
+                  const { lat, lng } = event.lngLat;
+                  setNewPlace({ lat, lng });
+                  fetchAddress(lat, lng); 
+                }}
+              />
+            )}
+    
+            {popupInfo && (
+              <Popup
+                latitude={popupInfo.lat}
+                longitude={popupInfo.lng}
+                anchor="top"
+                onClose={() => setPopupInfo(null)}
+              >
+                <div>{popupInfo.address}</div> 
+              </Popup>
+            )}
+    
+            <NavigationControl position="bottom-right" />
+          </ReactMapGL>
+    
+          <div className="selected-location">
+            <p>選擇的地點: {selectedLocation}</p>
+          </div>
+    
+            <div className="checkbox-section">
+              <label className="checkbox">
+                <input
+                  type="radio"
+                  name="earStatus"
+                  value="已剪耳"
+                  checked={earStatus === true}
+                  onChange={handleEarStatusChange}
+                />
+                已剪耳
+              </label>
+              <label className="checkbox">
+                <input
+                  type="radio"
+                  name="earStatus"
+                  value="未剪耳"
+                  checked={earStatus === false}
+                  onChange={handleEarStatusChange}
+                />
+                未剪耳
+              </label>
+            </div>
+    
+            {earStatus === false && (
+              <div className="checkbox-section">
+                <label className="checkbox">
+                  <input
+                    type="radio"
+                    name="strayCatStatus"
+                    value="流浪貓"
+                    checked={strayCatStatus === true}
+                    onChange={handleStrayCatStatusChange}
+                  />
+                  流浪貓
+                </label>
+                <label className="checkbox">
+                  <input
+                    type="radio"
+                    name="strayCatStatus"
+                    value="非流浪貓"
+                    checked={strayCatStatus === false}
+                    onChange={handleStrayCatStatusChange}
+                  />
+                  非流浪貓
+                </label>
+              </div>
+            )}
+    
+            <input
+              type="file"
+              id="chooseImage"
+              accept="image/*"
+              multiple
+              onChange={handleImageChange}
+              ref={fileInputRef}
+            />
+            {imageSrcs.map((src, index) => (
+              <div key={index} className="mobile-image-crop-container">
+                <div className="mobile-image-crop-section">
+                  <div
+                    id={`cropContainer-${index}`}
+                    style={{ height: "300px", width: "400px" }}
+                  ></div>
+    
+                  <div className="justify-btn">
+                    <button
+                      id={`crop_img_${index}`}
+                      className="btn-info"
+                      type="button"
+                      onClick={() => handleCrop(index)}
+                    >
+                      <i className="fa fa-scissors"></i> 裁剪圖片
+                    </button>
+                    <button
+                      className="btn-danger"
+                      type="button"
+                      onClick={() => handleCancelCrop(index)}
+                    >
+                      取消圖片
+                    </button>
+                  </div>
+                </div>
+    
+                {croppedImages[index] && (
+                  <div className="mobile-image-preview-section">
+                    <h3 className="Hthree">裁剪後的圖片預覽：</h3>
+                    <img
+                      src={croppedImages[index]}
+                      alt={`Cropped Preview ${index}`}
+                      style={{ width: "250px" }}
+                      loading="lazy"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+    
+            <button className="submit-btn" type="submit">
+              Post
+            </button>
+          </form>
+        </main>
+      </div>
+      ) : (
+        <div className="content">
     <br />
     <main>
       <form
@@ -494,6 +688,8 @@ function Upload() {
       </form>
     </main>
   </div>
+      )}
+    </>
   );
 }
 

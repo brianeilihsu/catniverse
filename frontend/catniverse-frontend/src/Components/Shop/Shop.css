@@ -9,9 +9,23 @@
     margin-left: 27.5%;
 }
 
+.mobile-product-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);  
+  width: 100%;
+  justify-items: center;
+  gap: 5px;
+}
+
 .search {
     text-align: center;
     margin-left: 15%;
+  }
+
+  .mobile-search {
+    text-align: center;
+    padding-top: 70px;
+    justify-content: center;
   }
   
   .search-in {
@@ -43,9 +57,17 @@
     margin-bottom: 20px;
   }
 
+  .mobile-searchKey {
+    display: flex;
+    margin-bottom: 20px;
+    align-items: center;
+    justify-content: center;
+  }
+
   .categorySearch, .brandSearch {
     width: 200px;
     margin-right: 10px;
+    color: hsl(0, 1%, 21%);
   }
 
   .cart-btn, .order-btn, .upload-btn {
