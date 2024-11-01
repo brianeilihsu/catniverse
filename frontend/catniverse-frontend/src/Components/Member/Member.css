@@ -1,4 +1,9 @@
-.content {
+.mobile-member-content {
+    padding: 20px;
+    flex-grow: 1;
+}
+
+.desktop-member-content {
     margin-left: 200px;
     padding: 20px;
     flex-grow: 1;
@@ -72,6 +77,15 @@ textarea {
     margin-block-end: 0em;
     font-weight: bold;
     display: flex;
+}
+
+.mobile-backLogo {
+    font-size: 20px;
+    margin-block-start: 0em;
+    margin-block-end: 0em;
+    font-weight: bold;
+    display: flex;
+    margin-top: 12.5%;
 }
 
 .back-container {

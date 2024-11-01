@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "./Profile.css";
 import uploadPic from "../../Image/post.png";
@@ -24,6 +24,7 @@ function Profile() {
   const [likedPosts, setLikedPosts] = useState({});
   const [comments, setComments] = useState({});
   const [commentText, setCommentText] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
   const token = localStorage.getItem("token");
   const sliderRefs = useRef({});
   const observerRefs = useRef({});
@@ -36,6 +37,13 @@ function Profile() {
     arrows: false,
     dots: false,
   };
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!sessionStorage.getItem("hasReloaded")) {
@@ -128,7 +136,7 @@ function Profile() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const img = entry.target;
-            img.src = img.dataset.src; // 懶加載真正的圖片
+            img.src = img.dataset.src; 
             img.classList.remove("lazyload");
             obs.unobserve(img);
           }
@@ -166,11 +174,15 @@ function Profile() {
       setSelectedPost(post);
       fetchComments(post.id);
       setShowModal(true);
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     }
   };
 
   const handleCloseModal = () => {
     setSelectedPost(null);
+    document.body.style.overflow = 'auto';
+    document.documentElement.style.overflow = 'auto';
     setShowModal(false);
   };
 
@@ -317,7 +329,6 @@ function Profile() {
           [postId]: true,
         }));
 
-        // 更新 selectedPost 和 userData 中的 total_likes
         setSelectedPost((prevState) => ({
           ...prevState,
           total_likes: prevState.total_likes + 1,
@@ -459,71 +470,79 @@ function Profile() {
 
   return (
     <div>
-      <div className="content">
-        <div className="container">
-          <button className="setting-btn" onClick={handleSettingOut}>
+      {isMobile ? (
+        <div className="mobile-type">
+          <button className="mobile-setting-btn" onClick={handleSettingOut}>
             <img src={settingPic} alt="Settings" />
           </button>
-          <div className="profile-header">
-            <img
-              src={userImageUrls.replace(".png", ".webp") || defaultAvatar}
-              alt="用戶頭像"
-              className="profile-picture"
-              style={{ width: "100px", height: "100px", borderRadius: "50%" }}
-              loading="lazy"
-            />
-            <div className="profile-info">
-              <h1>{userData.username}</h1>
-              <p>Email: {userData.email}</p>
-              <p>Personal profile: {userData.bio}</p>
-              <p>
-                Join date:{" "}
-                {new Date(userData.joinDate).toLocaleDateString("zh-TW")}
-              </p>
-              <p>
-                Number of posts: {userData.posts ? userData.posts.length : 0}
-              </p>
-            </div>
-            <button className="edit-profile-btn" onClick={toMember}>
-              Modify profile
-            </button>
-          </div>
+          <div className="mobile-profile-content">
+            <div className="mobile-container">
+              <div className="mobile-profile-header">
+                <img
+                  src={userImageUrls || defaultAvatar}
+                  alt="用戶頭像"
+                  className="profile-picture"
+                  style={{
+                    width: "85px",
+                    height: "85px",
+                    borderRadius: "50%",
+                  }}
+                  loading="lazy"
+                />
+                <div className="profile-info">
+                  <h1>{userData.username}</h1>
+                  <p>{userData.email}</p>
+                  <p>{userData.bio}</p>
+                  <p>
+                    {new Date(userData.joinDate).toLocaleDateString("zh-TW")}
+                  </p>
+                  <p>
+                    Number of posts:{" "}
+                    {userData.posts ? userData.posts.length : 0}
+                  </p>
+                </div>
+                <button className="edit-profile-btn" onClick={toMember}>
+                  Modify
+                </button>
+              </div>
 
-          <div className="posts">
-            {userData.posts && userData.posts.length > 0 ? (
-              userData.posts.map((post) => (
-                <div className="mypost" key={post.id}>
-                  <div
-                    className="title-and-btn"
-                    onClick={() => handlePostClick(post.id)}
-                  >
-                    <h3>{post.title}</h3>
-                    {showOutDelete && (
-                      <button
-                        className="X-btn"
-                        onClick={(event) => handleDeletePost(event, post.id)}
+              <div className="mobile-posts">
+                {userData.posts && userData.posts.length > 0 ? (
+                  userData.posts.map((post) => (
+                    <div className="mobile-mypost" key={post.id}>
+                      <div
+                        className="title-and-btn"
+                        onClick={() => handlePostClick(post.id)}
                       >
-                        <img src={XPic} alt="Delete Post" />
-                      </button>
-                    )}
-                  </div>
+                        <h3>{post.title}</h3>
+                        {showOutDelete && (
+                          <button
+                            className="X-btn"
+                            onClick={(event) =>
+                              handleDeletePost(event, post.id)
+                            }
+                          >
+                            <img src={XPic} alt="Delete Post" />
+                          </button>
+                        )}
+                      </div>
 
-                  {postImageUrls[post.id] &&
-                  postImageUrls[post.id].length === 1 ? (
-                    <div
-                      className="g-container"
-                      style={{ display: "flex", justifyContent: "center" }}
-                    >
-                      <img
-                        src={postImageUrls[post.id][0].replace(
-                          ".png",
-                          "-lowres.webp"
-                        )}
-                        data-src={postImageUrls[post.id][0].replace(
-                          ".png",
-                          ".webp"
-                        )}
-                        srcSet={`
+                      {postImageUrls[post.id] &&
+                      postImageUrls[post.id].length === 1 ? (
+                        <div
+                          className="g-container"
+                          style={{ display: "flex", justifyContent: "center" }}
+                        >
+                          <img
+                            src={postImageUrls[post.id][0].replace(
+                              ".png",
+                              "-lowres.webp"
+                            )}
+                            data-src={postImageUrls[post.id][0].replace(
+                              ".png",
+                              ".webp"
+                            )}
+                            srcSet={`
                           ${postImageUrls[post.id][0].replace(
                             ".png",
                             "-320w.webp"
@@ -537,235 +556,674 @@ function Profile() {
                             "-1024w.webp"
                           )} 1024w
                         `}
-                        sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
-                        alt="Post image"
-                        className="profilePost-image"
-                        style={{ width: "100%", height: "220px" }}
-                        loading="lazy"
-                      />
-                    </div>
-                  ) : (
-                    <React.Suspense fallback={<div>Loading slider...</div>}>
-                      <Slider
-                        {...sliderSettings}
-                        ref={(slider) => (sliderRefs.current[post.id] = slider)}
-                      >
-                        {postImageUrls[post.id] &&
-                          postImageUrls[post.id].map((url, index) => (
-                            <div key={index}>
-                              <img
-                                src={url.replace(".png", "-lowres.webp")}
-                                data-src={url.replace(".png", ".webp")}
-                                srcSet={`
+                            sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
+                            alt="Post image"
+                            className="profilePost-image"
+                            style={{ width: "100%", height: "220px" }}
+                            loading="lazy"
+                          />
+                        </div>
+                      ) : (
+                        <React.Suspense fallback={<div>Loading slider...</div>}>
+                          <Slider
+                            {...sliderSettings}
+                            ref={(slider) =>
+                              (sliderRefs.current[post.id] = slider)
+                            }
+                          >
+                            {postImageUrls[post.id] &&
+                              postImageUrls[post.id].map((url, index) => (
+                                <div key={index}>
+                                  <img
+                                    src={url.replace(".png", "-lowres.webp")}
+                                    data-src={url.replace(".png", ".webp")}
+                                    srcSet={`
                                   ${url.replace(".png", "-320w.webp")} 320w,
                                   ${url.replace(".png", "-640w.webp")} 640w,
                                   ${url.replace(".png", "-1024w.webp")} 1024w
                                 `}
+                                    sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
+                                    alt={`Post image ${index}`}
+                                    className="profilePost-image"
+                                    style={{ width: "100%", height: "220px" }}
+                                    onClick={(e) =>
+                                      handleImageClick(
+                                        e,
+                                        sliderRefs.current[post.id]
+                                      )
+                                    }
+                                    loading="lazy"
+                                  />
+                                </div>
+                              ))}
+                          </Slider>
+                        </React.Suspense>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p>No post</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <button className="uploadPost-btn" onClick={handleUpload}>
+            <img
+              className="uploadPost-img"
+              src={uploadPic}
+              alt="Upload Product"
+            />
+          </button>
+
+          {showModal && selectedPost && (
+            <div className="overlay">
+              <div
+                className="mobile-modal"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="closed-button" onClick={handleCloseModal}>
+                  &times;
+                </span>
+
+                <div className="mobile-profile-post" key={selectedPost.id}>
+                  <div className="mobile-post-header">
+                    <Link
+                      to={`/profile/${selectedPost.userId}`}
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      <img
+                        src={
+                          userImageUrls
+                            ? userImageUrls.replace(".png", "-lowres.webp")
+                            : defaultAvatar
+                        }
+                        data-src={
+                          userImageUrls
+                            ? userImageUrls.replace(".png", ".webp")
+                            : defaultAvatar
+                        }
+                        srcSet={
+                          userImageUrls
+                            ? `
+                  ${userImageUrls.replace(".png", "-50w.webp")} 50w,
+                  ${userImageUrls.replace(".png", "-100w.webp")} 100w
+                `
+                            : `
+                  ${defaultAvatar} 50w,
+                  ${defaultAvatar} 100w
+                `
+                        }
+                        sizes="50px"
+                        alt="使用者頭像"
+                        className="mobile-user-avatar"
+                        style={{
+                          width: "50px",
+                          height: "50px",
+                          borderRadius: "50%",
+                          backgroundColor: "#f0f0f0",
+                        }}
+                        loading="lazy"
+                      />
+                    </Link>
+                    <Link
+                      to={`/profile/${selectedPost.userId}`}
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      <span className="mobile-user-name">
+                        {userData ? userData.username : "未知使用者"}
+                      </span>
+                    </Link>
+                  </div>
+
+                  <h4>{selectedPost.title}</h4>
+
+                  {postImageUrls[selectedPost.id] &&
+                  Array.isArray(postImageUrls[selectedPost.id]) &&
+                  postImageUrls[selectedPost.id].length === 1 ? (
+                    <div
+                      className="g-container"
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <img
+                        src={postImageUrls[selectedPost.id][0].replace(
+                          ".png",
+                          "-lowres.webp"
+                        )}
+                        data-src={postImageUrls[selectedPost.id][0].replace(
+                          ".png",
+                          ".webp"
+                        )}
+                        srcSet={`  
+                ${postImageUrls[selectedPost.id][0].replace(
+                  ".png",
+                  "-320w.webp"
+                )} 320w,
+                ${postImageUrls[selectedPost.id][0].replace(
+                  ".png",
+                  "-640w.webp"
+                )} 640w,
+                ${postImageUrls[selectedPost.id][0].replace(
+                  ".png",
+                  "-1024w.webp"
+                )} 1024w
+              `}
+                        sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
+                        alt="Post image"
+                        className="mobile-post-image"
+                        style={{
+                          width: "100%",
+                          height: "350px",
+                          backgroundColor: "#f0f0f0",
+                        }}
+                        loading="lazy"
+                      />
+                    </div>
+                  ) : (
+                    postImageUrls[selectedPost.id] &&
+                    Array.isArray(postImageUrls[selectedPost.id]) && (
+                      <Suspense fallback={<div>Loading slider...</div>}>
+                        <Slider {...sliderSettings(sliderRef)}>
+                          {postImageUrls[selectedPost.id].map((url, index) => (
+                            <div
+                              className="g-container"
+                              key={index}
+                              style={{
+                                display: "flex",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <img
+                                src={url.replace(".png", "-lowres.webp")}
+                                data-src={url.replace(".png", ".webp")}
+                                srcSet={`  
+                        ${url.replace(".png", "-320w.webp")} 320w,
+                        ${url.replace(".png", "-640w.webp")} 640w,
+                        ${url.replace(".png", "-1024w.webp")} 1024w
+                      `}
                                 sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
                                 alt={`Post image ${index}`}
-                                className="profilePost-image"
-                                style={{ width: "100%", height: "220px" }}
+                                className="mobile-post-image"
                                 onClick={(e) =>
-                                  handleImageClick(
-                                    e,
-                                    sliderRefs.current[post.id]
-                                  )
+                                  handleImageClick(e, sliderRef.current)
                                 }
+                                style={{
+                                  width: "100%",
+                                  height: "350px",
+                                  backgroundColor: "#f0f0f0",
+                                }}
                                 loading="lazy"
                               />
                             </div>
                           ))}
-                      </Slider>
-                    </React.Suspense>
+                        </Slider>
+                      </Suspense>
+                    )
                   )}
+
+                  <div className="post-content">
+                    <p className="post-text">{selectedPost.content}</p>
+                    <p className="post-location">
+                      發布地址：{selectedPost.city}
+                      {selectedPost.district}
+                      {selectedPost.street}
+                    </p>
+                    <p className="post-date">
+                      發布於：
+                      {new Date(selectedPost.createdAt).toLocaleString(
+                        "zh-TW",
+                        {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        }
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="post-actions">
+                    <button
+                      className="action-btn"
+                      onClick={() => handleLike(selectedPost.id)}
+                      style={{
+                        color: likedPosts[selectedPost.id]
+                          ? "#9E1212"
+                          : "black",
+                        fontWeight: likedPosts[selectedPost.id]
+                          ? "bold"
+                          : "normal",
+                      }}
+                    >
+                      <img
+                        className="heart-pic"
+                        src={
+                          likedPosts[selectedPost.id]
+                            ? HeartPicFilled
+                            : HeartPic
+                        }
+                        alt="讚"
+                      />
+                      {selectedPost.total_likes}
+                    </button>
+                    <button
+                      className="comment-btn"
+                      onClick={() => toggleComments(selectedPost.id)}
+                    >
+                      <img
+                        className="comment-pic"
+                        src={CommentPic}
+                        alt="留言"
+                      />
+                      {selectedPost.total_comments}
+                    </button>
+                  </div>
+
+                  {comments[selectedPost.id] &&
+                    comments[selectedPost.id].visible && (
+                      <>
+                        <div className="comments-section">
+                          {comments[selectedPost.id]?.list ? (
+                            comments[selectedPost.id].list.length > 0 ? (
+                              comments[selectedPost.id].list.map(
+                                (comment, index) => (
+                                  <div
+                                    className="comment"
+                                    key={comment.id || index}
+                                  >
+                                    <img
+                                      src={comment.userAvatar || defaultAvatar}
+                                      alt="評論者頭像"
+                                      className="comment-avatar"
+                                      style={{
+                                        width: "32px",
+                                        height: "32px",
+                                        borderRadius: "50%",
+                                        backgroundColor: "#f0f0f0",
+                                      }}
+                                      loading="lazy"
+                                    />
+                                    <div className="comment-content">
+                                      <div className="comment-author">
+                                        {comment.username}
+                                      </div>
+                                      <div className="comment-text">
+                                        {comment.content}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              )
+                            ) : (
+                              <div>No comment</div>
+                            )
+                          ) : (
+                            <div>Loading comments...</div>
+                          )}
+                        </div>
+                        <div className="new-comment">
+                          <input
+                            type="text"
+                            placeholder="寫下你的評論..."
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                          />
+                          <button
+                            className="send-btn"
+                            onClick={() => handleAddComment(selectedPost.id)}
+                          >
+                            Send
+                          </button>
+                        </div>
+                      </>
+                    )}
                 </div>
-              ))
-            ) : (
-              <p>No post</p>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-
-      <button className="uploadPost-btn" onClick={handleUpload}>
-        <img className="uploadPost-img" src={uploadPic} alt="Upload Product" />
-      </button>
-
-      {showModal && selectedPost && (
-        <div className="overlay">
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <span className="closed-button" onClick={handleCloseModal}>
-              &times;
-            </span>
-            <div className="modal-image">
-              {postImageUrls[selectedPost.id] &&
-              postImageUrls[selectedPost.id].length === 1 ? (
+      ) : (
+        <div className="desktop-type">
+          <div className="content">
+            <div className="container">
+              <button className="setting-btn" onClick={handleSettingOut}>
+                <img src={settingPic} alt="Settings" />
+              </button>
+              <div className="profile-header">
                 <img
-                  src={postImageUrls[selectedPost.id][0].replace(
-                    ".png",
-                    ".webp"
-                  )}
-                  className="modalPost-image"
-                  alt="Post image"
-                  style={{ width: "500px", height: "660px" }}
+                  src={userImageUrls.replace(".png", ".webp") || defaultAvatar}
+                  alt="用戶頭像"
+                  className="profile-picture"
+                  style={{
+                    width: "100px",
+                    height: "100px",
+                    borderRadius: "50%",
+                  }}
                   loading="lazy"
                 />
-              ) : (
-                <Slider
-                  {...sliderSettings}
-                  ref={(slider) =>
-                    (sliderRefs.current[selectedPost.id] = slider)
-                  }
-                >
-                  {postImageUrls[selectedPost.id] &&
-                    postImageUrls[selectedPost.id].map((url, index) => (
-                      <div key={index}>
-                        <img
-                          src={url.replace(".png", ".webp")}
-                          className="modalPost-image"
-                          alt={`Post image ${index}`}
-                          style={{ width: "500px", height: "660px" }}
-                          onClick={(e) =>
-                            handleImageClick(
-                              e,
-                              sliderRefs.current[selectedPost.id]
-                            )
-                          }
-                          loading="lazy"
-                        />
-                      </div>
-                    ))}
-                </Slider>
-              )}
-            </div>
-            <div
-              className="modalPost-content"
-              style={{ width: "500px", height: "660px" }}
-            >
-              <div>
-                <button className="setting2-btn" onClick={handleSettingIn}>
-                  <img src={settingPic} alt="Settings" />
+                <div className="profile-info">
+                  <h1>{userData.username}</h1>
+                  <p>Email: {userData.email}</p>
+                  <p>Personal profile: {userData.bio}</p>
+                  <p>
+                    Join date:{" "}
+                    {new Date(userData.joinDate).toLocaleDateString("zh-TW")}
+                  </p>
+                  <p>
+                    Number of posts:{" "}
+                    {userData.posts ? userData.posts.length : 0}
+                  </p>
+                </div>
+                <button className="edit-profile-btn" onClick={toMember}>
+                  Modify profile
                 </button>
-                <h2 className="modalPost-title">{selectedPost.title}</h2>
               </div>
-              <p className="modalPost-text">{selectedPost.content}</p>
-              <p className="address">
-                發布地址: {selectedPost.city}
-                {selectedPost.district}
-                {selectedPost.street}
-              </p>
-              <p className="date">
-                發布於：
-                {new Date(selectedPost.createdAt).toLocaleString("zh-TW", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })}
-              </p>
-              <p className="stray">
-                是否為流浪貓: {selectedPost.isStray ? "是" : "否"}
-              </p>
 
-              <div className="modalPost-actions">
-                <button
-                  className="action-btn"
-                  onClick={() => handleLike(selectedPost.id)}
-                  style={{
-                    color: likedPosts[selectedPost.id] ? "#9E1212" : "black",
-                    fontWeight: likedPosts[selectedPost.id] ? "bold" : "normal",
-                  }}
-                >
-                  <img
-                    className="heart-pic"
-                    src={
-                      likedPosts[selectedPost.id] ? HeartPicFilled : HeartPic
-                    }
-                    alt="讚"
-                  />
-                  {selectedPost.total_likes}
-                </button>
-                <button
-                  className="comment-btn"
-                  onClick={() => toggleComments(selectedPost.id)}
-                >
-                  <img className="comment-pic" src={CommentPic} alt="留言" />
-                  {selectedPost.total_comments}
-                </button>
-              </div>
-              {comments[selectedPost.id] &&
-                comments[selectedPost.id].visible && (
-                  <>
-                    <div className="comments-section">
-                      {comments[selectedPost.id]?.list ? (
-                        comments[selectedPost.id].list.length > 0 ? (
-                          comments[selectedPost.id].list.map(
-                            (comment, index) => (
-                              <div
-                                className="comment"
-                                key={comment.id || index}
-                              >
-                                <img
-                                  src={comment.userAvatar || defaultAvatar}
-                                  alt="評論者頭像"
-                                  className="comment-avatar"
-                                  style={{
-                                    width: "32px",
-                                    height: "32px",
-                                    borderRadius: "50%",
-                                  }}
-                                  loading="lazy"
-                                />
-                                <div className="comment-content">
-                                  <div className="title-and-btn">
-                                    <div className="comment-author">
-                                      {comment.username}
-                                    </div>
-                                    {showInDelete && (
-                                      <button
-                                        className="X-in-btn"
-                                        onClick={() =>
-                                          handleDeleteComment(comment.id)
-                                        }
-                                      >
-                                        <img src={XPic} alt="Delete Comment" />
-                                      </button>
-                                    )}
-                                  </div>
-                                  <div className="comment-text">
-                                    {comment.content}
-                                  </div>
-                                </div>
-                              </div>
-                            )
-                          )
-                        ) : (
-                          <div>No comment</div> 
-                        )
+              <div className="posts">
+                {userData.posts && userData.posts.length > 0 ? (
+                  userData.posts.map((post) => (
+                    <div className="mypost" key={post.id}>
+                      <div
+                        className="title-and-btn"
+                        onClick={() => handlePostClick(post.id)}
+                      >
+                        <h3>{post.title}</h3>
+                        {showOutDelete && (
+                          <button
+                            className="X-btn"
+                            onClick={(event) =>
+                              handleDeletePost(event, post.id)
+                            }
+                          >
+                            <img src={XPic} alt="Delete Post" />
+                          </button>
+                        )}
+                      </div>
+
+                      {postImageUrls[post.id] &&
+                      postImageUrls[post.id].length === 1 ? (
+                        <div
+                          className="g-container"
+                          style={{ display: "flex", justifyContent: "center" }}
+                        >
+                          <img
+                            src={postImageUrls[post.id][0].replace(
+                              ".png",
+                              "-lowres.webp"
+                            )}
+                            data-src={postImageUrls[post.id][0].replace(
+                              ".png",
+                              ".webp"
+                            )}
+                            srcSet={`
+                          ${postImageUrls[post.id][0].replace(
+                            ".png",
+                            "-320w.webp"
+                          )} 320w,
+                          ${postImageUrls[post.id][0].replace(
+                            ".png",
+                            "-640w.webp"
+                          )} 640w,
+                          ${postImageUrls[post.id][0].replace(
+                            ".png",
+                            "-1024w.webp"
+                          )} 1024w
+                        `}
+                            sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
+                            alt="Post image"
+                            className="profilePost-image"
+                            style={{ width: "100%", height: "220px" }}
+                            loading="lazy"
+                          />
+                        </div>
                       ) : (
-                        <div>Loading comments...</div> 
+                        <React.Suspense fallback={<div>Loading slider...</div>}>
+                          <Slider
+                            {...sliderSettings}
+                            ref={(slider) =>
+                              (sliderRefs.current[post.id] = slider)
+                            }
+                          >
+                            {postImageUrls[post.id] &&
+                              postImageUrls[post.id].map((url, index) => (
+                                <div key={index}>
+                                  <img
+                                    src={url.replace(".png", "-lowres.webp")}
+                                    data-src={url.replace(".png", ".webp")}
+                                    srcSet={`
+                                  ${url.replace(".png", "-320w.webp")} 320w,
+                                  ${url.replace(".png", "-640w.webp")} 640w,
+                                  ${url.replace(".png", "-1024w.webp")} 1024w
+                                `}
+                                    sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
+                                    alt={`Post image ${index}`}
+                                    className="profilePost-image"
+                                    style={{ width: "100%", height: "220px" }}
+                                    onClick={(e) =>
+                                      handleImageClick(
+                                        e,
+                                        sliderRefs.current[post.id]
+                                      )
+                                    }
+                                    loading="lazy"
+                                  />
+                                </div>
+                              ))}
+                          </Slider>
+                        </React.Suspense>
                       )}
                     </div>
-                    <div className="new-comment">
-                      <input
-                        type="text"
-                        placeholder="寫下你的評論..."
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
-                      />
-                      <button
-                        className="send-btn"
-                        onClick={() => handleAddComment(selectedPost.id)}
-                      >
-                        Send
-                      </button>
-                    </div>
-                  </>
+                  ))
+                ) : (
+                  <p>No post</p>
                 )}
+              </div>
             </div>
           </div>
+
+          <button className="uploadPost-btn" onClick={handleUpload}>
+            <img
+              className="uploadPost-img"
+              src={uploadPic}
+              alt="Upload Product"
+            />
+          </button>
+
+          {showModal && selectedPost && (
+            <div className="overlay">
+              <div className="modal" onClick={(e) => e.stopPropagation()}>
+                <span className="closed-button" onClick={handleCloseModal}>
+                  &times;
+                </span>
+                <div className="modal-image">
+                  {postImageUrls[selectedPost.id] &&
+                  postImageUrls[selectedPost.id].length === 1 ? (
+                    <img
+                      src={postImageUrls[selectedPost.id][0].replace(
+                        ".png",
+                        ".webp"
+                      )}
+                      className="modalPost-image"
+                      alt="Post image"
+                      style={{ width: "500px", height: "660px" }}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <Slider
+                      {...sliderSettings}
+                      ref={(slider) =>
+                        (sliderRefs.current[selectedPost.id] = slider)
+                      }
+                    >
+                      {postImageUrls[selectedPost.id] &&
+                        postImageUrls[selectedPost.id].map((url, index) => (
+                          <div key={index}>
+                            <img
+                              src={url.replace(".png", ".webp")}
+                              className="modalPost-image"
+                              alt={`Post image ${index}`}
+                              style={{ width: "500px", height: "660px" }}
+                              onClick={(e) =>
+                                handleImageClick(
+                                  e,
+                                  sliderRefs.current[selectedPost.id]
+                                )
+                              }
+                              loading="lazy"
+                            />
+                          </div>
+                        ))}
+                    </Slider>
+                  )}
+                </div>
+                <div
+                  className="modalPost-content"
+                  style={{ width: "500px", height: "660px" }}
+                >
+                  <div>
+                    <button className="setting2-btn" onClick={handleSettingIn}>
+                      <img src={settingPic} alt="Settings" />
+                    </button>
+                    <h2 className="modalPost-title">{selectedPost.title}</h2>
+                  </div>
+                  <p className="modalPost-text">{selectedPost.content}</p>
+                  <p className="address">
+                    發布地址: {selectedPost.city}
+                    {selectedPost.district}
+                    {selectedPost.street}
+                  </p>
+                  <p className="date">
+                    發布於：
+                    {new Date(selectedPost.createdAt).toLocaleString("zh-TW", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })}
+                  </p>
+                  <p className="stray">
+                    是否為流浪貓: {selectedPost.isStray ? "是" : "否"}
+                  </p>
+
+                  <div className="modalPost-actions">
+                    <button
+                      className="action-btn"
+                      onClick={() => handleLike(selectedPost.id)}
+                      style={{
+                        color: likedPosts[selectedPost.id]
+                          ? "#9E1212"
+                          : "black",
+                        fontWeight: likedPosts[selectedPost.id]
+                          ? "bold"
+                          : "normal",
+                      }}
+                    >
+                      <img
+                        className="heart-pic"
+                        src={
+                          likedPosts[selectedPost.id]
+                            ? HeartPicFilled
+                            : HeartPic
+                        }
+                        alt="讚"
+                      />
+                      {selectedPost.total_likes}
+                    </button>
+                    <button
+                      className="comment-btn"
+                      onClick={() => toggleComments(selectedPost.id)}
+                    >
+                      <img
+                        className="comment-pic"
+                        src={CommentPic}
+                        alt="留言"
+                      />
+                      {selectedPost.total_comments}
+                    </button>
+                  </div>
+                  {comments[selectedPost.id] &&
+                    comments[selectedPost.id].visible && (
+                      <>
+                        <div className="comments-section">
+                          {comments[selectedPost.id]?.list ? (
+                            comments[selectedPost.id].list.length > 0 ? (
+                              comments[selectedPost.id].list.map(
+                                (comment, index) => (
+                                  <div
+                                    className="comment"
+                                    key={comment.id || index}
+                                  >
+                                    <img
+                                      src={comment.userAvatar || defaultAvatar}
+                                      alt="評論者頭像"
+                                      className="comment-avatar"
+                                      style={{
+                                        width: "32px",
+                                        height: "32px",
+                                        borderRadius: "50%",
+                                      }}
+                                      loading="lazy"
+                                    />
+                                    <div className="comment-content">
+                                      <div className="title-and-btn">
+                                        <div className="comment-author">
+                                          {comment.username}
+                                        </div>
+                                        {showInDelete && (
+                                          <button
+                                            className="X-in-btn"
+                                            onClick={() =>
+                                              handleDeleteComment(comment.id)
+                                            }
+                                          >
+                                            <img
+                                              src={XPic}
+                                              alt="Delete Comment"
+                                            />
+                                          </button>
+                                        )}
+                                      </div>
+                                      <div className="comment-text">
+                                        {comment.content}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              )
+                            ) : (
+                              <div>No comment</div>
+                            )
+                          ) : (
+                            <div>Loading comments...</div>
+                          )}
+                        </div>
+                        <div className="new-comment">
+                          <input
+                            type="text"
+                            placeholder="寫下你的評論..."
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                          />
+                          <button
+                            className="send-btn"
+                            onClick={() => handleAddComment(selectedPost.id)}
+                          >
+                            Send
+                          </button>
+                        </div>
+                      </>
+                    )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

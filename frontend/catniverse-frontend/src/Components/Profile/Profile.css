@@ -2,10 +2,19 @@
     padding-top: 10px !important;
 }
 
+.mobile-container {
+  padding-top: 10px !important;
+}
+
 .content {
     margin-left: 200px;
     padding: 20px;
     flex-grow: 1;
+}
+
+.mobile-profile-content {
+  padding: 20px;
+  flex-grow: 1;
 }
 
 .profile-header {
@@ -16,6 +25,17 @@
     align-items: center;
     margin-bottom: 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.mobile-profile-header {
+  background-color: hsl(0, 0%, 95%);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  margin-top: 60px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .profile-picture {
@@ -35,6 +55,14 @@
 .profile-info p {
     margin: 5px 0;
     color: #666;
+}
+
+.mobile-user-avatar {
+  margin-right: 1em;
+}
+
+.mobile-user-name {
+  font-weight: bold;
 }
 
 .edit-profile-btn {
@@ -59,6 +87,13 @@
     gap: 20px;
 }
 
+.mobile-posts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 20px; 
+  width: 100%; 
+}
+
 .mypost {
     background-color: white;
     border-radius: 10px;
@@ -71,6 +106,20 @@
 
 .mypost:hover {
     cursor: pointer;
+}
+
+.mobile-mypost {
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 1em;
+}
+
+.mobile-mypost:hover {
+  cursor: pointer;
 }
 
 .profilePost-image, .modalPost-image {
@@ -128,6 +177,16 @@
     margin-bottom: 5px;
   }
 
+  .mobile-setting-btn {
+    background-color: transparent;
+    margin: 0px;
+    margin-top: 3.5%;
+    padding: 0px;
+    margin-left: 90%;
+    position: fixed;
+    z-index: 20;
+  }
+
   .X-btn img{
     background-color: transparent;
     margin: 0px;
@@ -180,6 +239,7 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
+    overflow: hidden;
   }
   
   .modal {
@@ -187,6 +247,16 @@
     display: flex;
     max-width: 1000px;
     height: 90%;
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .mobile-modal {
+    position: relative;
+    display: flex;
+    max-width: 800px;
+    height: 80%;
     background-color: white;
     border-radius: 10px;
     overflow: hidden;
@@ -340,4 +410,16 @@
     max-height: 300px; 
     padding: 10px;
     margin-top: 0px !important;
+  }
+
+  .mobile-profile-post {
+    padding: 1em;
+    max-width: 500px;
+    overflow: auto;
+  }
+
+  .mobile-post-image {
+    object-fit: cover;
+    border-radius: 5px;
+    width: 400px;
   }

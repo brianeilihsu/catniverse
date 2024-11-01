@@ -6,13 +6,21 @@ import backPic from "../../Image/back.png";
 
 function Member() {
   const [userData, setUserData] = useState({});
-  const [image, setImage] = useState(null); 
-  const [imagePreview, setImagePreview] = useState(""); 
-  const [errors, setErrors] = useState({}); 
-  const [confirmPassword, setConfirmPassword] = useState(""); // 新增 confirmPassword 狀態
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [errors, setErrors] = useState({});
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
 
   const userId = localStorage.getItem("userId");
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchUserData = async (userId) => {
@@ -50,7 +58,7 @@ function Member() {
   }, [userId]);
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0]; 
+    const file = e.target.files[0];
     const errors = {};
 
     if (!["image/jpeg", "image/png", "image/gif"].includes(file.type)) {
@@ -124,75 +132,164 @@ function Member() {
 
   return (
     <div>
-      <div className="content">
-        <div className="container">
-          <div className="backLogo">
-            <Link to={`/profile/${userId}`} className="back-container">
-              <button className="back-btn"><img className="backPic" src={backPic} /></button>
-              <p>Back</p>
-            </Link>
+      {isMobile ? (
+        <div className="mobile-member-content">
+          <div className="mobile-member-container">
+            <div className="mobile-backLogo">
+              <Link to={`/profile/${userId}`} className="back-container">
+                <button className="back-btn">
+                  <img className="backPic" src={backPic} />
+                </button>
+                <p>Back</p>
+              </Link>
+            </div>
+            <form onSubmit={handleSubmit} encType="multipart/form-data">
+              <img
+                src={imagePreview}
+                alt="用戶頭像"
+                className="avatar-preview"
+                id="avatarPreview"
+              />
+
+              <label htmlFor="avatar">Update avatar:</label>
+              <input
+                type="file"
+                id="avatar"
+                name="avatar"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+              {errors.avatar && <p style={{ color: "red" }}>{errors.avatar}</p>}
+
+              <label htmlFor="username">Username</label>
+              <input
+                type="text"
+                id="user"
+                name="username"
+                value={userData.username || ""}
+                onChange={handleChange}
+                required
+              />
+
+              <label htmlFor="bio">Personal profile:</label>
+              <textarea
+                id="bio"
+                name="bio"
+                value={userData.bio || ""}
+                onChange={handleChange}
+                required
+              />
+
+              <label htmlFor="password">
+                New password: (please leave it blank if you do not want to
+                change it)
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={userData.password || ""}
+                onChange={handleChange}
+              />
+
+              <label htmlFor="confirmPassword">Confirm new password:</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={confirmPassword}
+                onChange={handleConfirmPasswordChange}
+              />
+              {errors.confirmPassword && (
+                <p style={{ color: "red" }}>{errors.confirmPassword}</p>
+              )}
+
+              <button className="submit-btn" type="submit">
+                Update
+              </button>
+            </form>
           </div>
-          <h1>Modify profile</h1>
-          <form onSubmit={handleSubmit} encType="multipart/form-data">
-            <img
-              src={imagePreview}
-              alt="用戶頭像"
-              className="avatar-preview"
-              id="avatarPreview"
-            />
-
-            <label htmlFor="avatar">Update avatar:</label>
-            <input
-              type="file"
-              id="avatar"
-              name="avatar"
-              accept="image/*"
-              onChange={handleImageChange}
-            />
-            {errors.avatar && <p style={{ color: "red" }}>{errors.avatar}</p>}
-
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="user"
-              name="username"
-              value={userData.username || ''}
-              onChange={handleChange}
-              required
-            />
-
-            <label htmlFor="bio">Personal profile:</label>
-            <textarea
-              id="bio"
-              name="bio"
-              value={userData.bio || ''}
-              onChange={handleChange}
-              required
-            />
-
-            <label htmlFor="password">New password: (please leave it blank if you do not want to change it)</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={userData.password || ''}
-              onChange={handleChange}
-            />
-
-            <label htmlFor="confirmPassword">Confirm new password:</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={confirmPassword}
-              onChange={handleConfirmPasswordChange}
-            />
-            {errors.confirmPassword && <p style={{ color: "red" }}>{errors.confirmPassword}</p>}
-
-            <button className="submit-btn" type="submit">Update</button>
-          </form>
         </div>
-      </div>
+      ) : (
+        <div className="desktop-member-content">
+          <div className="container">
+            <div className="backLogo">
+              <Link to={`/profile/${userId}`} className="back-container">
+                <button className="back-btn">
+                  <img className="backPic" src={backPic} />
+                </button>
+                <p>Back</p>
+              </Link>
+            </div>
+            <h1>Modify profile</h1>
+            <form onSubmit={handleSubmit} encType="multipart/form-data">
+              <img
+                src={imagePreview}
+                alt="用戶頭像"
+                className="avatar-preview"
+                id="avatarPreview"
+              />
+
+              <label htmlFor="avatar">Update avatar:</label>
+              <input
+                type="file"
+                id="avatar"
+                name="avatar"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+              {errors.avatar && <p style={{ color: "red" }}>{errors.avatar}</p>}
+
+              <label htmlFor="username">Username</label>
+              <input
+                type="text"
+                id="user"
+                name="username"
+                value={userData.username || ""}
+                onChange={handleChange}
+                required
+              />
+
+              <label htmlFor="bio">Personal profile:</label>
+              <textarea
+                id="bio"
+                name="bio"
+                value={userData.bio || ""}
+                onChange={handleChange}
+                required
+              />
+
+              <label htmlFor="password">
+                New password: (please leave it blank if you do not want to
+                change it)
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={userData.password || ""}
+                onChange={handleChange}
+              />
+
+              <label htmlFor="confirmPassword">Confirm new password:</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={confirmPassword}
+                onChange={handleConfirmPasswordChange}
+              />
+              {errors.confirmPassword && (
+                <p style={{ color: "red" }}>{errors.confirmPassword}</p>
+              )}
+
+              <button className="submit-btn" type="submit">
+                Update
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
