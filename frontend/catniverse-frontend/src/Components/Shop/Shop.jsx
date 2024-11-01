@@ -64,7 +64,6 @@ function Shop() {
             [userId]: user,
           }));
     
-          // 檢查 user.cart 是否存在，然後再讀取 cartId
           if (user.cart && user.cart.cartId) {
             localStorage.setItem("cartId", user.cart.cartId);
           }

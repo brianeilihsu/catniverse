@@ -3,6 +3,10 @@
     flex-grow: 1;
   }
 
+  .mobile-content {
+    flex-grow: 1;
+  }
+
  .index-title {
     color: hsl(0, 1%, 21%);
     padding-top: 10px;
@@ -30,6 +34,23 @@
     max-width: 800px;
     margin-left: 15%;
   }
+
+  .mobile-post {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 1em;
+    margin-bottom: 2em;
+    max-width: 800px;
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .mobile-post-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1em;
+  }
+
   .post-header {
     display: flex;
     align-items: center;
@@ -185,6 +206,7 @@
     width: 100px;
     height: 30px;
     background-color: transparent;
+    color: hsl(0, 1%, 21%);
     margin: 22.5px 0px 0px 12.5px;
     padding: 0px;
   }
@@ -194,4 +216,11 @@
 
   .chooseType {
     display: flex;
+  }
+
+  .mobile-filter {
+    background-color: hsl(0, 0%, 95%);
+    padding-top: 52.5px;
+    padding-bottom: 10px;
+    padding-left: 35px;
   }
