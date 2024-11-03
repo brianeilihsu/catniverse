@@ -27,6 +27,14 @@ const Chart = () => {
     const [chartData, setChartData] = useState(null);
     const [districts, setDistricts] = useState([]);
     const [selectedCitiesOrDistricts, setSelectedCitiesOrDistricts] = useState([]);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener("resize", handleResize);
+        handleResize();
+        return () => window.removeEventListener("resize", handleResize);
+      }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -184,8 +192,149 @@ const Chart = () => {
         },
     };
 
+    const mobileOptions = {
+        indexAxis: 'y',  // This makes the bars horizontal
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' },
+            title: {
+                display: true,
+                text: `資料 - ${selectedCity}`,
+            },
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: '數量或比例',
+                },
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: selectedCity === "all" ? "城市" : "地區",
+                },
+            },
+        },
+    };
+
     return (
-        <div className='wrapper'>
+        <>
+        {isMobile ? (
+            <div className='wrapper'>
+            <div className="mobile-backLogo">
+                <Link to={`/`} className="back-container">
+                    <button className="back-btn">
+                    <img className="backPic" src={backPic} alt="back" />
+                    </button>
+                    <p>Back</p>
+                </Link>
+            </div>
+            <div className='all-container'>
+                <div className='select-container'>
+                    <div>
+                        <label htmlFor="city-select">選擇城市: </label>
+                        <select
+                            id="city-select"
+                            value={selectedCity}
+                            onChange={(e) => setSelectedCity(e.target.value)}
+                        >
+                            <option value="all">全部城市</option>
+                            {cities.map(city => (
+                                <option key={city} value={city}>
+                                    {city}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>選擇{selectedCity === "all" ? "城市" : "地區"}: </label>
+                        {districts.map(option => (
+                            <div key={option}>
+                                <input
+                                    type="checkbox"
+                                    name={option}
+                                    checked={selectedCitiesOrDistricts.includes(option)}
+                                    onChange={handleDistrictCheckboxChange}
+                                />
+                                <label htmlFor={option}>{option}</label>
+                            </div>
+                        ))}
+                    </div>
+                    <br />
+                    <div>
+                        <label>選擇圖表類型: </label>
+                        <div>
+                            <input
+                                type="checkbox"
+                                name="total_cat"
+                                checked={chartTypes.total_cat}
+                                onChange={handleCheckboxChange}
+                            />
+                            <label htmlFor="total_cat">流浪貓總數</label>
+                        </div>
+                        <div>
+                            <input
+                                type="checkbox"
+                                name="ratio"
+                                checked={chartTypes.ratio}
+                                onChange={handleCheckboxChange}
+                            />
+                            <label htmlFor="ratio">剪耳比率 (Tipped/Total)</label>
+                        </div>
+                        <div>
+                            <input
+                                type="checkbox"
+                                name="stray_ratio"
+                                checked={chartTypes.stray_ratio}
+                                onChange={handleCheckboxChange}
+                            />
+                            <label htmlFor="stray_ratio">流浪貓比例 (Stray/Total)</label>
+                        </div>
+                        <div>
+                            <input
+                                type="checkbox"
+                                name="tipped_ratio"
+                                checked={chartTypes.tipped_ratio}
+                                onChange={handleCheckboxChange}
+                            />
+                            <label htmlFor="tipped_ratio">剪耳貓佔比 (Tipped/Total Cat)</label>
+                        </div>
+                        <div>
+                            <input
+                                type="checkbox"
+                                name="tipped_stray_ratio"
+                                checked={chartTypes.tipped_stray_ratio}
+                                onChange={handleCheckboxChange}
+                            />
+                            <label htmlFor="tipped_stray_ratio">剪耳流浪貓佔比 (Tipped Stray/Total Tipped)</label>
+                        </div>
+                        <div>
+                            <input
+                                type="checkbox"
+                                name="untipped_stray_ratio"
+                                checked={chartTypes.untipped_stray_ratio}
+                                onChange={handleCheckboxChange}
+                            />
+                            <label htmlFor="untipped_stray_ratio">未剪耳且流浪的貓佔比</label>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div className='charts-container'>
+                    {chartData && chartData.datasets.length > 0 ? (
+                        <Bar options={mobileOptions} data={chartData} />
+                    ) : (
+                        <p>Loading data...</p>
+                    )}
+                </div>
+            </div>
+        </div>
+        ) : (
+            <div className='wrapper'>
             <div className="backLogo">
                 <Link to={`/`} className="back-container">
                     <button className="back-btn">
@@ -296,6 +445,8 @@ const Chart = () => {
                 </div>
             </div>
         </div>
+        )}
+        </>
     );
 };
 
