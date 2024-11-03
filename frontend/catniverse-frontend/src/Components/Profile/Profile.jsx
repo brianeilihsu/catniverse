@@ -483,8 +483,8 @@ function Profile() {
                   alt="用戶頭像"
                   className="profile-picture"
                   style={{
-                    width: "85px",
-                    height: "85px",
+                    width: "70px",
+                    height: "70px",
                     borderRadius: "50%",
                   }}
                   loading="lazy"
@@ -559,7 +559,7 @@ function Profile() {
                             sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
                             alt="Post image"
                             className="profilePost-image"
-                            style={{ width: "100%", height: "220px" }}
+                            style={{ width: "100%", height: "180px" }}
                             loading="lazy"
                           />
                         </div>
@@ -585,7 +585,7 @@ function Profile() {
                                     sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
                                     alt={`Post image ${index}`}
                                     className="profilePost-image"
-                                    style={{ width: "100%", height: "220px" }}
+                                    style={{ width: "100%", height: "180px" }}
                                     onClick={(e) =>
                                       handleImageClick(
                                         e,

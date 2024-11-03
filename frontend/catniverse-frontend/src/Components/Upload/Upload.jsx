@@ -296,8 +296,8 @@ function Upload() {
       alert("表單和圖片一起上傳成功！");
       navigate("/");
     } catch (error) {
-      console.error("上傳過程失敗：", error);
-      alert("上傳過程失敗");
+      console.error("請裁切圖片：", error);
+      alert("請裁切圖片");
     } finally {
       setIsLoading(false);
     }

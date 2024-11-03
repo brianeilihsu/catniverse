@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, Suspense } from "react";
+import { Link } from "react-router-dom";
 import mapboxgl from "mapbox-gl";
 import axios from "axios";
 import { feature } from "topojson-client";
@@ -12,6 +13,7 @@ import HeartPic from "../../Image/comment-heart.png";
 import HeartPicFilled from "../../Image/heart.png";
 import CommentPic from "../../Image/comment.png";
 import mapPic from "../../Image/map.png";
+import filterPic from "../../Image/filter.png";
 import defaultAvatar from "../../Image/account.png";
 
 mapboxgl.accessToken =
@@ -38,7 +40,6 @@ const Map = () => {
   const [userLocation, setUserLocation] = useState(null);
   const [cats, setCats] = useState([]);
   const [catsImageUrls, setCatsImageUrls] = useState({});
-  const [selectedCat, setSelectedCat] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [likedPosts, setLikedPosts] = useState({});
   const [comments, setComments] = useState({});
@@ -59,6 +60,10 @@ const Map = () => {
   const [regionId, setRegionId] = useState(null);
   const [catLat, setCatLat] = useState(null);
   const [catLng, setCatLng] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [userImageUrls, setUserImageUrls] = useState("");
+  const [username, setUsername] = useState("");
   const directions = useRef(null);
   const twBoundaries = feature(
     townTopoData,
@@ -77,6 +82,13 @@ const Map = () => {
   );
 
   const towns = selectedCounty ? regionOptions[selectedCounty] || [] : [];
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     removeBoundaries();
@@ -224,6 +236,8 @@ const Map = () => {
 
       const canvas = map.getCanvas();
 
+      let shouldPreventScroll = false;
+
       canvas.addEventListener(
         "touchmove",
         (e) => {
@@ -246,6 +260,7 @@ const Map = () => {
       map.addControl(geolocateControl);
 
       map.on("load", () => {
+        map.resize();
         if (catPositioningEnabled) {
           geolocateControl.trigger();
         }
@@ -299,7 +314,7 @@ const Map = () => {
             .addTo(mapRef.current);
 
           marker.getElement().addEventListener("click", () => {
-            fetchPostData(cat.postId);
+            fetchPostData(cat.postId, isMobile);
             setCatLat(cat.latitude);
             setCatLng(cat.longitude);
             setShowModal(true);
@@ -313,7 +328,7 @@ const Map = () => {
     return () => {
       markers.forEach((marker) => marker.remove());
     };
-  }, [selectedCounty, cats, catsImageUrls, catPositioningEnabled]);
+  }, [selectedCounty, cats, catsImageUrls, catPositioningEnabled, isMobile]);
 
   useEffect(() => {
     if (selectedPostData) {
@@ -510,7 +525,7 @@ const Map = () => {
         );
       } else {
         console.error("prevPosts is not an array:", prevPosts);
-        return prevPosts; 
+        return prevPosts;
       }
     } catch (error) {
       console.error(`Error posting comment for post ${catId}:`, error);
@@ -605,7 +620,6 @@ const Map = () => {
 
   useEffect(() => {
     if (densityByCounty && Object.keys(densityByCounty).length > 0) {
-      // 當密度數據可用時，觸發邊界繪製
       drawBoundaries();
     }
   }, [
@@ -655,7 +669,6 @@ const Map = () => {
       features,
     };
 
-    // 檢查並更新資料來源
     if (mapRef.current.getSource("selected-city-density")) {
       mapRef.current.getSource("selected-city-density").setData(geojsonData);
     } else {
@@ -665,7 +678,6 @@ const Map = () => {
       });
     }
 
-    // 添加填充圖層
     if (!mapRef.current.getLayer("selected-city-density")) {
       mapRef.current.addLayer({
         id: "selected-city-density",
@@ -783,13 +795,14 @@ const Map = () => {
     }
   };
 
-  const fetchPostData = async (postId) => {
+  const fetchPostData = async (postId, isMobile) => {
     setPostImageUrls({});
     try {
       const response = await axios.get(
         `http://140.136.151.71:8787/api/v1/posts/post-id/${postId}`
       );
       const post = response.data.data;
+
       if (post && post.postImages && post.postImages.length > 0) {
         const imageUrls = await Promise.all(
           post.postImages.map(async (image) => {
@@ -805,6 +818,13 @@ const Map = () => {
       }
 
       setSelectedPostData(post);
+
+      if (isMobile) {
+        fetchUserAvatar(post.userId);
+        const userResponse = await fetchUserDetails(post.userId);
+        const user = userResponse.data.data;
+        setUsername(user.username);
+      }
     } catch (error) {
       console.error("Error fetching  posts: ", error);
     }
@@ -831,6 +851,19 @@ const Map = () => {
       return URL.createObjectURL(response.data);
     } catch (error) {
       console.error("Error fetching image:", error);
+    }
+  };
+
+  const fetchUserAvatar = async (id) => {
+    try {
+      const response = await axios.get(
+        `http://140.136.151.71:8787/api/v1/user-avatar/download/${id}`,
+        { responseType: "blob" }
+      );
+      const avatarUrl = URL.createObjectURL(response.data);
+      setUserImageUrls(avatarUrl);
+    } catch (error) {
+      console.error("Error fetching userAvatar", error);
     }
   };
 
@@ -954,266 +987,636 @@ const Map = () => {
     });
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
-    <div className="map">
-      <div
-        ref={mapContainerRef}
-        className="map-container"
-        style={{ height: "100vh", width: "100%" }}
-      />
-      <div className="cat-select">
-        <input
-          type="checkbox"
-          name="貓咪定位"
-          checked={catPositioningEnabled}
-          onChange={handleCatPositioningChange}
-        />
-        <label className="location">貓咪定位</label>
-        <input
-          type="checkbox"
-          name="貓咪密度"
-          checked={catDensityEnabled}
-          onChange={handleCatDensityChange}
-        />
-        <label>貓咪密度</label>
-      </div>
+    <>
+      {isMobile ? (
+        <div className="mobile-map">
+          <div ref={mapContainerRef} className="mobile-map-container" />
+          <button
+            onClick={toggleSidebar}
+            className="mobile-sidebar-toggle-button"
+          >
+            <img
+              src={filterPic}
+              style={{ width: "25px", height: "25px" }}
+            ></img>
+          </button>
 
-      {catDensityEnabled && (
-        <div className="legend">
-          <div className="legend-title">貓咪密度</div>
-          <div className="legend-item">
-            <span className="color-box color-1"></span> &gt; 15
-          </div>
-          <div className="legend-item">
-            <span className="color-box color-2"></span> 10 - 15
-          </div>
-          <div className="legend-item">
-            <span className="color-box color-3"></span> 7 - 10
-          </div>
-          <div className="legend-item">
-            <span className="color-box color-4"></span> 5 - 7
-          </div>
-          <div className="legend-item">
-            <span className="color-box color-5"></span> 2 - 5
-          </div>
-          <div className="legend-item">
-            <span className="color-box color-6"></span> 0 - 2
-          </div>
-        </div>
-      )}
-      <div className="info-box">
-        <h3>貓咪資訊</h3>
-        <p>
-          <strong>未絕育數量:</strong> {notNeuteredCount}
-        </p>
-        <p>
-          <strong>已絕育數量:</strong> {neuteredCount}
-        </p>
-      </div>
-      <div className="info-box-select">
-        <h3>選擇台灣縣市、區與里</h3>
-
-        <label>選擇縣市</label>
-        <select value={selectedCounty} onChange={handleCountyChange}>
-          <option value="" disabled>
-            請選擇縣市
-          </option>
-          {countyOptions.map((county) => (
-            <option key={county.name} value={county.name}>
-              {county.name}
-            </option>
-          ))}
-        </select>
-
-        <label>選擇鄉鎮市區</label>
-        <select
-          value={selectedRegion !== null ? selectedRegion : ""}
-          onChange={handleRegionChange}
-          disabled={!selectedCounty}
-        >
-          <option value="" disabled>
-            請選擇鄉鎮市區
-          </option>
-          {towns.map((region, index) => (
-            <option key={index} value={region.geometryIndex}>
-              {region.name}
-            </option>
-          ))}
-        </select>
-
-        <button onClick={handleReset}>重新選擇</button>
-      </div>
-      {loading && <div className="loading-overlay">Loading...</div>}
-      {showModal && selectedPostData && (
-        <div className="overlay">
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <span className="closed-button" onClick={handleCloseModal}>
-              &times;
-            </span>
-            <div className="modal-image">
-              {postImagesUrls[selectedPostData?.id] &&
-              postImagesUrls[selectedPostData?.id]?.length === 1 ? (
-                <img
-                  src={postImagesUrls[selectedPostData.id][0]?.replace(
-                    ".png",
-                    ".webp"
-                  )}
-                  className="modalPost-image"
-                  alt="Cat image"
-                  style={{ width: "500px", height: "660px" }}
-                  loading="lazy"
-                />
-              ) : (
-                <Suspense fallback={<div>Loading slider...</div>}>
-                  <Slider
-                    {...sliderSettings}
-                    ref={(slider) =>
-                      (sliderRefs.current[selectedPostData?.id] = slider)
-                    }
-                  >
-                    {postImagesUrls[selectedPostData?.id]?.map((url, index) => (
-                      <div key={index}>
-                        <img
-                          src={url?.replace(".png", ".webp")}
-                          className="modalPost-image"
-                          alt={`Cat image ${index}`}
-                          style={{ width: "500px", height: "660px" }}
-                          loading="lazy"
-                        />
-                      </div>
-                    ))}
-                  </Slider>
-                </Suspense>
+          {isSidebarOpen && (
+            <div className="cat-sidebar">
+              {catDensityEnabled && (
+                <div className="legend">
+                  <div className="legend-title">貓咪密度</div>
+                  <div className="legend-item">
+                    <span className="color-box color-1"></span> &gt; 15
+                  </div>
+                  <div className="legend-item">
+                    <span className="color-box color-2"></span> 10 - 15
+                  </div>
+                  <div className="legend-item">
+                    <span className="color-box color-3"></span> 7 - 10
+                  </div>
+                  <div className="legend-item">
+                    <span className="color-box color-4"></span> 5 - 7
+                  </div>
+                  <div className="legend-item">
+                    <span className="color-box color-5"></span> 2 - 5
+                  </div>
+                  <div className="legend-item">
+                    <span className="color-box color-6"></span> 0 - 2
+                  </div>
+                </div>
               )}
-            </div>
-            <div
-              className="modalPost-content"
-              style={{ width: "500px", height: "660px" }}
-            >
-              <div>
-                <button className="location-btn" onClick={handleDirection}>
-                  <img src={mapPic} alt="Map" />
-                </button>
-                <h2 className="modalPost-title">{selectedPostData.title}</h2>
-              </div>
-              <p className="modalPost-text">{selectedPostData.content}</p>
-              <p className="address">
-                發布地址: {selectedPostData.city}
-                {selectedPostData.district}
-                {selectedPostData.street}
-              </p>
-              <p className="date">
-                發布於：
-                {new Date(selectedPostData.createdAt).toLocaleString("zh-TW", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })}
-              </p>
-              <p className="stray">
-                是否為流浪貓: {selectedPostData.isStray ? "是" : "否"}
-              </p>
-
-              <div className="modalPost-actions">
-                <button
-                  className="action-btn"
-                  onClick={() => handleLike(selectedPostData.id)}
-                  style={{
-                    color: likedPosts[selectedPostData.id]
-                      ? "#9E1212"
-                      : "black",
-                    fontWeight: likedPosts[selectedPostData.id]
-                      ? "bold"
-                      : "normal",
-                  }}
-                >
-                  <img
-                    className="heart-pic"
-                    src={
-                      likedPosts[selectedPostData.id]
-                        ? HeartPicFilled
-                        : HeartPic
-                    }
-                    alt="讚"
+              <div className="mobile-select">
+                <div className="mobile-cat-select">
+                  <input
+                    type="checkbox"
+                    name="貓咪定位"
+                    checked={catPositioningEnabled}
+                    onChange={handleCatPositioningChange}
                   />
-                  {selectedPostData.total_likes}
-                </button>
-                <button
-                  className="comment-btn"
-                  onClick={() => toggleComments(selectedPostData.id)}
-                >
-                  <img className="comment-pic" src={CommentPic} alt="留言" />
-                  {selectedPostData.total_comments}
-                </button>
-              </div>
+                  <label className="location">貓咪定位</label>
+                  <input
+                    type="checkbox"
+                    name="貓咪密度"
+                    checked={catDensityEnabled}
+                    onChange={handleCatDensityChange}
+                  />
+                  <label>貓咪密度</label>
+                </div>
+                <div className="mobile-info-box-select">
+                  <h3>選擇台灣縣市、區與里</h3>
 
-              {comments[selectedPostData.id] &&
-                comments[selectedPostData.id].visible && (
-                  <>
-                    <div className="comments-section">
-                      {comments[selectedPostData.id]?.list ? (
-                        comments[selectedPostData.id].list.length > 0 ? (
-                          comments[selectedPostData.id].list.map(
-                            (comment, index) => (
+                  <label>選擇縣市</label>
+                  <select value={selectedCounty} onChange={handleCountyChange}>
+                    <option value="" disabled>
+                      請選擇縣市
+                    </option>
+                    {countyOptions.map((county) => (
+                      <option key={county.name} value={county.name}>
+                        {county.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <label>選擇鄉鎮市區</label>
+                  <select
+                    value={selectedRegion !== null ? selectedRegion : ""}
+                    onChange={handleRegionChange}
+                    disabled={!selectedCounty}
+                  >
+                    <option value="" disabled>
+                      請選擇鄉鎮市區
+                    </option>
+                    {towns.map((region, index) => (
+                      <option key={index} value={region.geometryIndex}>
+                        {region.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button onClick={handleReset}>重新選擇</button>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="mobile-info-box">
+            <h3>貓咪資訊</h3>
+            <p>
+              <strong>未絕育數量:</strong> {notNeuteredCount}
+            </p>
+            <p>
+              <strong>已絕育數量:</strong> {neuteredCount}
+            </p>
+          </div>
+          {loading && <div className="loading-overlay">Loading...</div>}
+          {showModal && selectedPostData && (
+            <div className="overlay">
+              <div
+                className="mobile-modal"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="closed-button" onClick={handleCloseModal}>
+                  &times;
+                </span>
+                <div className="mobile-profile-post" key={selectedPostData.id}>
+                  <div className="mobile-post-header">
+                    <Link
+                      to={`/profile/${selectedPostData.userId}`}
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      <img
+                        src={
+                          userImageUrls
+                            ? userImageUrls.replace(".png", "-lowres.webp")
+                            : defaultAvatar
+                        }
+                        sizes="50px"
+                        alt="使用者頭像"
+                        className="mobile-user-avatar"
+                        style={{
+                          width: "50px",
+                          height: "50px",
+                          borderRadius: "50%",
+                          backgroundColor: "#f0f0f0",
+                        }}
+                        loading="lazy"
+                      />
+                    </Link>
+                    <Link
+                      to={`/profile/${selectedPostData.userId}`}
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      <span className="mobile-user-name">
+                        {username ? username : "未知使用者"}
+                      </span>
+                    </Link>
+                  </div>
+                  <h4>{selectedPostData.title}</h4>
+                  {postImagesUrls[selectedPostData?.id] &&
+                  Array.isArray(postImagesUrls[selectedPostData?.id]) &&
+                  postImagesUrls[selectedPostData?.id]?.length === 1 ? (
+                    <div
+                      className="g-container"
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <img
+                        src={postImagesUrls[selectedPostData.id][0].replace(
+                          ".png",
+                          "-lowres.webp"
+                        )}
+                        data-src={postImagesUrls[
+                          selectedPostData.id
+                        ][0].replace(".png", ".webp")}
+                        srcSet={`  
+                ${postImagesUrls[selectedPostData.id][0].replace(
+                  ".png",
+                  "-320w.webp"
+                )} 320w,
+                ${postImagesUrls[selectedPostData.id][0].replace(
+                  ".png",
+                  "-640w.webp"
+                )} 640w,
+                ${postImagesUrls[selectedPostData.id][0].replace(
+                  ".png",
+                  "-1024w.webp"
+                )} 1024w
+              `}
+                        sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
+                        alt="Post image"
+                        className="mobile-post-image"
+                        style={{
+                          width: "100%",
+                          height: "350px",
+                          backgroundColor: "#f0f0f0",
+                        }}
+                        loading="lazy"
+                      />
+                    </div>
+                  ) : (
+                    postImagesUrls[selectedPostData.id] &&
+                    Array.isArray(postImagesUrls[selectedPostData.id]) && (
+                      <Suspense fallback={<div>Loading slider...</div>}>
+                        <Slider {...sliderSettings(sliderRefs)}>
+                          {postImagesUrls[selectedPostData.id].map(
+                            (url, index) => (
                               <div
-                                className="comment"
-                                key={comment.id || index}
+                                className="g-container"
+                                key={index}
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "center",
+                                }}
                               >
                                 <img
-                                  src={
-                                    comment.userAvatar || defaultAvatar
+                                  src={url.replace(".png", "-lowres.webp")}
+                                  data-src={url.replace(".png", ".webp")}
+                                  srcSet={`  
+                        ${url.replace(".png", "-320w.webp")} 320w,
+                        ${url.replace(".png", "-640w.webp")} 640w,
+                        ${url.replace(".png", "-1024w.webp")} 1024w
+                      `}
+                                  sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
+                                  alt={`Post image ${index}`}
+                                  className="mobile-post-image"
+                                  onClick={(e) =>
+                                    handleImageClick(e, sliderRefs.current)
                                   }
-                                  alt="評論者頭像"
-                                  className="comment-avatar"
                                   style={{
-                                    width: "32px",
-                                    height: "32px",
-                                    borderRadius: "50%",
+                                    width: "100%",
+                                    height: "350px",
+                                    backgroundColor: "#f0f0f0",
                                   }}
                                   loading="lazy"
                                 />
-                                <div className="comment-content">
-                                  <div className="comment-author">
-                                    {comment.username}
-                                  </div>
-                                  <div className="comment-text">
-                                    {comment.content}
-                                  </div>
-                                </div>
                               </div>
                             )
-                          )
-                        ) : (
-                          <div>No comment</div> 
-                        )
-                      ) : (
-                        <div>Loading comments...</div> 
+                          )}
+                        </Slider>
+                      </Suspense>
+                    )
+                  )}
+                  <div className="post-content">
+                    <p className="post-text">{selectedPostData.content}</p>
+                    <p className="post-location">
+                      發布地址：{selectedPostData.city}
+                      {selectedPostData.district}
+                      {selectedPostData.street}
+                    </p>
+                    <p className="post-date">
+                      發布於：
+                      {new Date(selectedPostData.createdAt).toLocaleString(
+                        "zh-TW",
+                        {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        }
                       )}
-                    </div>
-                    <div className="new-comment">
-                      <input
-                        type="text"
-                        placeholder="寫下你的評論..."
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
+                    </p>
+                  </div>
+                  <div className="post-actions">
+                    <button
+                      className="action-btn"
+                      onClick={() => handleLike(selectedPostData.id)}
+                      style={{
+                        color: likedPosts[selectedPostData.id]
+                          ? "#9E1212"
+                          : "black",
+                        fontWeight: likedPosts[selectedPostData.id]
+                          ? "bold"
+                          : "normal",
+                      }}
+                    >
+                      <img
+                        className="heart-pic"
+                        src={
+                          likedPosts[selectedPostData.id]
+                            ? HeartPicFilled
+                            : HeartPic
+                        }
+                        alt="讚"
                       />
-                      <button
-                        className="send-btn"
-                        onClick={() => handleAddComment(selectedPostData.id)}
-                      >
-                        Send
-                      </button>
-                    </div>
-                  </>
-                )}
+                      {selectedPostData.total_likes}
+                    </button>
+                    <button
+                      className="comment-btn"
+                      onClick={() => toggleComments(selectedPostData.id)}
+                    >
+                      <img
+                        className="comment-pic"
+                        src={CommentPic}
+                        alt="留言"
+                      />
+                      {selectedPostData.total_comments}
+                    </button>
+                  </div>
+                  {comments[selectedPostData.id] &&
+                    comments[selectedPostData.id].visible && (
+                      <>
+                        <div className="comments-section">
+                          {comments[selectedPostData.id]?.list ? (
+                            comments[selectedPostData.id].list.length > 0 ? (
+                              comments[selectedPostData.id].list.map(
+                                (comment, index) => (
+                                  <div
+                                    className="comment"
+                                    key={comment.id || index}
+                                  >
+                                    <img
+                                      src={comment.userAvatar || defaultAvatar}
+                                      alt="評論者頭像"
+                                      className="comment-avatar"
+                                      style={{
+                                        width: "32px",
+                                        height: "32px",
+                                        borderRadius: "50%",
+                                        backgroundColor: "#f0f0f0",
+                                      }}
+                                      loading="lazy"
+                                    />
+                                    <div className="comment-content">
+                                      <div className="comment-author">
+                                        {comment.username}
+                                      </div>
+                                      <div className="comment-text">
+                                        {comment.content}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              )
+                            ) : (
+                              <div>No comment</div>
+                            )
+                          ) : (
+                            <div>Loading comments...</div>
+                          )}
+                        </div>
+                        <div className="new-comment">
+                          <input
+                            type="text"
+                            placeholder="寫下你的評論..."
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                          />
+                          <button
+                            className="send-btn"
+                            onClick={() => handleAddComment(selectedPostData.id)}
+                          >
+                            Send
+                          </button>
+                        </div>
+                      </>
+                    )}
+                </div>
+              </div>
             </div>
+          )}
+        </div>
+      ) : (
+        <div className="map">
+          <div
+            ref={mapContainerRef}
+            className="map-container"
+            style={{ height: "100vh", width: "100%" }}
+          />
+          <div className="cat-select">
+            <input
+              type="checkbox"
+              name="貓咪定位"
+              checked={catPositioningEnabled}
+              onChange={handleCatPositioningChange}
+            />
+            <label className="location">貓咪定位</label>
+            <input
+              type="checkbox"
+              name="貓咪密度"
+              checked={catDensityEnabled}
+              onChange={handleCatDensityChange}
+            />
+            <label>貓咪密度</label>
           </div>
+
+          {catDensityEnabled && (
+            <div className="legend">
+              <div className="legend-title">貓咪密度</div>
+              <div className="legend-item">
+                <span className="color-box color-1"></span> &gt; 15
+              </div>
+              <div className="legend-item">
+                <span className="color-box color-2"></span> 10 - 15
+              </div>
+              <div className="legend-item">
+                <span className="color-box color-3"></span> 7 - 10
+              </div>
+              <div className="legend-item">
+                <span className="color-box color-4"></span> 5 - 7
+              </div>
+              <div className="legend-item">
+                <span className="color-box color-5"></span> 2 - 5
+              </div>
+              <div className="legend-item">
+                <span className="color-box color-6"></span> 0 - 2
+              </div>
+            </div>
+          )}
+          <div className="info-box">
+            <h3>貓咪資訊</h3>
+            <p>
+              <strong>未絕育數量:</strong> {notNeuteredCount}
+            </p>
+            <p>
+              <strong>已絕育數量:</strong> {neuteredCount}
+            </p>
+          </div>
+          <div className="info-box-select">
+            <h3>選擇台灣縣市、區與里</h3>
+
+            <label>選擇縣市</label>
+            <select value={selectedCounty} onChange={handleCountyChange}>
+              <option value="" disabled>
+                請選擇縣市
+              </option>
+              {countyOptions.map((county) => (
+                <option key={county.name} value={county.name}>
+                  {county.name}
+                </option>
+              ))}
+            </select>
+
+            <label>選擇鄉鎮市區</label>
+            <select
+              value={selectedRegion !== null ? selectedRegion : ""}
+              onChange={handleRegionChange}
+              disabled={!selectedCounty}
+            >
+              <option value="" disabled>
+                請選擇鄉鎮市區
+              </option>
+              {towns.map((region, index) => (
+                <option key={index} value={region.geometryIndex}>
+                  {region.name}
+                </option>
+              ))}
+            </select>
+
+            <button onClick={handleReset}>重新選擇</button>
+          </div>
+          {loading && <div className="loading-overlay">Loading...</div>}
+          {showModal && selectedPostData && (
+            <div className="overlay">
+              <div className="modal" onClick={(e) => e.stopPropagation()}>
+                <span className="closed-button" onClick={handleCloseModal}>
+                  &times;
+                </span>
+                <div className="modal-image">
+                  {postImagesUrls[selectedPostData?.id] &&
+                  postImagesUrls[selectedPostData?.id]?.length === 1 ? (
+                    <img
+                      src={postImagesUrls[selectedPostData.id][0]?.replace(
+                        ".png",
+                        ".webp"
+                      )}
+                      className="modalPost-image"
+                      alt="Cat image"
+                      style={{ width: "500px", height: "660px" }}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <Suspense fallback={<div>Loading slider...</div>}>
+                      <Slider
+                        {...sliderSettings}
+                        ref={(slider) =>
+                          (sliderRefs.current[selectedPostData?.id] = slider)
+                        }
+                      >
+                        {postImagesUrls[selectedPostData?.id]?.map(
+                          (url, index) => (
+                            <div key={index}>
+                              <img
+                                src={url?.replace(".png", ".webp")}
+                                className="modalPost-image"
+                                alt={`Cat image ${index}`}
+                                style={{ width: "500px", height: "660px" }}
+                                loading="lazy"
+                              />
+                            </div>
+                          )
+                        )}
+                      </Slider>
+                    </Suspense>
+                  )}
+                </div>
+                <div
+                  className="modalPost-content"
+                  style={{ width: "500px", height: "660px" }}
+                >
+                  <div>
+                    <button className="location-btn" onClick={handleDirection}>
+                      <img src={mapPic} alt="Map" />
+                    </button>
+                    <h2 className="modalPost-title">
+                      {selectedPostData.title}
+                    </h2>
+                  </div>
+                  <p className="modalPost-text">{selectedPostData.content}</p>
+                  <p className="address">
+                    發布地址: {selectedPostData.city}
+                    {selectedPostData.district}
+                    {selectedPostData.street}
+                  </p>
+                  <p className="date">
+                    發布於：
+                    {new Date(selectedPostData.createdAt).toLocaleString(
+                      "zh-TW",
+                      {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                      }
+                    )}
+                  </p>
+                  <p className="stray">
+                    是否為流浪貓: {selectedPostData.isStray ? "是" : "否"}
+                  </p>
+
+                  <div className="modalPost-actions">
+                    <button
+                      className="action-btn"
+                      onClick={() => handleLike(selectedPostData.id)}
+                      style={{
+                        color: likedPosts[selectedPostData.id]
+                          ? "#9E1212"
+                          : "black",
+                        fontWeight: likedPosts[selectedPostData.id]
+                          ? "bold"
+                          : "normal",
+                      }}
+                    >
+                      <img
+                        className="heart-pic"
+                        src={
+                          likedPosts[selectedPostData.id]
+                            ? HeartPicFilled
+                            : HeartPic
+                        }
+                        alt="讚"
+                      />
+                      {selectedPostData.total_likes}
+                    </button>
+                    <button
+                      className="comment-btn"
+                      onClick={() => toggleComments(selectedPostData.id)}
+                    >
+                      <img
+                        className="comment-pic"
+                        src={CommentPic}
+                        alt="留言"
+                      />
+                      {selectedPostData.total_comments}
+                    </button>
+                  </div>
+
+                  {comments[selectedPostData.id] &&
+                    comments[selectedPostData.id].visible && (
+                      <>
+                        <div className="comments-section">
+                          {comments[selectedPostData.id]?.list ? (
+                            comments[selectedPostData.id].list.length > 0 ? (
+                              comments[selectedPostData.id].list.map(
+                                (comment, index) => (
+                                  <div
+                                    className="comment"
+                                    key={comment.id || index}
+                                  >
+                                    <img
+                                      src={comment.userAvatar || defaultAvatar}
+                                      alt="評論者頭像"
+                                      className="comment-avatar"
+                                      style={{
+                                        width: "32px",
+                                        height: "32px",
+                                        borderRadius: "50%",
+                                      }}
+                                      loading="lazy"
+                                    />
+                                    <div className="comment-content">
+                                      <div className="comment-author">
+                                        {comment.username}
+                                      </div>
+                                      <div className="comment-text">
+                                        {comment.content}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              )
+                            ) : (
+                              <div>No comment</div>
+                            )
+                          ) : (
+                            <div>Loading comments...</div>
+                          )}
+                        </div>
+                        <div className="new-comment">
+                          <input
+                            type="text"
+                            placeholder="寫下你的評論..."
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                          />
+                          <button
+                            className="send-btn"
+                            onClick={() =>
+                              handleAddComment(selectedPostData.id)
+                            }
+                          >
+                            Send
+                          </button>
+                        </div>
+                      </>
+                    )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 };
 
