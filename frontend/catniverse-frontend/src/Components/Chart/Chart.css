@@ -6,6 +6,17 @@
     padding: 20px;
 }
 
+.mobile-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 70vh;
+}
+
 /* Styling for the select container */
 .select-container {
     flex-grow: 1;
@@ -16,14 +27,28 @@
     font-size: small;
 }
 
-/* Styling for the chart container */
+.mobile-select-container {
+    border-radius: 8px;
+    font-size: small;
+}
+
 .charts-container {
-    flex-grow: 4;  /* 讓圖表容器佔據更多空間 */
-    width: 90%;    /* 增加圖表的寬度 */
+    flex-grow: 4;  
+    width: 90%;   
     background-color: white;
     border-radius: 8px;
     padding: 20px;
     height: 750px;
+}
+
+.mobile-charts-container {
+    flex-grow: 6;  
+    width: 90%;    
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    padding-top: 40px;
+    height: 100%;
 }
 
 .all-container {
@@ -37,6 +62,67 @@
     height: 850px;
 }
 
+.mobile-all-container {
+    display: flex;
+    width: 100%;    /* 增加圖表的寬度 */
+    background-color: white;
+    border-radius: 8px;
+    margin-top: 5%;
+    margin-bottom: 0.5%;
+    height: 850px;
+}
+
 #city-select {
     font-size: small;
+    color: hsl(0, 1%, 21%);
+    background-color: white;
 }
+
+.loading {
+    padding-top: 20px;
+    padding-left: 20px;
+}
+
+.mobile-chart-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    background-color: hsl(0, 0%, 95%);
+    padding: 20px;
+    height: 100vh;
+    position: fixed;
+    right: 0; 
+    top: 0; 
+    z-index: 30;
+}
+
+.mobile-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); 
+    z-index: 25;
+}
+
+@media (max-width: 768px) {
+    input[type="checkbox"] {
+      transform: scale(0.8); 
+      margin-right: 5px;
+    }
+  }
+
+
+.checkbox-container {
+    display: flex;
+    flex-wrap: wrap; 
+  }
+  
+  
+  .checkbox-item {
+    width: 45%; 
+    display: flex;
+    align-items: center;
+  }
+  

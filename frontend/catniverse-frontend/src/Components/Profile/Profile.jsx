@@ -501,7 +501,7 @@ function Profile() {
                     {userData.posts ? userData.posts.length : 0}
                   </p>
                 </div>
-                <button className="edit-profile-btn" onClick={toMember}>
+                <button className="mobile-edit-profile-btn" onClick={toMember}>
                   Modify
                 </button>
               </div>

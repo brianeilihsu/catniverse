@@ -75,6 +75,7 @@ function Product({ product }) {
                 },
             });
             alert('Product added to cart successfully!');
+            setShowModal(false);
         } catch (error) {
             console.error('Error adding product to cart:', error);
             alert('Error adding product to cart');
@@ -104,13 +105,13 @@ function Product({ product }) {
                         <img
                             src={productImageUrls[product.id][0]} 
                             alt={`Product image for ${product.name}`}
-                            style={{ width: "100%", height: "200px" }}
+                            style={{ width: "150px", height: "150px" }}
                         />
                     ) : (
                         <img
                             src={productPic} 
                             alt="Default product pic"
-                            style={{ width: "100%", height: "200px" }}
+                            style={{ width: "150px", height: "150px" }}
                         />
                     )}
                     <h2 className='product-title'>{product.name}</h2> 
@@ -133,7 +134,7 @@ function Product({ product }) {
                                         <img
                                             src={url}
                                             alt={`Product image ${index}`}
-                                            style={{ width: "100%", height: "350px" }}
+                                            style={{ width: "100%", height: "300px" }}
                                             loading="lazy"
                                         />
                                     </div>
@@ -142,7 +143,7 @@ function Product({ product }) {
                                 <img
                                     src={productPic} 
                                     alt="Default product pic"
-                                    style={{ width: "100%", height: "350px" }}
+                                    style={{ width: "100%", height: "300px" }}
                                     loading="lazy"
                                 />
                             )}

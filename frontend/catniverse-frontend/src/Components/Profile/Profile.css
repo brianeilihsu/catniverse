@@ -72,6 +72,16 @@
     font-weight: bold;
 }
 
+.mobile-edit-profile-btn {
+  background-color: hsl(0, 3%, 82%);
+  color: hsl(0, 1%, 21%);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-weight: bold;
+}
+
 .edit-profile-btn:hover {
     background-color: #999;
     transition: 0.5s;

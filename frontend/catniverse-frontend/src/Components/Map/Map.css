@@ -52,7 +52,8 @@ h2 {
   padding: 10px;
   border-radius: 10px;
   z-index: 8;
-  width: 125px; 
+  font-size: 15px;
+  width: 100px; 
   height: auto;
 }
 
@@ -64,6 +65,14 @@ h2 {
 .info-box p {
   font-size: 14px;
   margin: 5px 0 0;
+}
+
+.mobile-info-box h3 {
+  margin: 0px;
+}
+
+.mobile-info-box p {
+  margin: 0px;
 }
 
 .info-box-select {
@@ -85,7 +94,7 @@ h2 {
   background-color: rgba(255, 255, 255, 0.8);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: absolute;
-  top: 300px;
+  top: 205px;
   right: 25px;
   padding: 10px;
   border-radius: 10px;
@@ -94,6 +103,10 @@ h2 {
   max-width: 200px;
   display: flex;
   flex-direction: column;
+}
+
+.mobile-select select {
+  background-color: white;
 }
 
 .mobile-cat-select,
@@ -215,15 +228,28 @@ h2 {
   z-index: 10;
 }
 
-.legend-title {
+.legend-title, .mobile-legend-title {
   font-weight: bold;
   margin-bottom: 5px;
 }
 
-.legend-item {
+.legend-item, .mobile-legend-item {
   display: flex;
   align-items: center;
   margin-bottom: 4px;
+}
+
+.mobile-legend {
+  position: absolute;
+  bottom: 20px;
+  right: 25px;
+  background-color: white;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  z-index: 10;
 }
 
 .color-box {
@@ -254,7 +280,7 @@ h2 {
 }
 
 .color-6 {
-  background-color: hsl(129, 90%, 88%);
+  background-color: hsl(129, 86%, 91%);
 }
 
 .location-btn {

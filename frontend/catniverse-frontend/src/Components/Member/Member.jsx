@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./Member.css";
 import backPic from "../../Image/back.png";
+import defaultAvatar from "../../Image/account.png";
 
 function Member() {
   const [userData, setUserData] = useState({});
@@ -145,7 +146,7 @@ function Member() {
             </div>
             <form onSubmit={handleSubmit} encType="multipart/form-data">
               <img
-                src={imagePreview}
+                src={imagePreview || defaultAvatar}
                 alt="用戶頭像"
                 className="avatar-preview"
                 id="avatarPreview"

@@ -14,7 +14,7 @@
     border: 1px solid #ddd;
     border-radius: 10px;
     padding: 10px;
-    width: 200px;
+    width: 160px;
     text-align: center;
     background-color: #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -28,6 +28,11 @@
   .product-img img {
     object-fit: cover;
     border-radius: 10px;
+  }
+
+  .mobile-product-img {
+    height: auto;
+    width: 160px;
   }
 
   .mobile-product-img img {
@@ -91,7 +96,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 5;
+    z-index: 25;
   }
   
   .modal-content {
@@ -108,11 +113,10 @@
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
-    width: 350px;
-    max-width: 90%;
+    width: 325px;
     position: relative;
-    margin-top: 15%;
-    z-index: 5;
+    margin-top: 10%;
+    z-index: 30;
   }
   
   .close-button {

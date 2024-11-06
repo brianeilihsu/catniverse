@@ -12,9 +12,9 @@
 .mobile-product-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);  
-  width: 100%;
   justify-items: center;
   gap: 5px;
+  padding: 10px;
 }
 
 .search {
@@ -68,6 +68,14 @@
     width: 200px;
     margin-right: 10px;
     color: hsl(0, 1%, 21%);
+  }
+
+  @media (max-width: 768px) {
+    .categorySearch, .brandSearch {
+      width: 150px;
+      margin-right: 10px;
+      color: hsl(0, 1%, 37%);
+    }
   }
 
   .cart-btn, .order-btn, .upload-btn {

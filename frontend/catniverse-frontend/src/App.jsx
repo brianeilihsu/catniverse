@@ -21,10 +21,11 @@ import Chart from "./Components/Chart/Chart";
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const noHeaderRoutes = ["/login", "/register", "/chart"];
+  const [noHeaderRoutes, setNoHeaderRoutes] = useState(["/login", "/register"]);
   const [username, setUsername] = useState("");
   const [userid, setUserid] = useState("");
   const isLoggingOut = useRef(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
@@ -38,11 +39,22 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
     if (!username && isLoggingOut.current) {
       navigate("/");
       isLoggingOut.current = false;
     }
   }, [username, navigate]);
+
+  useEffect(() => {
+    setNoHeaderRoutes(isMobile ? ["/login", "/register"] : ["/login", "/register", "/chart"]);
+  }, [isMobile]);
 
   const handleLogout = () => {
     localStorage.clear();

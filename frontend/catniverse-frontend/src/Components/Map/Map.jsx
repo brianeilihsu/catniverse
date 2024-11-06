@@ -65,6 +65,7 @@ const Map = () => {
   const [userImageUrls, setUserImageUrls] = useState("");
   const [username, setUsername] = useState("");
   const directions = useRef(null);
+  const [step, setStep] = useState(0);
   const twBoundaries = feature(
     townTopoData,
     townTopoData.objects["TOWN_MOI_1130718"]
@@ -220,7 +221,28 @@ const Map = () => {
   }, [selectedCounty, catPositioningEnabled]);
 
   useEffect(() => {
-    if (!mapRef.current) {
+    if (mapRef.current) {
+      if (isMobile && catDensityEnabled) {
+        // 確保在每次條件變更時直接操作圖層
+        mapRef.current.getStyle().layers.forEach((layer) => {
+          if (layer.type === "symbol" && layer.layout["text-field"]) {
+            mapRef.current.setLayoutProperty(layer.id, "visibility", "none");
+          }
+        });
+      } else {
+        // 如果不符合條件，則顯示標籤
+        mapRef.current.getStyle().layers.forEach((layer) => {
+          if (layer.type === "symbol" && layer.layout["text-field"]) {
+            mapRef.current.setLayoutProperty(layer.id, "visibility", "visible");
+          }
+        });
+      }
+    }
+  }, [isMobile, catDensityEnabled]); 
+  
+
+  useEffect(() => {
+    if (!mapRef.current) {;
       const map = new mapboxgl.Map({
         container: mapContainerRef.current,
         style: "mapbox://styles/mapbox/streets-v12",
@@ -634,24 +656,30 @@ const Map = () => {
 
   const drawDensityByCatCount = () => {
     const flattenedCounties = Object.values(countyOptions).flat();
+  
+    const maxCatCount = Math.max(...flattenedCounties.map(county => densityByCounty[county.name] || 0));
+    const calculatedStep = maxCatCount / 6;
+    setStep(calculatedStep);
+  
     const features = flattenedCounties.map((county) => {
       const countyName = county.name;
       const catCount = densityByCounty[countyName] || 0;
       let color = "#FFFFFF";
-      if (catCount > 15) {
+  
+      if (catCount > calculatedStep * 5) {
         color = "hsl(129, 55%, 40%)";
-      } else if (catCount > 10) {
+      } else if (catCount > calculatedStep * 4) {
         color = "hsl(129, 60%, 52%)";
-      } else if (catCount > 7) {
+      } else if (catCount > calculatedStep * 3) {
         color = "hsl(129, 65%, 63%)";
-      } else if (catCount > 5) {
+      } else if (catCount > calculatedStep * 2) {
         color = "hsl(129, 70%, 72%)";
-      } else if (catCount > 2) {
+      } else if (catCount > calculatedStep) {
         color = "hsl(129, 80%, 82%)";
-      } else if (catCount > 0) {
-        color = "hsl(129, 90%, 88%)";
+      } else if (catCount >= 0) {
+        color = "hsl(129, 86%, 91%)";
       }
-
+  
       const selectedFeature = twCountyBoundaries.features[county.geometryIndex];
       return {
         type: "Feature",
@@ -663,12 +691,12 @@ const Map = () => {
         },
       };
     });
-
+  
     const geojsonData = {
       type: "FeatureCollection",
       features,
     };
-
+  
     if (mapRef.current.getSource("selected-city-density")) {
       mapRef.current.getSource("selected-city-density").setData(geojsonData);
     } else {
@@ -677,7 +705,7 @@ const Map = () => {
         data: geojsonData,
       });
     }
-
+  
     if (!mapRef.current.getLayer("selected-city-density")) {
       mapRef.current.addLayer({
         id: "selected-city-density",
@@ -685,11 +713,11 @@ const Map = () => {
         source: "selected-city-density",
         paint: {
           "fill-color": ["get", "color"],
-          "fill-opacity": 0.6,
+          "fill-opacity": 1,
         },
       });
     }
-
+  
     if (!mapRef.current.getLayer("selected-city-line")) {
       mapRef.current.addLayer({
         id: "selected-city-line",
@@ -701,7 +729,7 @@ const Map = () => {
         },
       });
     }
-  };
+  };  
 
   const fetchCatsData = async () => {
     if (dataCache.current[selectedCounty]) {
@@ -912,6 +940,16 @@ const Map = () => {
   };
 
   const drawDensityRegionBoundary = () => {
+    const maxCatCount = Math.max(
+      ...cities.flatMap((county) => {
+        const regionsInCounty = regionOptions[county] || [];
+        return regionsInCounty.map((region) => densityByRegion[region.name] || 0);
+      })
+    );
+  
+    const calculatedStep = maxCatCount / 6;
+    setStep(calculatedStep);
+
     const features = cities.flatMap((county) => {
       const regionsInCounty = regionOptions[county] || [];
 
@@ -920,18 +958,18 @@ const Map = () => {
         const catCount = densityByRegion[regionName] || 0;
 
         let color = "#FFFFFF";
-        if (catCount > 15) {
+        if (catCount > calculatedStep * 5) {
           color = "hsl(129, 55%, 40%)";
-        } else if (catCount > 10) {
+        } else if (catCount > calculatedStep * 4) {
           color = "hsl(129, 60%, 52%)";
-        } else if (catCount > 7) {
+        } else if (catCount > calculatedStep * 3) {
           color = "hsl(129, 65%, 63%)";
-        } else if (catCount > 5) {
+        } else if (catCount > calculatedStep * 2) {
           color = "hsl(129, 70%, 72%)";
-        } else if (catCount > 2) {
+        } else if (catCount > calculatedStep) {
           color = "hsl(129, 80%, 82%)";
-        } else if (catCount > 0) {
-          color = "hsl(129, 90%, 88%)";
+        } else if (catCount >= 0) {
+          color = "hsl(129, 86%, 91%)";
         }
 
         const selectedFeature = twBoundaries.features[region.geometryIndex];
@@ -972,7 +1010,7 @@ const Map = () => {
       source: "region-density",
       paint: {
         "fill-color": ["get", "color"],
-        "fill-opacity": 0.6,
+        "fill-opacity": 1,
       },
     });
 
@@ -1008,29 +1046,6 @@ const Map = () => {
 
           {isSidebarOpen && (
             <div className="cat-sidebar">
-              {catDensityEnabled && (
-                <div className="legend">
-                  <div className="legend-title">貓咪密度</div>
-                  <div className="legend-item">
-                    <span className="color-box color-1"></span> &gt; 15
-                  </div>
-                  <div className="legend-item">
-                    <span className="color-box color-2"></span> 10 - 15
-                  </div>
-                  <div className="legend-item">
-                    <span className="color-box color-3"></span> 7 - 10
-                  </div>
-                  <div className="legend-item">
-                    <span className="color-box color-4"></span> 5 - 7
-                  </div>
-                  <div className="legend-item">
-                    <span className="color-box color-5"></span> 2 - 5
-                  </div>
-                  <div className="legend-item">
-                    <span className="color-box color-6"></span> 0 - 2
-                  </div>
-                </div>
-              )}
               <div className="mobile-select">
                 <div className="mobile-cat-select">
                   <input
@@ -1093,6 +1108,29 @@ const Map = () => {
               <strong>已絕育數量:</strong> {neuteredCount}
             </p>
           </div>
+          {catDensityEnabled && (
+            <div className="mobile-legend">
+            <div className="mobile-legend-title">貓咪密度</div>
+            <div className="mobile-legend-item">
+              <span className="color-box color-1"></span> &gt; {Math.ceil(step * 5)}
+            </div>
+            <div className="legend-item">
+              <span className="color-box color-2"></span> {Math.ceil(step * 4)} - {Math.ceil(step * 5)}
+            </div>
+            <div className="legend-item">
+              <span className="color-box color-3"></span> {Math.ceil(step * 3)} - {Math.ceil(step * 4)}
+            </div>
+            <div className="legend-item">
+              <span className="color-box color-4"></span> {Math.ceil(step * 2)} - {Math.ceil(step * 3)}
+            </div>
+            <div className="legend-item">
+              <span className="color-box color-5"></span> {Math.ceil(step)} - {Math.ceil(step * 2)}
+            </div>
+            <div className="legend-item">
+              <span className="color-box color-6"></span> 0 - {Math.ceil(step)}
+            </div>
+          </div>          
+          )}
           {loading && <div className="loading-overlay">Loading...</div>}
           {showModal && selectedPostData && (
             <div className="overlay">
@@ -1332,7 +1370,9 @@ const Map = () => {
                           />
                           <button
                             className="send-btn"
-                            onClick={() => handleAddComment(selectedPostData.id)}
+                            onClick={() =>
+                              handleAddComment(selectedPostData.id)
+                            }
                           >
                             Send
                           </button>

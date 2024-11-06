@@ -9,6 +9,15 @@
 
 }
 
+.mobile-p-container {
+  max-width: 80%;
+  margin: 0 auto;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
 .pl-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -18,6 +27,15 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   margin-left: 17%;
 
+}
+
+.mobile-pl-container {
+  width: 85%;
+  margin: 0 auto;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 h1, h2 {
@@ -84,15 +102,16 @@ textarea {
 }
 
 .submit-btn {
-  background-color: hsl(0, 0%, 95%);
+  background-color: hsl(0, 69%, 35%);
   font-size: 17.5px;
   width: 100%;
   height: 40px;
+  color: white;
   font-weight: bold;
 }
 
 .submit-btn:hover {
-  background-color: #999;
+  background-color: hsl(0, 71%, 33%);
   transition: 0.5s;
 }
 
@@ -126,12 +145,14 @@ th {
 .edit-btn {
   background-color: #045ba2;
   color: white;
+  font-weight: bold;
   cursor: pointer;
 }
 
 .save-btn {
   background-color: #4d8dc2;
   color: white;
+  font-weight: bold;
   cursor: pointer;
 }
 
@@ -139,6 +160,7 @@ th {
   background-color: hsl(0, 71%, 33%);
   color: white;
   cursor: pointer;
+  font-weight: bold;
   margin-left: 10%;
 }
 
@@ -146,13 +168,30 @@ th {
   background-color: hsl(0, 47%, 57%);
   color: white;
   cursor: pointer;
+  font-weight: bold;
   margin-left: 10%;
 }
 
-.backLogo {
+.upload-backLogo {
   display: flex;
+  font-size: 20px;
+  margin-block-start: 0em;
+  margin-block-end: 0em;
+  font-weight: bold;
+  padding-top: 70px;
+  padding-left: 10px;
 }
 
 .new-product-btn {
   margin-left: 92.5%;
+  background-color: hsl(0, 71%, 33%);
+  color: white;
+  font-weight: bold;
+}
+
+.mobile-new-product-btn {
+  margin-left: 80%;
+  background-color: hsl(0, 71%, 33%);
+  color: white;
+  font-weight: bold;
 }
