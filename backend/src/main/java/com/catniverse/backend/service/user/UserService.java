@@ -63,6 +63,8 @@ public class UserService implements ImpUserService{
             return userRepo.findById(userId).map(existingUser -> {
 
                 existingUser.setUsername(request.getUsername());
+                existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
+                existingUser.setBio(request.getBio());
                 return userRepo.save(existingUser);
             }).orElseThrow(()-> new ResourceNotFoundException("User not found"));
     }
