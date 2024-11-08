@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
 import HeartPic from "../../Image/comment-heart.png";
 import HeartPicFilled from "../../Image/heart.png";
 import CommentPic from "../../Image/comment.png";
@@ -10,7 +11,7 @@ import "./Index.css";
 const Slider = React.lazy(() => import("react-slick"));
 
 function Index() {
-  const [postData, setPostData] = useState([]);
+  const [postData, setPostData] = useState(["loading"]);
   const [userData, setUserData] = useState({});
   const [visibleCount, setVisibleCount] = useState(10);
   const [postImageUrls, setPostImageUrls] = useState({});
@@ -24,6 +25,7 @@ function Index() {
   const observerRef = useRef(null);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
+  const sliderRef = useRef({});
 
   const taiwanRegions = [
     "臺北市",
@@ -58,21 +60,23 @@ function Index() {
   }, []);
 
   useEffect(() => {
-    if (!sessionStorage.getItem("hasReloaded")) {
-      sessionStorage.setItem("hasReloaded", "true");
-      window.location.reload();
-    }
+    const handleInitialLoad = async () => {
+      if (!sessionStorage.getItem("hasReloaded")) {
+        sessionStorage.setItem("hasReloaded", "true");
+        window.location.reload();
+      }
 
-    if (observerRef.current) return;
+      if (!observerRef.current) {
+        observerRef.current = true;
+        await handlePopularPost();
+      }
+    };
 
-    observerRef.current = true;
-
-    handlePopularPost();
+    handleInitialLoad();
   }, []);
 
   const fetchPostData = async (posts) => {
-    setPostData(posts);
-
+    setPostData(["loading"]);
     const userId = localStorage.getItem("userId");
 
     const postPromises = posts.map(async (post) => {
@@ -97,6 +101,7 @@ function Index() {
     });
 
     await Promise.all(postPromises);
+    setPostData(posts);
   };
 
   const fetchPostImages = async (downloadUrls, postId) => {
@@ -164,7 +169,7 @@ function Index() {
         "http://140.136.151.71:8787/api/v1/posts/popular"
       );
       const posts = response.data.data;
-      fetchPostData(posts);
+      await fetchPostData(posts);
     } catch (error) {
       console.error("Error fetching popular posts: ", error);
     }
@@ -176,7 +181,7 @@ function Index() {
         "http://140.136.151.71:8787/api/v1/posts/latest"
       );
       const posts = response.data.data;
-      fetchPostData(posts);
+      await fetchPostData(posts);
     } catch (error) {
       console.error("Error fetching latest posts: ", error);
     }
@@ -195,7 +200,7 @@ function Index() {
           }
         );
         const posts = response.data.data;
-        fetchPostData(posts);
+        await fetchPostData(posts);
       } else {
         handlePopularPost();
       }
@@ -424,92 +429,82 @@ function Index() {
     <div>
       {isMobile ? (
         <div className="mobile-container">
-            <div className="mobile-filter">
-              <button className="popular" onClick={handlePopularPost}>
-                Popular
-              </button>
-              <button className="latest" onClick={handleLatestPost}>
-                Latest
-              </button>
-              <select
-                className="region"
-                value={selectedRegion}
-                onChange={handleRegionPost}
-              >
-                <option value="">Region</option>
-                {taiwanRegions.map((region) => (
-                  <option key={region} value={region}>
-                    {region}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="mobile-filter">
+            <button className="popular" onClick={handlePopularPost}>
+              Popular
+            </button>
+            <button className="latest" onClick={handleLatestPost}>
+              Latest
+            </button>
+            <select
+              className="region"
+              value={selectedRegion}
+              onChange={handleRegionPost}
+            >
+              <option value="">Region</option>
+              {taiwanRegions.map((region) => (
+                <option key={region} value={region}>
+                  {region}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="mobile-content">
             <div className="NoContainer">
               <br />
-              <div id="mobile-post-list">
-                {postData.length > 0 ? (
-                  postData.slice(0, visibleCount).map((post) => {
-                    let sliderRef = React.createRef();
-                    const user = userData[post.userId];
-                    const avatarUrl = userImageUrls[post.userId];
-                    const postComments = comments[post.id]?.list || [];
+              {postData[0] === "loading" ? (
+                <div className="loading-overlay">
+                  <ClipLoader color="#666" size={50} />
+                </div>
+              ) : postData.length > 0 ? (
+                <div id="mobile-post-list">
+                  {postData.slice(0, visibleCount).map((post) => (
+                    <div className="mobile-post" key={post.id}>
+                      <div className="mobile-post-header">
+                        <Link
+                          to={`/profile/${post.userId}`}
+                          style={{
+                            textDecoration: "none",
+                            color: "inherit",
+                          }}
+                        >
+                          <img
+                            src={
+                              userImageUrls[post.userId]
+                                ? userImageUrls[post.userId].replace(
+                                    ".png",
+                                    "-lowres.webp"
+                                  )
+                                : defaultAvatar
+                            }
+                            alt="使用者頭像"
+                            className="user-avatar"
+                            style={{
+                              width: "50px",
+                              height: "50px",
+                              borderRadius: "50%",
+                              backgroundColor: "#f0f0f0",
+                            }}
+                            loading="lazy"
+                          />
+                        </Link>
+                        <Link
+                          to={`/profile/${post.userId}`}
+                          style={{
+                            textDecoration: "none",
+                            color: "inherit",
+                          }}
+                        >
+                          <span className="user-name">
+                            {userData[post.userId]?.username || "未知使用者"}
+                          </span>
+                        </Link>
+                      </div>
 
-                    return (
-                      <div className="mobile-post" key={post.id}>
-                        <div className="mobile-post-header">
-                          <Link
-                            to={`/profile/${post.userId}`}
-                            style={{ textDecoration: "none", color: "inherit" }}
-                          >
-                            <img
-                              src={
-                                avatarUrl
-                                  ? avatarUrl.replace(".png", "-lowres.webp")
-                                  : defaultAvatar
-                              }
-                              data-src={
-                                avatarUrl
-                                  ? avatarUrl.replace(".png", ".webp")
-                                  : defaultAvatar
-                              }
-                              srcSet={
-                                avatarUrl
-                                  ? `
-                            ${avatarUrl.replace(".png", "-50w.webp")} 50w,
-                            ${avatarUrl.replace(".png", "-100w.webp")} 100w
-                          `
-                                  : `
-                            ${defaultAvatar} 50w,
-                            ${defaultAvatar} 100w
-                          `
-                              }
-                              sizes="50px"
-                              alt="使用者頭像"
-                              className="user-avatar"
-                              style={{
-                                width: "50px",
-                                height: "50px",
-                                borderRadius: "50%",
-                                backgroundColor: "#f0f0f0",
-                              }}
-                              loading="lazy"
-                            />
-                          </Link>
-                          <Link
-                            to={`/profile/${post.userId}`}
-                            style={{ textDecoration: "none", color: "inherit" }}
-                          >
-                            <span className="user-name">
-                              {user ? user.username : "未知使用者"}
-                            </span>
-                          </Link>
-                        </div>
+                      <h4>{post.title}</h4>
 
-                        <h4>{post.title}</h4>
-
-                        {postImageUrls[post.id] &&
-                        Array.isArray(postImageUrls[post.id]) &&
+                      {postImageUrls[post.id] &&
+                      Array.isArray(postImageUrls[post.id]) ? (
                         postImageUrls[post.id].length === 1 ? (
                           <div
                             className="g-container"
@@ -523,25 +518,6 @@ function Index() {
                                 ".png",
                                 "-lowres.webp"
                               )}
-                              data-src={postImageUrls[post.id][0].replace(
-                                ".png",
-                                ".webp"
-                              )}
-                              srcSet={`  
-                              ${postImageUrls[post.id][0].replace(
-                                ".png",
-                                "-320w.webp"
-                              )} 320w,
-                              ${postImageUrls[post.id][0].replace(
-                                ".png",
-                                "-640w.webp"
-                              )} 640w,
-                              ${postImageUrls[post.id][0].replace(
-                                ".png",
-                                "-1024w.webp"
-                              )} 1024w
-                            `}
-                              sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
                               alt="Post image"
                               className="post-image"
                               style={{
@@ -554,171 +530,158 @@ function Index() {
                             />
                           </div>
                         ) : (
-                          postImageUrls[post.id] &&
-                          Array.isArray(postImageUrls[post.id]) && (
-                            <Suspense fallback={<div>Loading slider...</div>}>
-                              <Slider {...sliderSettings(sliderRef)}>
-                                {postImageUrls[post.id].map((url, index) => (
-                                  <div
-                                    className="g-container"
-                                    key={index}
+                          <Suspense fallback={<div>Loading slider...</div>}>
+                            <Slider {...sliderSettings(sliderRef)}>
+                              {postImageUrls[post.id].map((url, index) => (
+                                <div
+                                  className="g-container"
+                                  key={index}
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                  }}
+                                >
+                                  <img
+                                    src={url.replace(".png", "-lowres.webp")}
+                                    alt={`Post image ${index}`}
+                                    className="post-image"
                                     style={{
-                                      display: "flex",
-                                      justifyContent: "center",
+                                      width: "95%",
+                                      height: "500px",
+                                      aspectRatio: "16/9",
+                                      backgroundColor: "#f0f0f0",
                                     }}
+                                    loading="lazy"
+                                  />
+                                </div>
+                              ))}
+                            </Slider>
+                          </Suspense>
+                        )
+                      ) : null}
+
+                      {/* Post Content */}
+                      <div className="post-content">
+                        <p className="post-text">{post.content}</p>
+                        <p className="post-location">
+                          發布地址：{post.city}
+                          {post.district}
+                          {post.street}
+                        </p>
+                        <p className="post-date">
+                          發布於：
+                          {new Date(post.createdAt).toLocaleString("zh-TW", {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
+                          })}
+                        </p>
+                      </div>
+
+                      {/* Post Actions */}
+                      <div className="post-actions">
+                        <button
+                          className="action-btn"
+                          onClick={() => handleLike(post.id)}
+                          style={{
+                            color: likedPosts[post.id] ? "#9E1212" : "black",
+                            fontWeight: likedPosts[post.id] ? "bold" : "normal",
+                          }}
+                        >
+                          <img
+                            className="heart-pic"
+                            src={
+                              likedPosts[post.id] ? HeartPicFilled : HeartPic
+                            }
+                            alt="讚"
+                          />
+                          {post.total_likes}
+                        </button>
+                        <button
+                          className="comment-btn"
+                          onClick={() => toggleComments(post.id)}
+                        >
+                          <img
+                            className="comment-pic"
+                            src={CommentPic}
+                            alt="留言"
+                          />
+                          {post.total_comments}
+                        </button>
+                      </div>
+
+                      {/* Comments Section */}
+                      {comments[post.id] && comments[post.id].visible && (
+                        <>
+                          <div className="comments-section">
+                            {comments[post.id]?.list ? (
+                              comments[post.id].list.length > 0 ? (
+                                comments[post.id].list.map((comment, index) => (
+                                  <div
+                                    className="comment"
+                                    key={comment.id || index}
                                   >
                                     <img
-                                      src={url.replace(".png", "-lowres.webp")}
-                                      data-src={url.replace(".png", ".webp")}
-                                      srcSet={`  
-                                      ${url.replace(".png", "-320w.webp")} 320w,
-                                      ${url.replace(".png", "-640w.webp")} 640w,
-                                      ${url.replace(
-                                        ".png",
-                                        "-1024w.webp"
-                                      )} 1024w
-                                    `}
-                                      sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
-                                      alt={`Post image ${index}`}
-                                      className="post-image"
-                                      onClick={(e) =>
-                                        handleImageClick(e, sliderRef.current)
-                                      }
+                                      src={comment.userAvatar || defaultAvatar}
+                                      alt="評論者頭像"
+                                      className="comment-avatar"
                                       style={{
-                                        width: "95%",
-                                        height: "500px",
-                                        aspectRatio: "16/9",
+                                        width: "32px",
+                                        height: "32px",
+                                        borderRadius: "50%",
                                         backgroundColor: "#f0f0f0",
                                       }}
                                       loading="lazy"
                                     />
-                                  </div>
-                                ))}
-                              </Slider>
-                            </Suspense>
-                          )
-                        )}
-                        <div className="post-content">
-                          <p className="post-text">{post.content}</p>
-                          <p className="post-location">
-                            發布地址：{post.city}
-                            {post.district}
-                            {post.street}
-                          </p>
-                          <p className="post-date">
-                            發布於：
-                            {new Date(post.createdAt).toLocaleString("zh-TW", {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              hour12: false,
-                            })}
-                          </p>
-                        </div>
-
-                        <div className="post-actions">
-                          <button
-                            className="action-btn"
-                            onClick={() => handleLike(post.id)}
-                            style={{
-                              color: likedPosts[post.id] ? "#9E1212" : "black",
-                              fontWeight: likedPosts[post.id]
-                                ? "bold"
-                                : "normal",
-                            }}
-                          >
-                            <img
-                              className="heart-pic"
-                              src={
-                                likedPosts[post.id] ? HeartPicFilled : HeartPic
-                              }
-                              alt="讚"
-                            />
-                            {post.total_likes}
-                          </button>
-                          <button
-                            className="comment-btn"
-                            onClick={() => toggleComments(post.id)}
-                          >
-                            <img
-                              className="comment-pic"
-                              src={CommentPic}
-                              alt="留言"
-                            />
-                            {post.total_comments}
-                          </button>
-                        </div>
-                        {comments[post.id] && comments[post.id].visible && (
-                          <>
-                            <div className="comments-section">
-                              {comments[post.id]?.list ? (
-                                comments[post.id].list.length > 0 ? (
-                                  postComments.map((comment, index) => (
-                                    <div
-                                      className="comment"
-                                      key={comment.id || index}
-                                    >
-                                      <img
-                                        src={
-                                          comment.userAvatar || defaultAvatar
-                                        }
-                                        alt="評論者頭像"
-                                        className="comment-avatar"
-                                        style={{
-                                          width: "32px",
-                                          height: "32px",
-                                          borderRadius: "50%",
-                                          backgroundColor: "#f0f0f0",
-                                        }}
-                                        loading="lazy"
-                                      />
-                                      <div className="comment-content">
-                                        <div className="comment-author">
-                                          {comment.username}
-                                        </div>
-                                        <div className="comment-text">
-                                          {comment.content}
-                                        </div>
+                                    <div className="comment-content">
+                                      <div className="comment-author">
+                                        {comment.username}
+                                      </div>
+                                      <div className="comment-text">
+                                        {comment.content}
                                       </div>
                                     </div>
-                                  ))
-                                ) : (
-                                  <div>No comment</div>
-                                )
+                                  </div>
+                                ))
                               ) : (
-                                <div>Loading comments...</div>
-                              )}
-                            </div>
-                            <div className="new-comment">
-                              <input
-                                type="text"
-                                placeholder="寫下你的評論..."
-                                value={commentText}
-                                onChange={(e) => setCommentText(e.target.value)}
-                              />
-                              <button
-                                className="send-btn"
-                                onClick={() => handleAddComment(post.id)}
-                              >
-                                Send
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )
-                  })
-                ) : (
-                  <p>There are no posts yet</p>
-                )}
-              </div>
-
-              {postData.length > visibleCount && (
-                <button className="load-more" onClick={loadMorePosts}>
-                  Loading more posts...
-                </button>
+                                <div>No comment</div>
+                              )
+                            ) : (
+                              <div>Loading comments...</div>
+                            )}
+                          </div>
+                          <div className="new-comment">
+                            <input
+                              type="text"
+                              placeholder="寫下你的評論..."
+                              value={commentText}
+                              onChange={(e) => setCommentText(e.target.value)}
+                            />
+                            <button
+                              className="send-btn"
+                              onClick={() => handleAddComment(post.id)}
+                            >
+                              Send
+                            </button>
+                          </div>
+                          {postData.length > visibleCount && (
+                            <button
+                              className="load-more"
+                              onClick={loadMorePosts}
+                            >
+                              Loading more posts...
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>There are no posts yet</p>
               )}
             </div>
           </div>
@@ -754,87 +717,102 @@ function Index() {
           <div className="content">
             <div className="NoContainer">
               <br />
-              <div id="post-list">
-                {postData.length > 0 ? (
-                  postData.slice(0, visibleCount).map((post) => {
-                    let sliderRef = React.createRef();
-                    const user = userData[post.userId];
-                    const avatarUrl = userImageUrls[post.userId];
-                    const postComments = comments[post.id]?.list || [];
+              {postData[0] === "loading" ? (
+                <div className="loading-overlay">
+                  <ClipLoader color={"#666"} size={50} />
+                </div>
+              ) : (
+                <>
+                  <div id="post-list">
+                    {postData.length > 0 ? (
+                      postData.slice(0, visibleCount).map((post) => {
+                        let sliderRef = React.createRef();
+                        const user = userData[post.userId];
+                        const avatarUrl = userImageUrls[post.userId];
+                        const postComments = comments[post.id]?.list || [];
 
-                    return (
-                      <div className="post" key={post.id}>
-                        <div className="post-header">
-                          <Link
-                            to={`/profile/${post.userId}`}
-                            style={{ textDecoration: "none", color: "inherit" }}
-                          >
-                            <img
-                              src={
-                                avatarUrl
-                                  ? avatarUrl.replace(".png", "-lowres.webp")
-                                  : defaultAvatar
-                              }
-                              data-src={
-                                avatarUrl
-                                  ? avatarUrl.replace(".png", ".webp")
-                                  : defaultAvatar
-                              }
-                              srcSet={
-                                avatarUrl
-                                  ? `
+                        return (
+                          <div className="post" key={post.id}>
+                            <div className="post-header">
+                              <Link
+                                to={`/profile/${post.userId}`}
+                                style={{
+                                  textDecoration: "none",
+                                  color: "inherit",
+                                }}
+                              >
+                                <img
+                                  src={
+                                    avatarUrl
+                                      ? avatarUrl.replace(
+                                          ".png",
+                                          "-lowres.webp"
+                                        )
+                                      : defaultAvatar
+                                  }
+                                  data-src={
+                                    avatarUrl
+                                      ? avatarUrl.replace(".png", ".webp")
+                                      : defaultAvatar
+                                  }
+                                  srcSet={
+                                    avatarUrl
+                                      ? `
                             ${avatarUrl.replace(".png", "-50w.webp")} 50w,
                             ${avatarUrl.replace(".png", "-100w.webp")} 100w
                           `
-                                  : `
+                                      : `
                             ${defaultAvatar} 50w,
                             ${defaultAvatar} 100w
                           `
-                              }
-                              sizes="50px"
-                              alt="使用者頭像"
-                              className="user-avatar"
-                              style={{
-                                width: "50px",
-                                height: "50px",
-                                borderRadius: "50%",
-                                backgroundColor: "#f0f0f0",
-                              }}
-                              loading="lazy"
-                            />
-                          </Link>
-                          <Link
-                            to={`/profile/${post.userId}`}
-                            style={{ textDecoration: "none", color: "inherit" }}
-                          >
-                            <span className="user-name">
-                              {user ? user.username : "未知使用者"}
-                            </span>
-                          </Link>
-                        </div>
+                                  }
+                                  sizes="50px"
+                                  alt="使用者頭像"
+                                  className="user-avatar"
+                                  style={{
+                                    width: "50px",
+                                    height: "50px",
+                                    borderRadius: "50%",
+                                    backgroundColor: "#f0f0f0",
+                                  }}
+                                  loading="lazy"
+                                />
+                              </Link>
+                              <Link
+                                to={`/profile/${post.userId}`}
+                                style={{
+                                  textDecoration: "none",
+                                  color: "inherit",
+                                }}
+                              >
+                                <span className="user-name">
+                                  {user ? user.username : "未知使用者"}
+                                </span>
+                              </Link>
+                            </div>
 
-                        <h4>{post.title}</h4>
+                            <h4>{post.title}</h4>
 
-                        {postImageUrls[post.id] &&
-                        Array.isArray(postImageUrls[post.id]) &&
-                        postImageUrls[post.id].length === 1 ? (
-                          <div
-                            className="g-container"
-                            style={{
-                              display: "flex",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <img
-                              src={postImageUrls[post.id][0].replace(
-                                ".png",
-                                "-lowres.webp"
-                              )}
-                              data-src={postImageUrls[post.id][0].replace(
-                                ".png",
-                                ".webp"
-                              )}
-                              srcSet={`  
+                            {postImageUrls[post.id] &&
+                            Array.isArray(postImageUrls[post.id]) &&
+                            postImageUrls[post.id].length === 1 ? (
+                              <div
+                                className="g-container"
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <img
+                                  src={postImageUrls[post.id][0].replace(
+                                    ".png",
+                                    "-lowres.webp"
+                                  )}
+                                  data-src={postImageUrls[post.id][0].replace(
+                                    ".png",
+                                    ".webp"
+                                  )}
+                                  srcSet={`  
                               ${postImageUrls[post.id][0].replace(
                                 ".png",
                                 "-320w.webp"
@@ -848,36 +826,45 @@ function Index() {
                                 "-1024w.webp"
                               )} 1024w
                             `}
-                              sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
-                              alt="Post image"
-                              className="post-image"
-                              style={{
-                                width: "95%",
-                                height: "500px",
-                                aspectRatio: "16/9",
-                                backgroundColor: "#f0f0f0",
-                              }}
-                              loading="lazy"
-                            />
-                          </div>
-                        ) : (
-                          postImageUrls[post.id] &&
-                          Array.isArray(postImageUrls[post.id]) && (
-                            <Suspense fallback={<div>Loading slider...</div>}>
-                              <Slider {...sliderSettings(sliderRef)}>
-                                {postImageUrls[post.id].map((url, index) => (
-                                  <div
-                                    className="g-container"
-                                    key={index}
-                                    style={{
-                                      display: "flex",
-                                      justifyContent: "center",
-                                    }}
-                                  >
-                                    <img
-                                      src={url.replace(".png", "-lowres.webp")}
-                                      data-src={url.replace(".png", ".webp")}
-                                      srcSet={`  
+                                  sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
+                                  alt="Post image"
+                                  className="post-image"
+                                  style={{
+                                    width: "95%",
+                                    height: "500px",
+                                    aspectRatio: "16/9",
+                                    backgroundColor: "#f0f0f0",
+                                  }}
+                                  loading="lazy"
+                                />
+                              </div>
+                            ) : (
+                              postImageUrls[post.id] &&
+                              Array.isArray(postImageUrls[post.id]) && (
+                                <Suspense
+                                  fallback={<div>Loading slider...</div>}
+                                >
+                                  <Slider {...sliderSettings(sliderRef)}>
+                                    {postImageUrls[post.id].map(
+                                      (url, index) => (
+                                        <div
+                                          className="g-container"
+                                          key={index}
+                                          style={{
+                                            display: "flex",
+                                            justifyContent: "center",
+                                          }}
+                                        >
+                                          <img
+                                            src={url.replace(
+                                              ".png",
+                                              "-lowres.webp"
+                                            )}
+                                            data-src={url.replace(
+                                              ".png",
+                                              ".webp"
+                                            )}
+                                            srcSet={`  
                                       ${url.replace(".png", "-320w.webp")} 320w,
                                       ${url.replace(".png", "-640w.webp")} 640w,
                                       ${url.replace(
@@ -885,147 +872,163 @@ function Index() {
                                         "-1024w.webp"
                                       )} 1024w
                                     `}
-                                      sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
-                                      alt={`Post image ${index}`}
-                                      className="post-image"
-                                      onClick={(e) =>
-                                        handleImageClick(e, sliderRef.current)
-                                      }
-                                      style={{
-                                        width: "95%",
-                                        height: "500px",
-                                        aspectRatio: "16/9",
-                                        backgroundColor: "#f0f0f0",
-                                      }}
-                                      loading="lazy"
-                                    />
-                                  </div>
-                                ))}
-                              </Slider>
-                            </Suspense>
-                          )
-                        )}
-                        <div className="post-content">
-                          <p className="post-text">{post.content}</p>
-                          <p className="post-location">
-                            發布地址：{post.city}
-                            {post.district}
-                            {post.street}
-                          </p>
-                          <p className="post-date">
-                            發布於：
-                            {new Date(post.createdAt).toLocaleString("zh-TW", {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              hour12: false,
-                            })}
-                          </p>
-                        </div>
-
-                        <div className="post-actions">
-                          <button
-                            className="action-btn"
-                            onClick={() => handleLike(post.id)}
-                            style={{
-                              color: likedPosts[post.id] ? "#9E1212" : "black",
-                              fontWeight: likedPosts[post.id]
-                                ? "bold"
-                                : "normal",
-                            }}
-                          >
-                            <img
-                              className="heart-pic"
-                              src={
-                                likedPosts[post.id] ? HeartPicFilled : HeartPic
-                              }
-                              alt="讚"
-                            />
-                            {post.total_likes}
-                          </button>
-                          <button
-                            className="comment-btn"
-                            onClick={() => toggleComments(post.id)}
-                          >
-                            <img
-                              className="comment-pic"
-                              src={CommentPic}
-                              alt="留言"
-                            />
-                            {post.total_comments}
-                          </button>
-                        </div>
-                        {comments[post.id] && comments[post.id].visible && (
-                          <>
-                            <div className="comments-section">
-                              {comments[post.id]?.list ? (
-                                comments[post.id].list.length > 0 ? (
-                                  postComments.map((comment, index) => (
-                                    <div
-                                      className="comment"
-                                      key={comment.id || index}
-                                    >
-                                      <img
-                                        src={
-                                          comment.userAvatar || defaultAvatar
-                                        }
-                                        alt="評論者頭像"
-                                        className="comment-avatar"
-                                        style={{
-                                          width: "32px",
-                                          height: "32px",
-                                          borderRadius: "50%",
-                                          backgroundColor: "#f0f0f0",
-                                        }}
-                                        loading="lazy"
-                                      />
-                                      <div className="comment-content">
-                                        <div className="comment-author">
-                                          {comment.username}
+                                            sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
+                                            alt={`Post image ${index}`}
+                                            className="post-image"
+                                            onClick={(e) =>
+                                              handleImageClick(
+                                                e,
+                                                sliderRef.current
+                                              )
+                                            }
+                                            style={{
+                                              width: "95%",
+                                              height: "500px",
+                                              aspectRatio: "16/9",
+                                              backgroundColor: "#f0f0f0",
+                                            }}
+                                            loading="lazy"
+                                          />
                                         </div>
-                                        <div className="comment-text">
-                                          {comment.content}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))
-                                ) : (
-                                  <div>No comment</div>
-                                )
-                              ) : (
-                                <div>Loading comments...</div>
-                              )}
+                                      )
+                                    )}
+                                  </Slider>
+                                </Suspense>
+                              )
+                            )}
+                            <div className="post-content">
+                              <p className="post-text">{post.content}</p>
+                              <p className="post-location">
+                                發布地址：{post.city}
+                                {post.district}
+                                {post.street}
+                              </p>
+                              <p className="post-date">
+                                發布於：
+                                {new Date(post.createdAt).toLocaleString(
+                                  "zh-TW",
+                                  {
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: false,
+                                  }
+                                )}
+                              </p>
                             </div>
-                            <div className="new-comment">
-                              <input
-                                type="text"
-                                placeholder="寫下你的評論..."
-                                value={commentText}
-                                onChange={(e) => setCommentText(e.target.value)}
-                              />
+
+                            <div className="post-actions">
                               <button
-                                className="send-btn"
-                                onClick={() => handleAddComment(post.id)}
+                                className="action-btn"
+                                onClick={() => handleLike(post.id)}
+                                style={{
+                                  color: likedPosts[post.id]
+                                    ? "#9E1212"
+                                    : "black",
+                                  fontWeight: likedPosts[post.id]
+                                    ? "bold"
+                                    : "normal",
+                                }}
                               >
-                                Send
+                                <img
+                                  className="heart-pic"
+                                  src={
+                                    likedPosts[post.id]
+                                      ? HeartPicFilled
+                                      : HeartPic
+                                  }
+                                  alt="讚"
+                                />
+                                {post.total_likes}
+                              </button>
+                              <button
+                                className="comment-btn"
+                                onClick={() => toggleComments(post.id)}
+                              >
+                                <img
+                                  className="comment-pic"
+                                  src={CommentPic}
+                                  alt="留言"
+                                />
+                                {post.total_comments}
                               </button>
                             </div>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p>There are no posts yet</p>
-                )}
-              </div>
+                            {comments[post.id] && comments[post.id].visible && (
+                              <>
+                                <div className="comments-section">
+                                  {comments[post.id]?.list ? (
+                                    comments[post.id].list.length > 0 ? (
+                                      postComments.map((comment, index) => (
+                                        <div
+                                          className="comment"
+                                          key={comment.id || index}
+                                        >
+                                          <img
+                                            src={
+                                              comment.userAvatar ||
+                                              defaultAvatar
+                                            }
+                                            alt="評論者頭像"
+                                            className="comment-avatar"
+                                            style={{
+                                              width: "32px",
+                                              height: "32px",
+                                              borderRadius: "50%",
+                                              backgroundColor: "#f0f0f0",
+                                            }}
+                                            loading="lazy"
+                                          />
+                                          <div className="comment-content">
+                                            <div className="comment-author">
+                                              {comment.username}
+                                            </div>
+                                            <div className="comment-text">
+                                              {comment.content}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <div>No comment</div>
+                                    )
+                                  ) : (
+                                    <div>Loading comments...</div>
+                                  )}
+                                </div>
+                                <div className="new-comment">
+                                  <input
+                                    type="text"
+                                    placeholder="寫下你的評論..."
+                                    value={commentText}
+                                    onChange={(e) =>
+                                      setCommentText(e.target.value)
+                                    }
+                                  />
+                                  <button
+                                    className="send-btn"
+                                    onClick={() => handleAddComment(post.id)}
+                                  >
+                                    Send
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p>There are no posts yet</p>
+                    )}
+                  </div>
 
-              {postData.length > visibleCount && (
-                <button className="load-more" onClick={loadMorePosts}>
-                  Loading more posts...
-                </button>
+                  {postData.length > visibleCount && (
+                    <button className="load-more" onClick={loadMorePosts}>
+                      Loading more posts...
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>

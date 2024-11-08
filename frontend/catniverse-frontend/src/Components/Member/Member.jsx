@@ -225,7 +225,7 @@ function Member() {
             <h1>Modify profile</h1>
             <form onSubmit={handleSubmit} encType="multipart/form-data">
               <img
-                src={imagePreview}
+                src={imagePreview || defaultAvatar}
                 alt="用戶頭像"
                 className="avatar-preview"
                 id="avatarPreview"

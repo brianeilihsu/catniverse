@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
 import axios from "axios";
 import "./Profile.css";
 import uploadPic from "../../Image/post.png";
@@ -14,7 +15,7 @@ const Slider = React.lazy(() => import("react-slick"));
 function Profile() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [userData, setUserData] = useState({});
+  const [userData, setUserData] = useState({ posts: ["loading"] });
   const [userImageUrls, setUserImageUrls] = useState("");
   const [postImageUrls, setPostImageUrls] = useState({});
   const [showOutDelete, setShowOutDelete] = useState(false);
@@ -53,24 +54,34 @@ function Profile() {
 
     const fetchUserData = async (userId) => {
       try {
+        setUserData({ posts: ["loading"] });
+
         const response = await axios.get(
           `http://140.136.151.71:8787/api/v1/users/${userId}/user`
         );
         const user = response.data.data;
-        setUserData(user);
 
+        let avatarUrl = null;
         if (user.userAvatar && user.userAvatar.downloadUrl) {
-          const avatarUrl = await fetchImage(user.userAvatar.downloadUrl);
-          setUserImageUrls(avatarUrl);
+          avatarUrl = await fetchImage(user.userAvatar.downloadUrl);
         }
 
         if (user.posts.length > 0) {
-          user.posts.forEach((post) => {
-            const downloadUrls = post.postImages.map((img) => img.downloadUrl);
-            fetchPostImages(downloadUrls, post.id);
-            checkIfLiked(post.id);
-          });
+          await Promise.all(
+            user.posts.map(async (post) => {
+              const downloadUrls = post.postImages.map(
+                (img) => img.downloadUrl
+              );
+              await fetchPostImages(downloadUrls, post.id);
+              await checkIfLiked(post.id);
+            })
+          );
         }
+
+        setUserData({
+          ...user,
+          userAvatarUrl: avatarUrl,
+        });
       } catch (error) {
         console.error(`Error fetching user data for userId ${userId}:`, error);
       }
@@ -113,7 +124,6 @@ function Profile() {
           preloadImage(blobUrls[0]);
         }
 
-        // Apply lazy loading with IntersectionObserver
         applyIntersectionObserver(postId);
       } catch (error) {
         console.error("Error fetching images:", error);
@@ -136,7 +146,7 @@ function Profile() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const img = entry.target;
-            img.src = img.dataset.src; 
+            img.src = img.dataset.src;
             img.classList.remove("lazyload");
             obs.unobserve(img);
           }
@@ -174,15 +184,15 @@ function Profile() {
       setSelectedPost(post);
       fetchComments(post.id);
       setShowModal(true);
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
     }
   };
 
   const handleCloseModal = () => {
     setSelectedPost(null);
-    document.body.style.overflow = 'auto';
-    document.documentElement.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
+    document.documentElement.style.overflow = "auto";
     setShowModal(false);
   };
 
@@ -507,7 +517,11 @@ function Profile() {
               </div>
 
               <div className="mobile-posts">
-                {userData.posts && userData.posts.length > 0 ? (
+                {userData.posts && userData.posts[0] === "loading" ? (
+                  <div className="loading-overlay">
+                    <ClipLoader color="#666" size={50} />
+                  </div>
+                ) : userData.posts && userData.posts.length > 0 ? (
                   userData.posts.map((post) => (
                     <div className="mobile-mypost" key={post.id}>
                       <div
@@ -543,19 +557,10 @@ function Profile() {
                               ".webp"
                             )}
                             srcSet={`
-                          ${postImageUrls[post.id][0].replace(
-                            ".png",
-                            "-320w.webp"
-                          )} 320w,
-                          ${postImageUrls[post.id][0].replace(
-                            ".png",
-                            "-640w.webp"
-                          )} 640w,
-                          ${postImageUrls[post.id][0].replace(
-                            ".png",
-                            "-1024w.webp"
-                          )} 1024w
-                        `}
+              ${postImageUrls[post.id][0].replace(".png", "-320w.webp")} 320w,
+              ${postImageUrls[post.id][0].replace(".png", "-640w.webp")} 640w,
+              ${postImageUrls[post.id][0].replace(".png", "-1024w.webp")} 1024w
+            `}
                             sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
                             alt="Post image"
                             className="profilePost-image"
@@ -578,10 +583,10 @@ function Profile() {
                                     src={url.replace(".png", "-lowres.webp")}
                                     data-src={url.replace(".png", ".webp")}
                                     srcSet={`
-                                  ${url.replace(".png", "-320w.webp")} 320w,
-                                  ${url.replace(".png", "-640w.webp")} 640w,
-                                  ${url.replace(".png", "-1024w.webp")} 1024w
-                                `}
+                      ${url.replace(".png", "-320w.webp")} 320w,
+                      ${url.replace(".png", "-640w.webp")} 640w,
+                      ${url.replace(".png", "-1024w.webp")} 1024w
+                    `}
                                     sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
                                     alt={`Post image ${index}`}
                                     className="profilePost-image"
@@ -925,7 +930,11 @@ function Profile() {
               </div>
 
               <div className="posts">
-                {userData.posts && userData.posts.length > 0 ? (
+                {userData.posts && userData.posts[0] === "loading" ? (
+                  <div className="loading-overlay">
+                    <ClipLoader color="#666" size={50} />
+                  </div>
+                ) : userData.posts && userData.posts.length > 0 ? (
                   userData.posts.map((post) => (
                     <div className="mypost" key={post.id}>
                       <div
@@ -961,19 +970,10 @@ function Profile() {
                               ".webp"
                             )}
                             srcSet={`
-                          ${postImageUrls[post.id][0].replace(
-                            ".png",
-                            "-320w.webp"
-                          )} 320w,
-                          ${postImageUrls[post.id][0].replace(
-                            ".png",
-                            "-640w.webp"
-                          )} 640w,
-                          ${postImageUrls[post.id][0].replace(
-                            ".png",
-                            "-1024w.webp"
-                          )} 1024w
-                        `}
+              ${postImageUrls[post.id][0].replace(".png", "-320w.webp")} 320w,
+              ${postImageUrls[post.id][0].replace(".png", "-640w.webp")} 640w,
+              ${postImageUrls[post.id][0].replace(".png", "-1024w.webp")} 1024w
+            `}
                             sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
                             alt="Post image"
                             className="profilePost-image"
@@ -996,10 +996,10 @@ function Profile() {
                                     src={url.replace(".png", "-lowres.webp")}
                                     data-src={url.replace(".png", ".webp")}
                                     srcSet={`
-                                  ${url.replace(".png", "-320w.webp")} 320w,
-                                  ${url.replace(".png", "-640w.webp")} 640w,
-                                  ${url.replace(".png", "-1024w.webp")} 1024w
-                                `}
+                      ${url.replace(".png", "-320w.webp")} 320w,
+                      ${url.replace(".png", "-640w.webp")} 640w,
+                      ${url.replace(".png", "-1024w.webp")} 1024w
+                    `}
                                     sizes="(max-width: 640px) 320px, (max-width: 1024px) 640px, 100vw"
                                     alt={`Post image ${index}`}
                                     className="profilePost-image"
