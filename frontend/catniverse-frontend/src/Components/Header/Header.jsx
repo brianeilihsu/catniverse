@@ -31,6 +31,10 @@ function Header({ user, onLogout }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    closeSidebar(); 
+  }, [location.pathname]);
+
   const handleLogout = () => {
     console.log("Logging out");
     onLogout();
