@@ -79,7 +79,7 @@ function Register() {
         }
       );
       alert("註冊成功！");
-      navigate("/login"); // 成功後導航到登入頁面
+      navigate("/login");
     } catch (error) {
       if (error.response) {
         console.error("Error response:", error.response.data);

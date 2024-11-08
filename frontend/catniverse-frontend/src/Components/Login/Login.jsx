@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
 import "./Login.css";
 import logo from "../../Image/cat-lover.png";
 
@@ -11,6 +11,7 @@ function Login({ setUsername }) {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
 
   useEffect(() => {
@@ -65,6 +66,8 @@ function Login({ setUsername }) {
 
   const handleLogin = async (e) => {
 
+    setIsLoading(true);
+
     e.preventDefault();
     console.log(email, " ", password);
     
@@ -96,6 +99,7 @@ function Login({ setUsername }) {
         if (email) {
           fetchRole(email);
         }
+        setIsLoading(true);
         navigate("/");
       } else {
         console.error('Failed to fetch username');
@@ -111,6 +115,11 @@ function Login({ setUsername }) {
 
   return (
     <div>
+      {isLoading && (
+        <div className="loading-overlay">
+          <ClipLoader color={"#666"} size={50} />
+        </div>
+      )}
       <div className="login-container">
         <div className="logo">
           <img src={logo} alt="" />
@@ -133,7 +142,12 @@ function Login({ setUsername }) {
             onChange={handleGetPassword}
             required
           />
-          <button className="login-button" type="submit" onClick={handleLogin}>Login</button>
+          <button 
+            className="login-button" 
+            type="submit" 
+            onClick={handleLogin}
+            disabled={isLoading}  
+          >Login</button>
         </form>
         <div className="links">
           <Link to="/register">Register a new account</Link>

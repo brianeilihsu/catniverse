@@ -221,24 +221,28 @@ const Map = () => {
   }, [selectedCounty, catPositioningEnabled]);
 
   useEffect(() => {
-    if (mapRef.current) {
-      if (isMobile && catDensityEnabled) {
-        // 確保在每次條件變更時直接操作圖層
-        mapRef.current.getStyle().layers.forEach((layer) => {
-          if (layer.type === "symbol" && layer.layout["text-field"]) {
-            mapRef.current.setLayoutProperty(layer.id, "visibility", "none");
-          }
-        });
-      } else {
-        // 如果不符合條件，則顯示標籤
-        mapRef.current.getStyle().layers.forEach((layer) => {
-          if (layer.type === "symbol" && layer.layout["text-field"]) {
-            mapRef.current.setLayoutProperty(layer.id, "visibility", "visible");
-          }
-        });
-      }
+    const map = mapRef.current;
+  
+    if (map) {
+      const updateLayerVisibility = () => {
+        if (map.isStyleLoaded()) {  
+          map.getStyle().layers.forEach((layer) => {
+            if (layer.type === "symbol" && layer.layout["text-field"]) {
+              map.setLayoutProperty(
+                layer.id,
+                "visibility",
+                isMobile && catDensityEnabled ? "none" : "visible"
+              );
+            }
+          });
+        } else {
+          map.once("styledata", updateLayerVisibility);
+        }
+      };
+
+      updateLayerVisibility();
     }
-  }, [isMobile, catDensityEnabled]); 
+  }, [isMobile, catDensityEnabled]);
   
 
   useEffect(() => {
@@ -293,8 +297,6 @@ const Map = () => {
       geolocateControl.on("geolocate", (position) => {
         const { longitude, latitude } = position.coords;
         setUserLocation([longitude, latitude]);
-        map.setZoom(7);
-        map.setCenter([120.906189, 23.634318]);
       });
 
       mapRef.current = map;
@@ -598,7 +600,9 @@ const Map = () => {
       selectedCountyFeature.geometry.coordinates[0].forEach((coord) => {
         bounds.extend(coord);
       });
-      mapRef.current.fitBounds(bounds, { padding: 20 });
+      setTimeout(() => {
+        mapRef.current.fitBounds(bounds, { padding: 20 });
+      }, 100);
     }
   };
 

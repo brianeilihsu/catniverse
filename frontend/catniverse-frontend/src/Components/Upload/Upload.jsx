@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
 import axios from "axios";
 import "croppie/croppie.css";
 import Croppie from "croppie";
@@ -8,7 +9,6 @@ import backPic from "../../Image/back.png";
 import debounce from "lodash.debounce";
 import imageCompression from "browser-image-compression";
 import ReactMapGL, { Marker, NavigationControl, Popup } from "react-map-gl";
-import mapboxSdk from "@mapbox/mapbox-sdk";
 import mapboxGeocoding from "@mapbox/mapbox-sdk/services/geocoding";
 import piexif from "piexifjs";
 const TOKEN =
@@ -50,7 +50,7 @@ function Upload() {
   const navigate = useNavigate();
   const geocodingClient = mapboxGeocoding({ accessToken: TOKEN });
 
-  const [exifData, setExifData] = useState([]); // 儲存 EXIF 資訊的狀態
+  const [exifData, setExifData] = useState([]);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -105,11 +105,10 @@ function Upload() {
         return address;
       }
     } else if (address.startsWith("台湾")) {
-      address = address.replace("台湾", "").replace(/\d+/g, ""); 
+      address = address.replace("台湾", "").replace(/\d+/g, "");
       let parts = address.match(/(.*市)(.*區)?(.*)/);
 
       if (parts) {
-
         const street = parts[3];
         const district = parts[2];
         const city = parts[1];
@@ -135,11 +134,11 @@ function Upload() {
         ".mapboxgl-popup-close-button"
       );
       if (closeButton) {
-        closeButton.removeAttribute("aria-hidden"); 
-        closeButton.setAttribute("inert", "true"); 
-        clearInterval(interval); 
+        closeButton.removeAttribute("aria-hidden");
+        closeButton.setAttribute("inert", "true");
+        clearInterval(interval);
       }
-    }, 100); 
+    }, 100);
 
     return () => clearInterval(interval);
   }, []);
@@ -369,10 +368,8 @@ function Upload() {
     e.preventDefault();
     setIsLoading(true);
 
-    // 檢查是否已成功取得 city 和 district
     if (!newCity || !newDistrict) {
       alert("請選擇有效的城市和區域位置。");
-      setIsLoading(false);
       return;
     }
 
@@ -387,15 +384,15 @@ function Upload() {
         })
       );
 
-      // 構建表單數據，將圖片和 EXIF 資訊一起上傳
       const formDataWithImages = new FormData();
       formDataWithImages.append("title", formData.title);
       formDataWithImages.append("content", formData.content);
-      formDataWithImages.append("city", newCity); // 添加城市
-      formDataWithImages.append("district", newDistrict); // 添加區域
-      formDataWithImages.append("street", newStreet || ""); // 添加街道
+      formDataWithImages.append("stray", strayCatStatus);
+      formDataWithImages.append("tipped", earStatus);
+      formDataWithImages.append("city", newCity);
+      formDataWithImages.append("district", newDistrict);
+      formDataWithImages.append("street", newStreet || "");
 
-      // 確認經緯度存在並添加
       if (latRef.current && lngRef.current) {
         formDataWithImages.append("latitude", parseFloat(latRef.current));
         formDataWithImages.append("longitude", parseFloat(lngRef.current));
@@ -418,10 +415,10 @@ function Upload() {
           },
         }
       );
-
+      console.log("With image", response.data.data);
       //await handleFormSubmitWithImages(croppedBlobs.filter(blob => blob));
 
-      alert("表單和圖片一起上傳成功！");
+      setIsLoading(false);
       navigate("/");
     } catch (error) {
       console.error(
@@ -451,6 +448,11 @@ function Upload() {
 
   return (
     <>
+      {isLoading && (
+        <div className="loading-overlay">
+          <ClipLoader color={"#666"} size={50} />
+        </div>
+      )}
       {isMobile ? (
         <div className="mobile-content">
           <br />
@@ -604,6 +606,7 @@ function Upload() {
                         className="btn-info"
                         type="button"
                         onClick={() => handleCrop(index)}
+                        disabled={isLoading}  
                       >
                         <i className="fa fa-scissors"></i> 裁剪圖片
                       </button>
@@ -611,6 +614,7 @@ function Upload() {
                         className="btn-danger"
                         type="button"
                         onClick={() => handleCancelCrop(index)}
+                        disabled={isLoading}  
                       >
                         取消圖片
                       </button>
@@ -631,7 +635,11 @@ function Upload() {
                 </div>
               ))}
 
-              <button className="submit-btn" type="submit">
+              <button 
+                className="submit-btn" 
+                type="submit"
+                disabled={isLoading}  
+              >
                 Post
               </button>
             </form>
@@ -685,19 +693,19 @@ function Upload() {
                 initialViewState={viewport}
                 mapStyle="mapbox://styles/mapbox/streets-v11"
                 localIdeographFontFamily="'sans-serif'"
-                onDblClick={handleAddClick} 
-                onMove={(event) => setViewport(event.viewState)} 
+                onDblClick={handleAddClick}
+                onMove={(event) => setViewport(event.viewState)}
                 style={{ width: "100%", height: "400px" }}
               >
                 {newPlace && (
                   <Marker
                     latitude={newPlace.lat}
                     longitude={newPlace.lng}
-                    draggable 
+                    draggable
                     onDragEnd={(event) => {
                       const { lat, lng } = event.lngLat;
                       setNewPlace({ lat, lng });
-                      fetchAddress(lat, lng); 
+                      fetchAddress(lat, lng);
                     }}
                   />
                 )}
@@ -790,6 +798,7 @@ function Upload() {
                         className="btn-info"
                         type="button"
                         onClick={() => handleCrop(index)}
+                        disabled={isLoading}  
                       >
                         <i className="fa fa-scissors"></i> 裁剪圖片
                       </button>
@@ -797,6 +806,7 @@ function Upload() {
                         className="btn-danger"
                         type="button"
                         onClick={() => handleCancelCrop(index)}
+                        disabled={isLoading}  
                       >
                         取消圖片
                       </button>
@@ -817,7 +827,11 @@ function Upload() {
                 </div>
               ))}
 
-              <button className="submit-btn" type="submit">
+              <button 
+                className="submit-btn" 
+                type="submit"
+                disabled={isLoading}    
+              >
                 Post
               </button>
             </form>

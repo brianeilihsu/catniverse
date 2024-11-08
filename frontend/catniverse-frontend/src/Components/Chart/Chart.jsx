@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
 import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJs,
@@ -64,6 +65,7 @@ const Chart = () => {
   );
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -74,31 +76,41 @@ const Chart = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch(
-        `http://140.136.151.71:8787/api/v1/chart/${
-          selectedCity === "all" ? "stray/all" : selectedCity
-        }`
-      );
-      const data = await response.json();
+      setIsLoading(true); // Start loading
 
-      const filteredData = data.data;
+      try {
+        const response = await fetch(
+          `http://140.136.151.71:8787/api/v1/chart/${
+            selectedCity === "all" ? "stray/all" : selectedCity
+          }`
+        );
+        const data = await response.json();
 
-      if (selectedCity === "all") {
-        const cityOptions = [...new Set(filteredData.map((item) => item.city))];
-        setDistricts(cityOptions);
-        setSelectedCitiesOrDistricts(cityOptions); // Select all cities by default
-      } else {
-        const districtOptions = [
-          ...new Set(filteredData.map((item) => item.district)),
-        ];
-        setDistricts(districtOptions);
-        setSelectedCitiesOrDistricts(districtOptions); // Select all districts by default
-      }
+        const filteredData = data.data;
 
-      if (isMobile) {
-        setChartData(generatePieChartData(filteredData));
-      } else {
-        setChartData(generateBarChartData(filteredData));
+        if (selectedCity === "all") {
+          const cityOptions = [
+            ...new Set(filteredData.map((item) => item.city)),
+          ];
+          setDistricts(cityOptions);
+          setSelectedCitiesOrDistricts(cityOptions); // Select all cities by default
+        } else {
+          const districtOptions = [
+            ...new Set(filteredData.map((item) => item.district)),
+          ];
+          setDistricts(districtOptions);
+          setSelectedCitiesOrDistricts(districtOptions); // Select all districts by default
+        }
+
+        setChartData(
+          isMobile
+            ? generatePieChartData(filteredData)
+            : generateBarChartData(filteredData)
+        );
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false); // Stop loading after fetch completes
       }
     };
 
@@ -128,7 +140,7 @@ const Chart = () => {
       );
 
       datasets.push({
-        label: "# 流浪貓總數",
+        label: "流浪貓總數",
         data: totalCats,
         backgroundColor: "rgba(54, 162, 235, 0.6)",
         borderColor: "rgba(54, 162, 235, 1)",
@@ -306,7 +318,6 @@ const Chart = () => {
       });
     }
 
-    // 返回包含多個 dataset 的結構，適用於多個圓餅圖
     return { datasets };
   };
 
@@ -382,15 +393,13 @@ const Chart = () => {
   const generateColors = (length) => {
     const colors = [];
     for (let i = 0; i < length; i++) {
-      const hue = 0; 
-      const saturation = 40 + (i * 5) % 40; 
-      const lightness = 50 + (i * 10) % 30; 
+      const hue = 0;
+      const saturation = 40 + ((i * 5) % 40);
+      const lightness = 50 + ((i * 10) % 30);
       colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
     }
     return colors;
   };
-  
-
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -402,6 +411,11 @@ const Chart = () => {
 
   return (
     <>
+      {isLoading && (
+        <div className="loading-overlay">
+          <ClipLoader color={"#666"} size={50} />
+        </div>
+      )}
       {isMobile ? (
         <div className="mobile-wrapper">
           {!isSidebarOpen && (
@@ -425,7 +439,9 @@ const Chart = () => {
 
           <div className="mobile-all-container">
             <div className="mobile-charts-container">
-              {chartData && chartData.datasets.length > 0 ? (
+              {chartData &&
+                chartData.datasets &&
+                chartData.datasets.length > 0 &&
                 chartData.datasets.map((dataset, index) => (
                   <div key={index} className="pie-chart">
                     <h3>{dataset.label}</h3>
@@ -442,10 +458,7 @@ const Chart = () => {
                       }}
                     />
                   </div>
-                ))
-              ) : (
-                <p className="loading">Loading data...</p>
-              )}
+                ))}
             </div>
             {isSidebarOpen && (
               <div className="mobile-chart-sidebar">
@@ -664,10 +677,8 @@ const Chart = () => {
             </div>
 
             <div className="charts-container">
-              {chartData && chartData.datasets.length > 0 ? (
+              {chartData && chartData.datasets.length > 0 && (
                 <Bar options={barOptions} data={chartData} />
-              ) : (
-                <p>Loading data...</p>
               )}
             </div>
           </div>
