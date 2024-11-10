@@ -504,8 +504,8 @@ function Profile() {
                   }}
                   loading="lazy"
                 />
-                <div className="profile-info">
-                  <h1>{userData.username}</h1>
+                <div className="mobile-profile-info">
+                  <h2>{userData.username}</h2>
                   <p>{userData.email}</p>
                   <p>{userData.bio}</p>
                   <p>

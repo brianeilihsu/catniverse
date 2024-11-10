@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, Suspense } from "react";
 import { Link } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
 import mapboxgl from "mapbox-gl";
 import axios from "axios";
 import { feature } from "topojson-client";
@@ -65,6 +66,7 @@ const Map = () => {
   const [userImageUrls, setUserImageUrls] = useState("");
   const [username, setUsername] = useState("");
   const directions = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(0);
   const twBoundaries = feature(
     townTopoData,
@@ -83,6 +85,31 @@ const Map = () => {
   );
 
   const towns = selectedCounty ? regionOptions[selectedCounty] || [] : [];
+
+  const cityCenters = {
+    臺北市: [121.5735, 25.0829],
+    新北市: [121.6739, 24.9157],
+    桃園市: [121.2168, 24.9376],
+    台中市: [120.6736, 24.1477],
+    臺南市: [120.3325, 23.0481],
+    高雄市: [120.6396, 23.0835],
+    基隆市: [121.7419, 25.1330],
+    新竹市: [120.9647, 24.8039],
+    嘉義市: [120.4473, 23.4755],
+    新竹縣: [121.1252, 24.7033],
+    苗栗縣: [120.9417, 24.4893],
+    彰化縣: [120.4818, 23.9920],
+    南投縣: [120.9876, 23.8388],
+    雲林縣: [120.3897, 23.7559],
+    嘉義縣: [120.5740, 23.4588],
+    屏東縣: [120.62, 22.5495],
+    宜蘭縣: [121.7195, 24.6929],
+    花蓮縣: [121.3542, 23.7569],
+    臺東縣: [121.1132, 22.7583],
+    澎湖縣: [119.6151, 23.5655],
+    金門縣: [118.3171, 24.4321],
+    連江縣: [119.5397, 26.1974]
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -103,20 +130,22 @@ const Map = () => {
     selectedRegion,
   ]);
 
-  const drawBoundaries = () => {
+  const drawBoundaries = async () => {
     if (catPositioningEnabled) {
       if (selectedCounty && selectedDistrict) {
         drawRegionBoundary(selectedRegion);
       } else if (selectedCounty && !selectedDistrict) {
-        drawCountyBoundary(countyId);
+        drawCountyBoundary(countyId, selectedCounty);
       }
     } else if (catDensityEnabled) {
       if (selectedDistrict) {
-        drawDensityRegionBoundary();
+        drawDensityByCatCount()
+        drawDensityRegionBoundary(selectedCounty);
         drawRegionBoundary(selectedRegion);
       } else if (selectedCounty) {
-        drawDensityRegionBoundary();
-        drawCountyBoundary(countyId);
+        drawDensityByCatCount()
+        drawDensityRegionBoundary(selectedCounty);
+        drawCountyBoundary(countyId, selectedCounty);
       } else if (
         !selectedCounty &&
         !selectedDistrict &&
@@ -129,15 +158,15 @@ const Map = () => {
   };
 
   const removeBoundaries = () => {
-    removeLayerAndSource("selected-county", "selected-county");
-    removeLayerAndSource("selected-region", "selected-region");
+    removeLayerAndSource("selected-county", ["selected-county"]);
+    removeLayerAndSource("selected-region", ["selected-region"]);
 
     removeLayer("selected-city-line");
-    removeLayerAndSource("selected-city-density", "selected-city-density");
+    removeLayerAndSource("selected-city-density", ["selected-city-density"]);
 
     removeLayer("region-density-line");
-    removeLayerAndSource("region-density-fill", "region-density");
-  };
+    removeLayerAndSource("region-density", ["region-density-fill", "region-density-line", "region-names"]); // 确保删除 region-density 所有关联图层
+};
 
   const removeLayer = (layerName) => {
     if (mapRef.current && mapRef.current.getLayer(layerName)) {
@@ -145,11 +174,13 @@ const Map = () => {
     }
   };
 
-  const removeLayerAndSource = (layerName, sourceName) => {
+  const removeLayerAndSource = (sourceName, layerNames = []) => {
     if (mapRef.current) {
-      if (mapRef.current.getLayer(layerName)) {
-        mapRef.current.removeLayer(layerName);
-      }
+      layerNames.forEach((layerName) => {
+        if (mapRef.current.getLayer(layerName)) {
+          mapRef.current.removeLayer(layerName);
+        }
+      });
       if (mapRef.current.getSource(sourceName)) {
         mapRef.current.removeSource(sourceName);
       }
@@ -185,6 +216,7 @@ const Map = () => {
 
   const handleCatPositioningChange = (e) => {
     const isChecked = e.target.checked;
+    setIsLoading(true);
     setCatPositioningEnabled(isChecked);
 
     if (isChecked) {
@@ -193,10 +225,12 @@ const Map = () => {
       setCatPositioningEnabled(true);
       alert("至少需要啟用一個模式：貓咪定位或貓咪密度");
     }
+    setIsLoading(false);
   };
 
   const handleCatDensityChange = (e) => {
     const isChecked = e.target.checked;
+    setIsLoading(true);
     setCatDensityEnabled(isChecked);
 
     if (isChecked) {
@@ -206,6 +240,7 @@ const Map = () => {
       setCatDensityEnabled(true);
       alert("至少需要啟用一個模式：貓咪定位或貓咪密度");
     }
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -221,32 +256,34 @@ const Map = () => {
   }, [selectedCounty, catPositioningEnabled]);
 
   useEffect(() => {
+    setIsLoading(true);
     const map = mapRef.current;
-  
+
     if (map) {
       const updateLayerVisibility = () => {
-        if (map.isStyleLoaded()) {  
+        if (map.isStyleLoaded()) {
           map.getStyle().layers.forEach((layer) => {
             if (layer.type === "symbol" && layer.layout["text-field"]) {
               map.setLayoutProperty(
                 layer.id,
                 "visibility",
-                isMobile && catDensityEnabled ? "none" : "visible"
+                catDensityEnabled ? "none" : "visible"
               );
             }
           });
+          setIsLoading(false);
         } else {
           map.once("styledata", updateLayerVisibility);
+          setIsLoading(false);
         }
       };
-
       updateLayerVisibility();
     }
-  }, [isMobile, catDensityEnabled]);
-  
+  }, [catDensityEnabled]);
 
   useEffect(() => {
-    if (!mapRef.current) {;
+    setIsLoading(true);
+    if (!mapRef.current) {
       const map = new mapboxgl.Map({
         container: mapContainerRef.current,
         style: "mapbox://styles/mapbox/streets-v12",
@@ -287,6 +324,7 @@ const Map = () => {
 
       map.on("load", () => {
         map.resize();
+        setIsLoading(false);
         if (catPositioningEnabled) {
           geolocateControl.trigger();
         }
@@ -301,6 +339,7 @@ const Map = () => {
 
       mapRef.current = map;
     }
+
     if (geolocateControlRef.current) {
       const visibility = catDensityEnabled ? "hidden" : "visible";
       document
@@ -362,6 +401,7 @@ const Map = () => {
   }, [selectedPostData]);
 
   const fetchMapDensity = async () => {
+    setIsLoading(true);
     setDensityByCounty({});
     setDensityByRegion({});
     try {
@@ -390,8 +430,10 @@ const Map = () => {
       });
 
       setDensityByRegion(densityRegionMap);
+      setIsLoading(false);
     } catch (error) {
       console.error("Error fetching popular posts: ", error);
+      setIsLoading(false);
     }
   };
 
@@ -566,7 +608,7 @@ const Map = () => {
     }));
   };
 
-  const drawCountyBoundary = (countyIndex) => {
+  const drawCountyBoundary = (countyIndex, countyName) => {
     const selectedCountyFeature = twCountyBoundaries.features[countyIndex];
 
     if (mapRef.current && selectedCountyFeature) {
@@ -595,14 +637,14 @@ const Map = () => {
           "line-width": 2,
         },
       });
-
-      const bounds = new mapboxgl.LngLatBounds();
-      selectedCountyFeature.geometry.coordinates[0].forEach((coord) => {
-        bounds.extend(coord);
-      });
-      setTimeout(() => {
-        mapRef.current.fitBounds(bounds, { padding: 20 });
-      }, 100);
+      const cityCenter = cityCenters[countyName];
+      if (mapRef.current && cityCenter) {
+        mapRef.current.flyTo({
+          center: cityCenter,
+          zoom: 10.5, 
+          speed: 1.5, 
+        });
+      }
     }
   };
 
@@ -640,7 +682,7 @@ const Map = () => {
       selectedFeature.geometry.coordinates[0].forEach((coord) => {
         bounds.extend(coord);
       });
-      mapRef.current.fitBounds(bounds, { padding: 20 });
+      mapRef.current.fitBounds(bounds, { padding: 70 });
     }
   };
 
@@ -660,16 +702,18 @@ const Map = () => {
 
   const drawDensityByCatCount = () => {
     const flattenedCounties = Object.values(countyOptions).flat();
-  
-    const maxCatCount = Math.max(...flattenedCounties.map(county => densityByCounty[county.name] || 0));
+
+    const maxCatCount = Math.max(
+      ...flattenedCounties.map((county) => densityByCounty[county.name] || 0)
+    );
     const calculatedStep = maxCatCount / 6;
     setStep(calculatedStep);
-  
+
     const features = flattenedCounties.map((county) => {
       const countyName = county.name;
       const catCount = densityByCounty[countyName] || 0;
       let color = "#FFFFFF";
-  
+
       if (catCount > calculatedStep * 5) {
         color = "hsl(129, 55%, 40%)";
       } else if (catCount > calculatedStep * 4) {
@@ -683,7 +727,7 @@ const Map = () => {
       } else if (catCount >= 0) {
         color = "hsl(129, 86%, 91%)";
       }
-  
+
       const selectedFeature = twCountyBoundaries.features[county.geometryIndex];
       return {
         type: "Feature",
@@ -695,12 +739,12 @@ const Map = () => {
         },
       };
     });
-  
+
     const geojsonData = {
       type: "FeatureCollection",
       features,
     };
-  
+
     if (mapRef.current.getSource("selected-city-density")) {
       mapRef.current.getSource("selected-city-density").setData(geojsonData);
     } else {
@@ -709,7 +753,7 @@ const Map = () => {
         data: geojsonData,
       });
     }
-  
+
     if (!mapRef.current.getLayer("selected-city-density")) {
       mapRef.current.addLayer({
         id: "selected-city-density",
@@ -721,7 +765,7 @@ const Map = () => {
         },
       });
     }
-  
+
     if (!mapRef.current.getLayer("selected-city-line")) {
       mapRef.current.addLayer({
         id: "selected-city-line",
@@ -733,7 +777,7 @@ const Map = () => {
         },
       });
     }
-  };  
+  };
 
   const fetchCatsData = async () => {
     if (dataCache.current[selectedCounty]) {
@@ -927,7 +971,6 @@ const Map = () => {
     setSelectedCounty("");
     setSelectedRegion(null);
     setSelectedDistrict("");
-    setDensityByCounty;
     setNeuteredCount(0);
     setNotNeuteredCount(0);
     setLoading(false);
@@ -943,62 +986,63 @@ const Map = () => {
     }
   };
 
-  const drawDensityRegionBoundary = () => {
+  const drawDensityRegionBoundary = (selectedCounty) => {
+    if (!selectedCounty) return; 
+  
+    const regionsInCounty = regionOptions[selectedCounty] || [];
+    
     const maxCatCount = Math.max(
-      ...cities.flatMap((county) => {
-        const regionsInCounty = regionOptions[county] || [];
-        return regionsInCounty.map((region) => densityByRegion[region.name] || 0);
-      })
+      ...regionsInCounty.map((region) => densityByRegion[region.name] || 0)
     );
   
     const calculatedStep = maxCatCount / 6;
     setStep(calculatedStep);
-
-    const features = cities.flatMap((county) => {
-      const regionsInCounty = regionOptions[county] || [];
-
-      return regionsInCounty.map((region) => {
-        const regionName = region.name;
-        const catCount = densityByRegion[regionName] || 0;
-
-        let color = "#FFFFFF";
-        if (catCount > calculatedStep * 5) {
-          color = "hsl(129, 55%, 40%)";
-        } else if (catCount > calculatedStep * 4) {
-          color = "hsl(129, 60%, 52%)";
-        } else if (catCount > calculatedStep * 3) {
-          color = "hsl(129, 65%, 63%)";
-        } else if (catCount > calculatedStep * 2) {
-          color = "hsl(129, 70%, 72%)";
-        } else if (catCount > calculatedStep) {
-          color = "hsl(129, 80%, 82%)";
-        } else if (catCount >= 0) {
-          color = "hsl(129, 86%, 91%)";
-        }
-
-        const selectedFeature = twBoundaries.features[region.geometryIndex];
-
-        return {
-          type: "Feature",
-          geometry: selectedFeature.geometry,
-          properties: {
-            regionName,
-            color,
-            catCount,
-          },
-        };
-      });
+  
+    const features = regionsInCounty.map((region) => {
+      const regionName = region.name;
+      const catCount = densityByRegion[regionName] || 0;
+  
+      let color = "#FFFFFF";
+      if (catCount > calculatedStep * 5) {
+        color = "hsl(129, 55%, 40%)";
+      } else if (catCount > calculatedStep * 4) {
+        color = "hsl(129, 60%, 52%)";
+      } else if (catCount > calculatedStep * 3) {
+        color = "hsl(129, 65%, 63%)";
+      } else if (catCount > calculatedStep * 2) {
+        color = "hsl(129, 70%, 72%)";
+      } else if (catCount > calculatedStep) {
+        color = "hsl(129, 80%, 82%)";
+      } else if (catCount >= 0) {
+        color = "hsl(129, 86%, 91%)";
+      }
+  
+      const selectedFeature = twBoundaries.features[region.geometryIndex];
+  
+      return {
+        type: "Feature",
+        geometry: selectedFeature.geometry,
+        properties: {
+          regionName,
+          color,
+          catCount,
+        },
+      };
     });
-
+  
     if (mapRef.current.getLayer("region-density-fill")) {
       mapRef.current.removeLayer("region-density-fill");
     }
     if (mapRef.current.getLayer("region-density-line")) {
       mapRef.current.removeLayer("region-density-line");
     }
+    if (mapRef.current.getLayer("region-names")) {
+      mapRef.current.removeLayer("region-names");
+    }
     if (mapRef.current.getSource("region-density")) {
       mapRef.current.removeSource("region-density");
     }
+  
 
     mapRef.current.addSource("region-density", {
       type: "geojson",
@@ -1007,7 +1051,7 @@ const Map = () => {
         features,
       },
     });
-
+  
     mapRef.current.addLayer({
       id: "region-density-fill",
       type: "fill",
@@ -1017,7 +1061,7 @@ const Map = () => {
         "fill-opacity": 1,
       },
     });
-
+  
     mapRef.current.addLayer({
       id: "region-density-line",
       type: "line",
@@ -1027,7 +1071,26 @@ const Map = () => {
         "line-width": 1,
       },
     });
-  };
+  
+    mapRef.current.addLayer({
+      id: "region-names",
+      type: "symbol",
+      source: "region-density",
+      layout: {
+        "text-field": ["get", "regionName"], 
+        "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+        "text-size": 12,
+        "text-offset": [0, 0.6],
+        "text-anchor": "top",
+      },
+      paint: {
+        "text-color": "#000000",
+        "text-halo-color": "#FFFFFF",
+        "text-halo-width": 1,
+      },
+    });
+  };  
+  
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -1035,6 +1098,11 @@ const Map = () => {
 
   return (
     <>
+      {isLoading && (
+        <div className="loading-overlay">
+          <ClipLoader color={"#666"} size={50} />
+        </div>
+      )}
       {isMobile ? (
         <div className="mobile-map">
           <div ref={mapContainerRef} className="mobile-map-container" />
@@ -1114,28 +1182,38 @@ const Map = () => {
           </div>
           {catDensityEnabled && (
             <div className="mobile-legend">
-            <div className="mobile-legend-title">貓咪密度</div>
-            <div className="mobile-legend-item">
-              <span className="color-box color-1"></span> &gt; {Math.ceil(step * 5)}
+              <div className="mobile-legend-title">貓咪密度</div>
+              <div className="mobile-legend-item">
+                <span className="color-box color-1"></span> &gt;{" "}
+                {Math.ceil(step * 5)}
+              </div>
+              <div className="legend-item">
+                <span className="color-box color-2"></span>{" "}
+                {Math.ceil(step * 4)} - {Math.ceil(step * 5)}
+              </div>
+              <div className="legend-item">
+                <span className="color-box color-3"></span>{" "}
+                {Math.ceil(step * 3)} - {Math.ceil(step * 4)}
+              </div>
+              <div className="legend-item">
+                <span className="color-box color-4"></span>{" "}
+                {Math.ceil(step * 2)} - {Math.ceil(step * 3)}
+              </div>
+              <div className="legend-item">
+                <span className="color-box color-5"></span> {Math.ceil(step)} -{" "}
+                {Math.ceil(step * 2)}
+              </div>
+              <div className="legend-item">
+                <span className="color-box color-6"></span> 0 -{" "}
+                {Math.ceil(step)}
+              </div>
             </div>
-            <div className="legend-item">
-              <span className="color-box color-2"></span> {Math.ceil(step * 4)} - {Math.ceil(step * 5)}
-            </div>
-            <div className="legend-item">
-              <span className="color-box color-3"></span> {Math.ceil(step * 3)} - {Math.ceil(step * 4)}
-            </div>
-            <div className="legend-item">
-              <span className="color-box color-4"></span> {Math.ceil(step * 2)} - {Math.ceil(step * 3)}
-            </div>
-            <div className="legend-item">
-              <span className="color-box color-5"></span> {Math.ceil(step)} - {Math.ceil(step * 2)}
-            </div>
-            <div className="legend-item">
-              <span className="color-box color-6"></span> 0 - {Math.ceil(step)}
-            </div>
-          </div>          
           )}
-          {loading && <div className="loading-overlay">Loading...</div>}
+          {loading && (
+            <div className="loading-overlay">
+              <ClipLoader color={"#666"} size={50} />
+            </div>
+          )}
           {showModal && selectedPostData && (
             <div className="overlay">
               <div
@@ -1177,6 +1255,9 @@ const Map = () => {
                         {username ? username : "未知使用者"}
                       </span>
                     </Link>
+                    <button className="mobile-location-btn" onClick={handleDirection}>
+                      <img src={mapPic} alt="Map" />
+                    </button>
                   </div>
                   <h4>{selectedPostData.title}</h4>
                   {postImagesUrls[selectedPostData?.id] &&
@@ -1416,22 +1497,28 @@ const Map = () => {
             <div className="legend">
               <div className="legend-title">貓咪密度</div>
               <div className="legend-item">
-                <span className="color-box color-1"></span> &gt; 15
+                <span className="color-box color-1"></span> &gt;{" "}
+                {Math.ceil(step * 5)}
               </div>
               <div className="legend-item">
-                <span className="color-box color-2"></span> 10 - 15
+                <span className="color-box color-2"></span>{" "}
+                {Math.ceil(step * 4)} - {Math.ceil(step * 5)}
               </div>
               <div className="legend-item">
-                <span className="color-box color-3"></span> 7 - 10
+                <span className="color-box color-3"></span>{" "}
+                {Math.ceil(step * 3)} - {Math.ceil(step * 4)}
               </div>
               <div className="legend-item">
-                <span className="color-box color-4"></span> 5 - 7
+                <span className="color-box color-4"></span>{" "}
+                {Math.ceil(step * 2)} - {Math.ceil(step * 3)}
               </div>
               <div className="legend-item">
-                <span className="color-box color-5"></span> 2 - 5
+                <span className="color-box color-5"></span> {Math.ceil(step)} -{" "}
+                {Math.ceil(step * 2)}
               </div>
               <div className="legend-item">
-                <span className="color-box color-6"></span> 0 - 2
+                <span className="color-box color-6"></span> 0 -{" "}
+                {Math.ceil(step)}
               </div>
             </div>
           )}
@@ -1477,7 +1564,11 @@ const Map = () => {
 
             <button onClick={handleReset}>重新選擇</button>
           </div>
-          {loading && <div className="loading-overlay">Loading...</div>}
+          {loading && (
+            <div className="loading-overlay">
+              <ClipLoader color={"#666"} size={50} />
+            </div>
+          )}
           {showModal && selectedPostData && (
             <div className="overlay">
               <div className="modal" onClick={(e) => e.stopPropagation()}>

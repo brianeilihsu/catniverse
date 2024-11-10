@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import ClipLoader from "react-spinners/ClipLoader";
 import axios from 'axios';
 import "./Register.css";
 import logo from "../../Image/cat-lover(1).png";
@@ -13,6 +14,7 @@ function Register() {
     email: "",
   });
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     document.documentElement.style.height = '100%';
@@ -39,9 +41,9 @@ function Register() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // 防止表單提交導致頁面刷新
+    e.preventDefault(); 
   
-    const passwordRegex = /^[A-Za-z0-9]{6,}$/;  // 至少6個字符，僅限英文字母和數字
+    const passwordRegex = /^[A-Za-z0-9]{6,}$/;  
   
     if (!registerData.username || !registerData.email || !registerData.password || !registerData.passwordCheck) {
       alert("所有欄位均為必填項！");
@@ -69,6 +71,7 @@ function Register() {
     }
   
     try {
+      setIsLoading(true);
       const response = await axios.post(
         "http://140.136.151.71:8787/api/v1/users/add",
         registerData,
@@ -78,6 +81,7 @@ function Register() {
           },
         }
       );
+      setIsLoading(false);
       alert("註冊成功！");
       navigate("/login");
     } catch (error) {

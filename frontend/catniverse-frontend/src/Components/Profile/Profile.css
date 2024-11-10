@@ -429,3 +429,16 @@
     border-radius: 5px;
     width: 400px;
   }
+
+  .mobile-profile-info h2 {
+    border-bottom: none;
+  }
+
+  .mobile-profile-info {
+    flex-grow: 1;
+  }
+
+  .mobile-profile-info p {
+    margin: 5px 0;
+    color: #666;
+  }

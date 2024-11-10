@@ -297,15 +297,20 @@ h2 {
   max-height: 30px;
 }
 
-.mapboxgl-ctrl-directions .mapboxgl-ctrl-geocoder {
-  padding: 10px;
-}
-
 @media (max-width: 768px) {
   .mapboxgl-canvas {
     flex-grow: 1;
     height: 100vh !important; 
     width: auto !important; 
+  }
+  .mapboxgl-ctrl-top-left {
+    margin: 75px 0px 0px 0px !important;
+  }
+  .mapboxgl-ctrl-directions .mapboxgl-ctrl-geocoder {
+    padding: 0px;
+  }
+  .mapboxgl-ctrl {
+    margin: 0px !important;
   }
 }
 
@@ -327,3 +332,20 @@ h2 {
   overflow: hidden;
 }
 
+.mobile-location-btn {
+  position: fixed !important;
+  z-index: 100;
+  cursor: pointer;
+  background-color: transparent;
+  padding: 0% !important;
+  margin: 65% !important;
+}
+
+.mobile-location-btn img {
+  max-width: 30px;
+  max-height: 30px;
+}
+
+.mapbox-form-label {
+  margin-top: 0px;
+}

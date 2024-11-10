@@ -348,25 +348,13 @@ const ProductManagement = () => {
                         }}
                       >
                         {editingProductId === product.id ? (
-                          <input
-                            type="text"
-                            value={editedProduct.name || ""}
-                            onChange={(e) => handleEditChange(e, "name")}
-                          />
+                          <p>{product.name}</p> 
                         ) : (
-                          product.name
+                          product.name 
                         )}
                       </td>
                       <td>
-                        {editingProductId === product.id ? (
-                          <input
-                            type="text"
-                            value={editedProduct.description}
-                            onChange={(e) => handleEditChange(e, "description")}
-                          />
-                        ) : (
-                          product.description
-                        )}
+                        {product.description}
                       </td>
                     </tr>
                   ))}
@@ -394,7 +382,6 @@ const ProductManagement = () => {
                 <h2>{isEditing ? "Edit Product" : "Add New Product"}</h2>
 
                 {isEditing ? (
-                  // 編輯模式表單
                   <form id="editProductForm" onSubmit={handleFormSubmit}>
                     <div className="form-group">
                       <label htmlFor="name">Product Name:</label>
@@ -572,14 +559,13 @@ const ProductManagement = () => {
                       </button>
                       <button
                         className="delete-btn"
-                        onClick={deleteProduct(editedProduct.id)}
+                        onClick={() => deleteProduct(editedProduct.id)}
                       >
                         Delete
                       </button>
                     </div>
                   </form>
                 ) : (
-                  // 新增模式表單
                   <form id="addProductForm" onSubmit={handleNewProductSubmit}>
                     <div className="form-group">
                       <label htmlFor="name">Product Name:</label>
