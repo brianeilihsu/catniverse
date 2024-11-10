@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import ClipLoader from "react-spinners/ClipLoader";
 import Product from "./Product.jsx";
 import "./Shop.css";
 import cartPic from "../../Image/shopping-cart.png";
@@ -17,6 +18,7 @@ function Shop() {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -91,6 +93,7 @@ function Shop() {
   }, [userData]);
 
   const fetchFilteredProducts = async () => {
+    setIsLoading(true);
     try {
       let response;
       const noSearchCriteria =
@@ -142,6 +145,8 @@ function Shop() {
       setProductData(products);
     } catch (error) {
       console.error(`Error fetching filtered product data:`, error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -152,7 +157,9 @@ function Shop() {
   }, [name, selectedCategory, selectedBrand]);
 
   const handleSearch = () => {
-    fetchFilteredProducts();
+    if (!isLoading) {
+      fetchFilteredProducts();
+    }
   };
 
   function handleNameChange(event) {
@@ -195,7 +202,6 @@ function Shop() {
                 Search
               </button>
             </div>
-
             <div className="mobile-searchKey">
               <select
                 className="categorySearch"
@@ -230,16 +236,21 @@ function Shop() {
                 )}
               </select>
             </div>
-
-            <div className="mobile-product-list">
-              {productData.length > 0 ? (
-                productData.map((product) => (
-                  <Product key={product.id} product={product} />
-                ))
-              ) : (
-                <p>No products found</p>
-              )}
-            </div>
+            {isLoading ? (
+              <div className="loading-overlay">
+                <ClipLoader color={"#666"} size={50} />
+              </div>
+            ) : (
+              <div className="mobile-product-list">
+                {productData.length > 0 ? (
+                  productData.map((product) => (
+                    <Product key={product.id} product={product} />
+                  ))
+                ) : (
+                  <p>No products found</p>
+                )}
+              </div>
+            )}
 
             {isAdmin && (
               <button className="upload-btn" onClick={handleUpload}>
@@ -310,16 +321,21 @@ function Shop() {
                 )}
               </select>
             </div>
-
-            <div className="product-list">
-              {productData.length > 0 ? (
-                productData.map((product) => (
-                  <Product key={product.id} product={product} />
-                ))
-              ) : (
-                <p>No products found</p>
-              )}
-            </div>
+            {isLoading ? (
+              <div className="loading-overlay">
+                <ClipLoader color={"#666"} size={50} />
+              </div>
+            ) : (
+              <div className="product-list">
+                {productData.length > 0 ? (
+                  productData.map((product) => (
+                    <Product key={product.id} product={product} />
+                  ))
+                ) : (
+                  <p>No products found</p>
+                )}
+              </div>
+            )}
 
             {isAdmin && (
               <button className="upload-btn" onClick={handleUpload}>

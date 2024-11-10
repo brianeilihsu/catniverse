@@ -58,7 +58,7 @@ function Member() {
     }
   }, [userId]);
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async(e) => {
     const file = e.target.files[0];
     const errors = {};
 
@@ -75,6 +75,29 @@ function Member() {
       setImagePreview(URL.createObjectURL(file));
     } else {
       setErrors(errors);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!image) return; 
+
+    const imageData = new FormData();
+    imageData.append("file", image);
+
+    try {
+      await axios.put(
+        `http://140.136.151.71:8787/api/v1/user-avatar/${userId}/update`,
+        imageData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log("User avatar updated successfully");
+      navigate(`/profile/${userId}`);
+    } catch (error) {
+      console.error("Error updating user avatar:", error);
     }
   };
 
@@ -109,26 +132,6 @@ function Member() {
     } catch (error) {
       console.error("Error updating user profile:", error);
     }
-
-    try {
-      if (image) {
-        const imageData = new FormData();
-        imageData.append("file", image);
-        await axios.put(
-          `http://140.136.151.71:8787/api/v1/user-avatar/${userId}/update`,
-          imageData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        console.log("User avatar updated successfully:", imageData);
-      }
-      navigate(`/profile/${userId}`);
-    } catch (error) {
-      console.error("Error updating user avatar:", error);
-    }
   };
 
   return (
@@ -153,15 +156,17 @@ function Member() {
               />
 
               <label htmlFor="avatar">Update avatar:</label>
-              <input
-                type="file"
-                id="avatar"
-                name="avatar"
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-              {errors.avatar && <p style={{ color: "red" }}>{errors.avatar}</p>}
-
+              <div className="update-avatar">
+                <input
+                  type="file"
+                  id="avatar"
+                  name="avatar"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+                {errors.avatar && <p style={{ color: "red" }}>{errors.avatar}</p>}
+                <button type="button" className="update-btn" onClick={handleImageUpload}>update</button>
+              </div>
               <label htmlFor="username">Username</label>
               <input
                 type="text"
@@ -232,14 +237,17 @@ function Member() {
               />
 
               <label htmlFor="avatar">Update avatar:</label>
-              <input
-                type="file"
-                id="avatar"
-                name="avatar"
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-              {errors.avatar && <p style={{ color: "red" }}>{errors.avatar}</p>}
+              <div className="desktop-update">
+                <input
+                  type="file"
+                  id="avatar"
+                  name="avatar"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+                {errors.avatar && <p style={{ color: "red" }}>{errors.avatar}</p>}
+                <button type="button" className="update-btn" onClick={handleImageUpload}>update</button>
+              </div>
 
               <label htmlFor="username">Username</label>
               <input

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import axios from "axios";
@@ -16,7 +16,6 @@ function Profile() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [userData, setUserData] = useState({ posts: ["loading"] });
-  const [userImageUrls, setUserImageUrls] = useState("");
   const [postImageUrls, setPostImageUrls] = useState({});
   const [showOutDelete, setShowOutDelete] = useState(false);
   const [showInDelete, setShowInDelete] = useState(false);
@@ -179,10 +178,16 @@ function Profile() {
   };
 
   const handlePostClick = (postId) => {
+    if (selectedPost?.id === postId) {
+      return;
+    }
     const post = userData.posts.find((p) => p.id === postId);
     if (post) {
       setSelectedPost(post);
-      fetchComments(post.id);
+      if (!comments[post.id]) {
+        fetchComments(post.id);
+      }
+
       setShowModal(true);
       document.body.style.overflow = "hidden";
       document.documentElement.style.overflow = "hidden";
@@ -489,7 +494,7 @@ function Profile() {
             <div className="mobile-container">
               <div className="mobile-profile-header">
                 <img
-                  src={userImageUrls || defaultAvatar}
+                  src={userData.userAvatarUrl || defaultAvatar}
                   alt="用戶頭像"
                   className="profile-picture"
                   style={{
@@ -620,7 +625,6 @@ function Profile() {
               alt="Upload Product"
             />
           </button>
-
           {showModal && selectedPost && (
             <div className="overlay">
               <div
@@ -639,20 +643,23 @@ function Profile() {
                     >
                       <img
                         src={
-                          userImageUrls
-                            ? userImageUrls.replace(".png", "-lowres.webp")
+                          userData.userAvatarUrl
+                            ? userData.userAvatarUrl.replace(
+                                ".png",
+                                "-lowres.webp"
+                              )
                             : defaultAvatar
                         }
                         data-src={
-                          userImageUrls
-                            ? userImageUrls.replace(".png", ".webp")
+                          userData.userAvatarUrl
+                            ? userData.userAvatarUrl.replace(".png", ".webp")
                             : defaultAvatar
                         }
                         srcSet={
-                          userImageUrls
+                          userData.userAvatarUrl
                             ? `
-                  ${userImageUrls.replace(".png", "-50w.webp")} 50w,
-                  ${userImageUrls.replace(".png", "-100w.webp")} 100w
+                  ${userData.userAvatarUrl.replace(".png", "-50w.webp")} 50w,
+                  ${userData.userAvatarUrl.replace(".png", "-100w.webp")} 100w
                 `
                             : `
                   ${defaultAvatar} 50w,
@@ -731,7 +738,12 @@ function Profile() {
                     postImageUrls[selectedPost.id] &&
                     Array.isArray(postImageUrls[selectedPost.id]) && (
                       <Suspense fallback={<div>Loading slider...</div>}>
-                        <Slider {...sliderSettings(sliderRef)}>
+                        <Slider
+                          {...sliderSettings}
+                          ref={(slider) =>
+                            (sliderRefs.current[selectedPost.id] = slider)
+                          }
+                        >
                           {postImageUrls[selectedPost.id].map((url, index) => (
                             <div
                               className="g-container"
@@ -753,7 +765,7 @@ function Profile() {
                                 alt={`Post image ${index}`}
                                 className="mobile-post-image"
                                 onClick={(e) =>
-                                  handleImageClick(e, sliderRef.current)
+                                  handleImageClick(e, sliderRefs.current[selectedPost.id])
                                 }
                                 style={{
                                   width: "100%",
@@ -901,7 +913,11 @@ function Profile() {
               </button>
               <div className="profile-header">
                 <img
-                  src={userImageUrls.replace(".png", ".webp") || defaultAvatar}
+                  src={
+                    (userData.userAvatarUrl &&
+                      userData.userAvatarUrl.replace(/\.png$/i, ".webp")) ||
+                    defaultAvatar
+                  }
                   alt="用戶頭像"
                   className="profile-picture"
                   style={{
