@@ -1,0 +1,56 @@
+.register-container {
+    background-color: white;
+    padding: 2em;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    width: 300px;
+    line-height: 0;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-top: 1em;
+}
+
+input {
+    padding: 0.5em;
+    margin-top: 0.5em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.register-btn {
+    background-color: hsl(0, 3%, 87%);
+    color: hsl(0, 1%, 21%);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 1em;
+    font-size: 17.5px;
+    width: 100%;
+    height: 40px;
+    font-weight: bold;
+}
+
+.register-btn:hover {
+    background-color: #999;
+}
+
+.login-link {
+    text-align: center;
+    margin-top: 1em;
+}
+
+.login-link a {
+    color: hsl(0, 1%, 21%);
+    text-decoration: none;
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}

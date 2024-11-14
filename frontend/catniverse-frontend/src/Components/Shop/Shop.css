@@ -1,0 +1,122 @@
+.shop-title {
+    margin: 0px;
+    color: hsl(0, 1%, 21%);
+    padding: 20px;
+    margin-left: 15%;
+}
+
+.product-list {
+    margin-left: 27.5%;
+}
+
+.mobile-product-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);  
+  justify-items: center;
+  gap: 5px;
+  padding: 10px;
+}
+
+.search {
+    text-align: center;
+    margin-left: 15%;
+  }
+
+  .mobile-search {
+    text-align: center;
+    padding-top: 70px;
+    justify-content: center;
+  }
+  
+  .search-in {
+    border: none;
+    background-color: rgb(245, 243, 243);
+    border-radius: 5px;
+    min-height: 25px;
+    font-size: 1.1rem;
+    width: 27.5%;
+  }
+  
+  .search-btn {
+    border: none;
+    background-color: rgb(173, 29, 29);
+    color: white;
+    border-radius: 5px;
+    font-size: 1.3rem;
+    margin-left: 10px;
+  }
+  
+  .search-btn:hover{
+    background-color: hsl(0, 71%, 33%);
+    cursor: pointer;
+  }
+
+  .searchKey {
+    margin-left: 45%;
+    display: flex;
+    margin-bottom: 20px;
+  }
+
+  .mobile-searchKey {
+    display: flex;
+    margin-bottom: 20px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .categorySearch, .brandSearch {
+    width: 200px;
+    margin-right: 10px;
+    color: hsl(0, 1%, 21%);
+  }
+
+  @media (max-width: 768px) {
+    .categorySearch, .brandSearch {
+      width: 150px;
+      margin-right: 10px;
+      color: hsl(0, 1%, 37%);
+    }
+  }
+
+  .cart-btn, .order-btn, .upload-btn {
+    position: fixed;
+    width: 60px;  
+    height: 60px;
+    border-radius: 50%;
+    background-color: hsl(0, 0%, 95%);
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  
+  .cart-btn:hover, .order-btn:hover, .upload-btn:hover  {
+    background-color: hsla(0, 1%, 34%, 0.232);
+  }
+  
+
+  .cart-img, .order-img, .upload-img {
+    width: 80%;   
+    height: 80%;  
+    object-fit: contain;
+    background-color: transparent;
+  }
+  
+  .cart-btn {
+    bottom: 20px;  
+    right: 20px; 
+  }
+  
+  .order-btn {
+    bottom: 100px;  
+    right: 20px;  
+  }
+
+  .upload-btn {
+    bottom: 180px;  
+    right: 20px; 
+  }
+  
+  

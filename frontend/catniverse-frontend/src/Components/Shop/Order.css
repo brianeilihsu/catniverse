@@ -1,0 +1,118 @@
+.container_order {
+    max-width: 900px;
+    max-height: auto;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-left: 27.5%;
+    padding: 0%;
+    margin-top: 20px;
+}
+
+.mobile-container_order {
+  max-width: 900px;
+  max-height: auto;
+  background-color: #fff;
+  padding-top: 14%;
+}
+
+.orderpage {
+  padding: 0px;
+  margin-bottom: 20px;
+}
+
+.mobile-orderpage {
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 20px;
+}
+
+.order-header {
+  text-align: center;
+  margin: 0%;
+}
+
+.order-product-name {
+  border-bottom: 0;
+  font-size: 20px;
+  font-weight: lighter;
+}
+
+.order-product-quantity {
+  font-size: 18px;
+}
+
+.order-list {
+  list-style-type: none;
+  background-color: #f3f3f3;
+  border-radius: 10px;
+  padding: 0;
+  max-width: 80%;
+  margin-left: 7.5%;
+  margin-bottom: 20px;
+
+}
+
+.product-pic-inOrder {
+  border-radius: 5px;
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  margin-right: 15px;
+}
+
+.order-product-quantity {
+  text-align: right;
+}
+
+.order-prices {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  position: absolute;
+  right: 10px; /* 右下角 */
+  bottom: 10px;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.expend {
+  text-align: center;
+}
+
+.expend-btn {
+  border: none;
+  color: #8b0909;
+}
+
+.order-total-prices {
+  text-align: right;
+}
+
+.order-total-price {
+  font-size: 20px;
+  padding: 10px;
+}
+
+.order-list {
+  position: relative;
+  padding: 20px;
+  border: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+
+.order-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #a70b0b; /* 可以选择不同的颜色 */
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.justify-p {
+  margin-left: 10%;
+}
+

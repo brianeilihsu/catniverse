@@ -1,0 +1,444 @@
+.container {
+    padding-top: 10px !important;
+}
+
+.content {
+    margin-left: 200px;
+    padding: 20px;
+    flex-grow: 1;
+}
+
+.mobile-profile-content {
+  padding: 20px;
+  flex-grow: 1;
+}
+
+.profile-header {
+    background-color: hsl(0, 0%, 95%);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.mobile-profile-header {
+  background-color: hsl(0, 0%, 95%);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  margin-top: 60px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.profile-picture {
+    object-fit: cover;
+    margin-right: 20px;
+}
+
+.profile-info {
+    flex-grow: 1;
+}
+
+.profile-info h1 {
+    margin: 0;
+    color: #333;
+}
+
+.profile-info p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.mobile-user-avatar {
+  margin-right: 1em;
+}
+
+.mobile-user-name {
+  font-weight: bold;
+}
+
+.edit-profile-btn {
+    background-color: hsl(0, 3%, 82%);
+    color: hsl(0, 1%, 21%);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-weight: bold;
+}
+
+.mobile-edit-profile-btn {
+  background-color: hsl(0, 3%, 82%);
+  color: hsl(0, 1%, 21%);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-weight: bold;
+}
+
+.edit-profile-btn:hover {
+    background-color: #999;
+    transition: 0.5s;
+}
+
+.posts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.mobile-posts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 20px; 
+  width: 100%; 
+}
+
+.mypost {
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 1em;
+}
+
+.mypost:hover {
+    cursor: pointer;
+}
+
+.mobile-mypost {
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 1em;
+}
+
+.mobile-mypost:hover {
+  cursor: pointer;
+}
+
+.profilePost-image, .modalPost-image {
+    object-fit: cover;
+}
+
+.post-content p {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.post-stats {
+    display: flex;
+    justify-content: space-between;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.uploadPost-btn {
+    position: fixed;
+    width: 60px;  
+    height: 60px;
+    border-radius: 50%;
+    background-color: hsl(0, 0%, 95%);
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  
+  .uploadPost-btn:hover {
+    background-color: hsla(0, 1%, 34%, 0.232);
+  }
+  
+
+  .uploadPost-img {
+    width: 80%;   
+    height: 80%;  
+    object-fit: contain;
+    background-color: transparent;
+  }
+
+  .uploadPost-btn {
+    bottom: 20px;  
+    right: 20px; 
+  }
+
+  .setting-btn {
+    background-color: transparent;
+    margin: 0px;
+    padding: 0px;
+    margin-left: 95%;
+    margin-bottom: 5px;
+  }
+
+  .mobile-setting-btn {
+    background-color: transparent;
+    margin: 0px;
+    margin-top: 3.5%;
+    padding: 0px;
+    margin-left: 90%;
+    position: fixed;
+    z-index: 20;
+  }
+
+  .X-btn img{
+    background-color: transparent;
+    margin: 0px;
+    padding: 0px;
+    max-width: 17.5px;
+    max-height: 17.5px;
+    display: flex;
+  }
+
+  .X-btn{
+    background-color: transparent;
+    margin: 0px;
+    padding: 0px;
+    max-width: 25px;
+    max-height: 25px;
+    display: flex;
+  }
+
+  .X-in-btn img{
+    background-color: transparent;
+    margin: 0px;
+    padding: 0px;
+    max-width: 12.5px;
+    max-height: 12.5px;
+    display: flex;
+  }
+
+  .X-in-btn{
+    background-color: transparent;
+    margin: 0px;
+    padding: 0px;
+    max-width: 10px;
+    max-height: 10px;
+    display: flex;
+  }
+
+  .title-and-btn {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .overlay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow: hidden;
+  }
+  
+  .modal {
+    position: relative;
+    display: flex;
+    max-width: 1000px;
+    height: 90%;
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .mobile-modal {
+    position: relative;
+    display: flex;
+    max-width: 800px;
+    height: 80%;
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  
+  .modal-image {
+    width: 50%;
+    height: 100%;
+    max-height: 500px;
+    object-fit: cover !important;
+  }
+  
+  .modalPost-content {
+    width: 50%;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  
+  .modalPost-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .modalPost-text {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  
+  .modalPost-actions {
+    display: flex;
+    justify-content: right;
+  } 
+
+  .closed-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    background-color: transparent;
+    border-radius: 60px;
+  }
+
+  .setting2-btn {
+    position: fixed !important;
+    z-index: 100;
+    cursor: pointer;
+    background-color: transparent;
+    padding: 0% !important;
+    margin: 0% !important;
+  }
+
+  .setting2-btn img {
+    max-width: 25px;
+    max-height: 25px;
+  }
+
+  .address {
+    padding: 0%;
+    margin: 0%;
+  }
+
+  .date {
+    padding: 0%;
+    margin: 0%;
+  }
+
+  .stray {
+    padding: 0%;
+    margin: 0%;
+    padding-bottom: 10px;
+    border-bottom: 2px solid hsl(0, 71%, 33%);
+  }
+
+  .action-btn, .comment-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #555;
+  }
+  .action-btn img {
+    max-width: 20px;
+    max-height: 20px;
+    margin-right: 5px;
+  }
+
+  .comment-btn img {
+    max-width: 25px;
+    max-height: 25px;
+    margin-right: 5px;
+  }
+
+  .heart-pic{
+    background-color:transparent;
+    max-width: 20px;
+    max-height: 20px;
+    margin-right: 5px;
+  }
+
+  .comment-pic {
+    background-color:transparent;
+    max-width: 25px;
+    max-height: 25px;
+  }
+  
+
+  .action-btn:hover, .comment-btn:hover {
+    background-color: hsl(0, 0%, 95%);
+  }
+
+  .new-comment {
+    display: flex;
+    margin-top: 10px;
+    align-items: center;
+  }
+  
+  .new-comment input {
+    flex-grow: 1;
+    border: none;
+    background-color: #f0f2f5;
+    border-radius: 20px;
+    padding: 8px 12px;
+    margin-right: 10px;
+    width: 0%;
+  }
+
+  .send-btn {
+    background-color: rgb(173, 29, 29);
+    color: white;;
+    margin-top: 0px;
+    padding-top: 0%;
+    padding-bottom: 0%;
+    font-size: 15px;
+    width: 60px;
+    height: 30px;
+  }
+
+  .send-btn:hover {
+    background-color: hsl(0, 71%, 33%);
+    cursor: pointer;
+  }
+
+  .comments-section {
+    overflow-y: auto;
+    max-height: 300px; 
+    padding: 10px;
+    margin-top: 0px !important;
+  }
+
+  .mobile-profile-post {
+    padding: 1em;
+    max-width: 500px;
+    overflow: auto;
+  }
+
+  .mobile-post-image {
+    object-fit: cover;
+    border-radius: 5px;
+    width: 400px;
+  }
+
+  .mobile-profile-info h2 {
+    border-bottom: none;
+  }
+
+  .mobile-profile-info {
+    flex-grow: 1;
+  }
+
+  .mobile-profile-info p {
+    margin: 5px 0;
+    color: #666;
+  }
