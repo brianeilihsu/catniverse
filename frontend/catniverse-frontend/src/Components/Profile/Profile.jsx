@@ -56,7 +56,7 @@ function Profile() {
         setUserData({ posts: ["loading"] });
 
         const response = await axios.get(
-          `http://140.136.151.71:8787/api/v1/users/${userId}/user`
+          `https://api.catniverse.website/api/v1/users/${userId}/user`
         );
         const user = response.data.data;
 
@@ -89,7 +89,7 @@ function Profile() {
     const fetchImage = async (downloadUrl) => {
       try {
         const response = await axios.get(
-          `http://140.136.151.71:8787${downloadUrl}`,
+          `https://api.catniverse.website${downloadUrl}`,
           { responseType: "blob" }
         );
         return URL.createObjectURL(response.data);
@@ -102,7 +102,7 @@ function Profile() {
       try {
         const imageBlobPromises = downloadUrls.map(async (downloadUrl) => {
           const response = await axios.get(
-            `http://140.136.151.71:8787${downloadUrl}`,
+            `https://api.catniverse.website${downloadUrl}`,
             { responseType: "blob" }
           );
           return URL.createObjectURL(response.data);
@@ -214,7 +214,7 @@ function Profile() {
 
     try {
       const response = await axios.delete(
-        `http://140.136.151.71:8787/api/v1/posts/delete/${postId}`
+        `https://api.catniverse.website/api/v1/posts/delete/${postId}`
       );
 
       if (response.status === 200) {
@@ -240,7 +240,7 @@ function Profile() {
   const handleDeleteComment = async (commentId) => {
     try {
       const response = await axios.delete(
-        `http://140.136.151.71:8787/api/v1/comments/delete/${commentId}`,
+        `https://api.catniverse.website/api/v1/comments/delete/${commentId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -300,7 +300,7 @@ function Profile() {
     try {
       if (isLiked) {
         await axios.delete(
-          "http://140.136.151.71:8787/api/v1/likes/remove-like",
+          "https://api.catniverse.website/api/v1/likes/remove-like",
           {
             params: { postId },
             headers: {
@@ -329,7 +329,7 @@ function Profile() {
         });
       } else {
         await axios.post(
-          "http://140.136.151.71:8787/api/v1/likes/add-like",
+          "https://api.catniverse.website/api/v1/likes/add-like",
           null,
           {
             params: { postId },
@@ -366,7 +366,7 @@ function Profile() {
   const checkIfLiked = async (postId) => {
     try {
       const response = await axios.get(
-        "http://140.136.151.71:8787/api/v1/likes/existed",
+        "https://api.catniverse.website/api/v1/likes/existed",
         {
           params: { postId },
           headers: {
@@ -400,7 +400,7 @@ function Profile() {
   const fetchComments = async (postId) => {
     try {
       const response = await axios.get(
-        `http://140.136.151.71:8787/api/v1/comments/from-post/${postId}`
+        `https://api.catniverse.website/api/v1/comments/from-post/${postId}`
       );
       const commentsData = response.data.data || [];
       const commentsWithUserInfo = await Promise.all(
@@ -429,13 +429,13 @@ function Profile() {
   };
 
   const fetchUserDetails = async (userId) => {
-    return axios.get(`http://140.136.151.71:8787/api/v1/users/${userId}/user`);
+    return axios.get(`https://api.catniverse.website/api/v1/users/${userId}/user`);
   };
 
   const fetchCommentImage = async (downloadUrl) => {
     try {
       const response = await axios.get(
-        `http://140.136.151.71:8787${downloadUrl}`,
+        `https://api.catniverse.website${downloadUrl}`,
         { responseType: "blob" }
       );
       return URL.createObjectURL(response.data);
@@ -455,7 +455,7 @@ function Profile() {
 
     try {
       await axios.post(
-        `http://140.136.151.71:8787/api/v1/comments/add/${postId}`,
+        `https://api.catniverse.website/api/v1/comments/add/${postId}`,
         null,
         {
           params: { content: commentText },

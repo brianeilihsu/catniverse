@@ -31,7 +31,7 @@ function Product({ product }) {
     const fetchImages = async (downloadUrl) => {
         try {
             const response = await axios.get(
-                `http://140.136.151.71:8787${downloadUrl}`,
+                `https://api.catniverse.website${downloadUrl}`,
                 { responseType: "blob" }
             );
             return URL.createObjectURL(response.data); 
@@ -72,7 +72,7 @@ function Product({ product }) {
         const token = localStorage.getItem('token');
 
         try {
-            await axios.post('http://140.136.151.71:8787/api/v1/cartItems/item/add', null, {
+            await axios.post('https://api.catniverse.website/api/v1/cartItems/item/add', null, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

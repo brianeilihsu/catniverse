@@ -41,7 +41,7 @@ function Shop() {
     const fetchProductData = async () => {
       try {
         const response = await axios.get(
-          `http://140.136.151.71:8787/api/v1/products/all`
+          `https://api.catniverse.website/api/v1/products/all`
         );
         const products = response.data.data;
         setProductData(products);
@@ -69,7 +69,7 @@ function Shop() {
       try {
         if (!userData[userId]) {
           const response = await axios.get(
-            `http://140.136.151.71:8787/api/v1/users/${userId}/user`
+            `https://api.catniverse.website/api/v1/users/${userId}/user`
           );
           const user = response.data.data;
 
@@ -101,12 +101,12 @@ function Shop() {
 
       if (noSearchCriteria) {
         response = await axios.get(
-          `http://140.136.151.71:8787/api/v1/products/all`
+          `https://api.catniverse.website/api/v1/products/all`
         );
       } else if (selectedCategory && selectedBrand) {
         try {
           response = await axios.get(
-            `http://140.136.151.71:8787/api/v1/products/products/by/category-and-brand`,
+            `https://api.catniverse.website/api/v1/products/products/by/category-and-brand`,
             { params: { category: selectedCategory, brand: selectedBrand } }
           );
         } catch (e) {
@@ -115,7 +115,7 @@ function Shop() {
       } else if (selectedBrand && name.trim() !== "") {
         try {
           response = await axios.get(
-            `http://140.136.151.71:8787/api/v1/products/products/by/brand-and-name`,
+            `https://api.catniverse.website/api/v1/products/products/by/brand-and-name`,
             { params: { brand: selectedBrand, name } }
           );
         } catch (e) {
@@ -123,15 +123,15 @@ function Shop() {
         }
       } else if (name.trim() !== "") {
         response = await axios.get(
-          `http://140.136.151.71:8787/api/v1/products/products/${name}/products`
+          `https://api.catniverse.website/api/v1/products/products/${name}/products`
         );
       } else if (selectedCategory) {
         response = await axios.get(
-          `http://140.136.151.71:8787/api/v1/products/product/${selectedCategory}/all/products`
+          `https://api.catniverse.website/api/v1/products/product/${selectedCategory}/all/products`
         );
       } else if (selectedBrand) {
         response = await axios.get(
-          `http://140.136.151.71:8787/api/v1/products/product/by-brand`,
+          `https://api.catniverse.website/api/v1/products/product/by-brand`,
           { params: { brand: selectedBrand } }
         );
       }

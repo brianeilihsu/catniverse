@@ -73,7 +73,7 @@ function Register() {
     try {
       setIsLoading(true);
       const response = await axios.post(
-        "http://140.136.151.71:8787/api/v1/users/add",
+        "https://api.catniverse.website/api/v1/users/add",
         registerData,
         {
           headers: {

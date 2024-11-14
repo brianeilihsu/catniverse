@@ -37,7 +37,7 @@ function Login({ setUsername }) {
   const fetchRole = async (email) => {
     try {
       const response = await axios.get(
-        `http://140.136.151.71:8787/api/v1/users/get-by-email`,
+        `https://api.catniverse.website/api/v1/users/get-by-email`,
         {
           params: { email: email }
         }
@@ -72,7 +72,7 @@ function Login({ setUsername }) {
     console.log(email, " ", password);
     
     try {
-      const response = await axios.post("http://140.136.151.71:8787/api/v1/auth/login", {
+      const response = await axios.post("https://api.catniverse.website/api/v1/auth/login", {
         email: email,
         password: password,
       });
@@ -85,7 +85,7 @@ function Login({ setUsername }) {
 
       
 
-      const response2 = await axios.get(`http://140.136.151.71:8787/api/v1/users/${userId}/user`, {
+      const response2 = await axios.get(`https://api.catniverse.website/api/v1/users/${userId}/user`, {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
         }
