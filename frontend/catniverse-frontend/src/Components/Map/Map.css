@@ -312,6 +312,10 @@ h2 {
   .mapboxgl-ctrl {
     margin: 0px !important;
   }
+  .mapbox-directions-component {
+    padding-top: 2.5px;
+    max-width: 75%;
+  }
 }
 
 .mobile-sidebar-toggle-button {
@@ -333,12 +337,12 @@ h2 {
 }
 
 .mobile-location-btn {
-  position: fixed !important;
+  display: flex;
+  margin-top: 0px;
   z-index: 100;
   cursor: pointer;
   background-color: transparent;
-  padding: 0% !important;
-  margin: 65% !important;
+  padding: 0% 0% 0% 0% !important;
 }
 
 .mobile-location-btn img {
@@ -346,6 +350,31 @@ h2 {
   max-height: 30px;
 }
 
+.locatoinBtn {
+  flex: 0 0 20%;
+  display: flex;
+}
+
 .mapbox-form-label {
   margin-top: 0px;
+}
+
+.mobile-map-post {
+  padding: 1em;
+    max-width: 350px;
+    overflow: auto;
+}
+
+.mapboxgl-ctrl-top-left {
+  z-index: 20;
+}
+
+.mph {
+  flex: 0 0 80%; 
+  display: flex;
+  align-items: center;
+}
+
+.closeDirection {
+  margin-left: 10px;
 }

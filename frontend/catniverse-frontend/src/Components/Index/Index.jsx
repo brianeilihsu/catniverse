@@ -108,7 +108,7 @@ function Index() {
     try {
       const imageBlobPromises = downloadUrls.map(async (downloadUrl) => {
         const response = await axios.get(
-          `https://api.catniverse.website${downloadUrl.replace(".png", ".webp")}`,
+          `http://140.136.151.71:8787${downloadUrl.replace(".png", ".webp")}`,
           {
             responseType: "blob",
           }
@@ -130,7 +130,7 @@ function Index() {
     if (userData[userId]) return;
     try {
       const response = await axios.get(
-        `https://api.catniverse.website/api/v1/users/${userId}/user`
+        `http://140.136.151.71:8787/api/v1/users/${userId}/user`
       );
       const user = response.data.data;
 
@@ -154,7 +154,7 @@ function Index() {
   const fetchImage = async (downloadUrl) => {
     try {
       const response = await axios.get(
-        `https://api.catniverse.website${downloadUrl}`,
+        `http://140.136.151.71:8787${downloadUrl}`,
         { responseType: "blob" }
       );
       return URL.createObjectURL(response.data);
@@ -166,7 +166,7 @@ function Index() {
   const handlePopularPost = async () => {
     try {
       const response = await axios.get(
-        "https://api.catniverse.website/api/v1/posts/popular"
+        "http://140.136.151.71:8787/api/v1/posts/popular"
       );
       const posts = response.data.data;
       await fetchPostData(posts);
@@ -178,7 +178,7 @@ function Index() {
   const handleLatestPost = async () => {
     try {
       const response = await axios.get(
-        "https://api.catniverse.website/api/v1/posts/latest"
+        "http://140.136.151.71:8787/api/v1/posts/latest"
       );
       const posts = response.data.data;
       await fetchPostData(posts);
@@ -194,7 +194,7 @@ function Index() {
     try {
       if (region) {
         const response = await axios.get(
-          `https://api.catniverse.website/api/v1/posts/region`,
+          `http://140.136.151.71:8787/api/v1/posts/region`,
           {
             params: { city: region },
           }
@@ -212,7 +212,7 @@ function Index() {
   const checkIfLiked = async (postId) => {
     try {
       const response = await axios.get(
-        "https://api.catniverse.website/api/v1/likes/existed",
+        "http://140.136.151.71:8787/api/v1/likes/existed",
         {
           params: { postId },
           headers: {
@@ -246,7 +246,7 @@ function Index() {
   const fetchComments = async (postId) => {
     try {
       const response = await axios.get(
-        `https://api.catniverse.website/api/v1/comments/from-post/${postId}`
+        `http://140.136.151.71:8787/api/v1/comments/from-post/${postId}`
       );
       const commentsData = response.data.data || [];
       const commentsWithUserInfo = await Promise.all(
@@ -275,13 +275,13 @@ function Index() {
   };
 
   const fetchUserDetails = async (userId) => {
-    return axios.get(`https://api.catniverse.website/api/v1/users/${userId}/user`);
+    return axios.get(`http://140.136.151.71:8787/api/v1/users/${userId}/user`);
   };
 
   const fetchCommentImage = async (downloadUrl) => {
     try {
       const response = await axios.get(
-        `https://api.catniverse.website${downloadUrl}`,
+        `http://140.136.151.71:8787${downloadUrl}`,
         { responseType: "blob" }
       );
       return URL.createObjectURL(response.data);
@@ -301,7 +301,7 @@ function Index() {
 
     try {
       const response = await axios.post(
-        `https://api.catniverse.website/api/v1/comments/add/${postId}`,
+        `http://140.136.151.71:8787/api/v1/comments/add/${postId}`,
         null,
         {
           params: { content: commentText },
@@ -340,7 +340,7 @@ function Index() {
     try {
       if (isLiked) {
         await axios.delete(
-          "https://api.catniverse.website/api/v1/likes/remove-like",
+          "http://140.136.151.71:8787/api/v1/likes/remove-like",
           {
             params: { postId },
             headers: {
@@ -362,7 +362,7 @@ function Index() {
         );
       } else {
         await axios.post(
-          "https://api.catniverse.website/api/v1/likes/add-like",
+          "http://140.136.151.71:8787/api/v1/likes/add-like",
           null,
           {
             params: { postId },
@@ -454,234 +454,268 @@ function Index() {
               <br />
               {postData[0] === "loading" ? (
                 <div className="loading-overlay">
-                  <ClipLoader color="#666" size={50} />
-                </div>
-              ) : postData.length > 0 ? (
-                <div id="mobile-post-list">
-                  {postData.slice(0, visibleCount).map((post) => (
-                    <div className="mobile-post" key={post.id}>
-                      <div className="mobile-post-header">
-                        <Link
-                          to={`/profile/${post.userId}`}
-                          style={{
-                            textDecoration: "none",
-                            color: "inherit",
-                          }}
-                        >
-                          <img
-                            src={
-                              userImageUrls[post.userId]
-                                ? userImageUrls[post.userId].replace(
-                                    ".png",
-                                    "-lowres.webp"
-                                  )
-                                : defaultAvatar
-                            }
-                            alt="使用者頭像"
-                            className="user-avatar"
-                            style={{
-                              width: "50px",
-                              height: "50px",
-                              borderRadius: "50%",
-                              backgroundColor: "#f0f0f0",
-                            }}
-                            loading="lazy"
-                          />
-                        </Link>
-                        <Link
-                          to={`/profile/${post.userId}`}
-                          style={{
-                            textDecoration: "none",
-                            color: "inherit",
-                          }}
-                        >
-                          <span className="user-name">
-                            {userData[post.userId]?.username || "未知使用者"}
-                          </span>
-                        </Link>
-                      </div>
-
-                      <h4>{post.title}</h4>
-
-                      {postImageUrls[post.id] &&
-                      Array.isArray(postImageUrls[post.id]) ? (
-                        postImageUrls[post.id].length === 1 ? (
-                          <div
-                            className="g-container"
-                            style={{
-                              display: "flex",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <img
-                              src={postImageUrls[post.id][0].replace(
-                                ".png",
-                                "-lowres.webp"
-                              )}
-                              alt="Post image"
-                              className="post-image"
-                              style={{
-                                width: "100%",
-                                height: "400px",
-                                aspectRatio: "16/9",
-                                backgroundColor: "#f0f0f0",
-                              }}
-                              loading="lazy"
-                            />
-                          </div>
-                        ) : (
-                          <Suspense fallback={<div>Loading slider...</div>}>
-                            <Slider {...sliderSettings(sliderRef)}>
-                              {postImageUrls[post.id].map((url, index) => (
-                                <div
-                                  className="g-container"
-                                  key={index}
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                  }}
-                                >
-                                  <img
-                                    src={url.replace(".png", "-lowres.webp")}
-                                    alt={`Post image ${index}`}
-                                    className="post-image"
-                                    style={{
-                                      width: "95%",
-                                      height: "500px",
-                                      aspectRatio: "16/9",
-                                      backgroundColor: "#f0f0f0",
-                                    }}
-                                    loading="lazy"
-                                  />
-                                </div>
-                              ))}
-                            </Slider>
-                          </Suspense>
-                        )
-                      ) : null}
-
-                      {/* Post Content */}
-                      <div className="post-content">
-                        <p className="post-text">{post.content}</p>
-                        <p className="post-location">
-                          發布地址：{post.city}
-                          {post.district}
-                          {post.street}
-                        </p>
-                        <p className="post-date">
-                          發布於：
-                          {new Date(post.createdAt).toLocaleString("zh-TW", {
-                            year: "numeric",
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: false,
-                          })}
-                        </p>
-                      </div>
-
-                      {/* Post Actions */}
-                      <div className="post-actions">
-                        <button
-                          className="action-btn"
-                          onClick={() => handleLike(post.id)}
-                          style={{
-                            color: likedPosts[post.id] ? "#9E1212" : "black",
-                            fontWeight: likedPosts[post.id] ? "bold" : "normal",
-                          }}
-                        >
-                          <img
-                            className="heart-pic"
-                            src={
-                              likedPosts[post.id] ? HeartPicFilled : HeartPic
-                            }
-                            alt="讚"
-                          />
-                          {post.total_likes}
-                        </button>
-                        <button
-                          className="comment-btn"
-                          onClick={() => toggleComments(post.id)}
-                        >
-                          <img
-                            className="comment-pic"
-                            src={CommentPic}
-                            alt="留言"
-                          />
-                          {post.total_comments}
-                        </button>
-                      </div>
-
-                      {/* Comments Section */}
-                      {comments[post.id] && comments[post.id].visible && (
-                        <>
-                          <div className="comments-section">
-                            {comments[post.id]?.list ? (
-                              comments[post.id].list.length > 0 ? (
-                                comments[post.id].list.map((comment, index) => (
-                                  <div
-                                    className="comment"
-                                    key={comment.id || index}
-                                  >
-                                    <img
-                                      src={comment.userAvatar || defaultAvatar}
-                                      alt="評論者頭像"
-                                      className="comment-avatar"
-                                      style={{
-                                        width: "32px",
-                                        height: "32px",
-                                        borderRadius: "50%",
-                                        backgroundColor: "#f0f0f0",
-                                      }}
-                                      loading="lazy"
-                                    />
-                                    <div className="comment-content">
-                                      <div className="comment-author">
-                                        {comment.username}
-                                      </div>
-                                      <div className="comment-text">
-                                        {comment.content}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))
-                              ) : (
-                                <div>No comment</div>
-                              )
-                            ) : (
-                              <div>Loading comments...</div>
-                            )}
-                          </div>
-                          <div className="new-comment">
-                            <input
-                              type="text"
-                              placeholder="寫下你的評論..."
-                              value={commentText}
-                              onChange={(e) => setCommentText(e.target.value)}
-                            />
-                            <button
-                              className="send-btn"
-                              onClick={() => handleAddComment(post.id)}
-                            >
-                              Send
-                            </button>
-                          </div>
-                          {postData.length > visibleCount && (
-                            <button
-                              className="load-more"
-                              onClick={loadMorePosts}
-                            >
-                              Loading more posts...
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  ))}
+                  <ClipLoader color={"#666"} size={50} />
                 </div>
               ) : (
-                <p>There are no posts yet</p>
+                <>
+                  <div id="mobile-post-list">
+                    {postData.length > 0 ? (
+                      postData.slice(0, visibleCount).map((post) => {
+                        let sliderRef = React.createRef();
+                        const user = userData[post.userId];
+                        const avatarUrl = userImageUrls[post.userId];
+                        const postComments = comments[post.id]?.list || [];
+
+                        return (
+                          <div className="mobile-post" key={post.id}>
+                            {/* Header Section */}
+                            <div className="mobile-post-header">
+                              <Link
+                                to={`/profile/${post.userId}`}
+                                style={{
+                                  textDecoration: "none",
+                                  color: "inherit",
+                                }}
+                              >
+                                <img
+                                  src={
+                                    avatarUrl
+                                      ? avatarUrl.replace(
+                                          ".png",
+                                          "-lowres.webp"
+                                        )
+                                      : defaultAvatar
+                                  }
+                                  alt="使用者頭像"
+                                  className="user-avatar"
+                                  style={{
+                                    width: "50px",
+                                    height: "50px",
+                                    borderRadius: "50%",
+                                    backgroundColor: "#f0f0f0",
+                                  }}
+                                  loading="lazy"
+                                />
+                              </Link>
+                              <Link
+                                to={`/profile/${post.userId}`}
+                                style={{
+                                  textDecoration: "none",
+                                  color: "inherit",
+                                }}
+                              >
+                                <span className="user-name">
+                                  {user ? user.username : "未知使用者"}
+                                </span>
+                              </Link>
+                            </div>
+
+                            <h4>{post.title}</h4>
+
+                            {postImageUrls[post.id] &&
+                            Array.isArray(postImageUrls[post.id]) &&
+                            postImageUrls[post.id].length === 1 ? (
+                              <div
+                                className="g-container"
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <img
+                                  src={postImageUrls[post.id][0].replace(
+                                    ".png",
+                                    "-lowres.webp"
+                                  )}
+                                  alt="Post image"
+                                  className="post-image"
+                                  style={{
+                                    width: "95%",
+                                    height: "400px",
+                                    aspectRatio: "16/9",
+                                    backgroundColor: "#f0f0f0",
+                                  }}
+                                  loading="lazy"
+                                />
+                              </div>
+                            ) : (
+                              postImageUrls[post.id] &&
+                              Array.isArray(postImageUrls[post.id]) && (
+                                <Suspense
+                                  fallback={<div>Loading slider...</div>}
+                                >
+                                  <Slider {...sliderSettings(sliderRef)}>
+                                    {postImageUrls[post.id].map(
+                                      (url, index) => (
+                                        <div
+                                          className="g-container"
+                                          key={index}
+                                          style={{
+                                            display: "flex",
+                                            justifyContent: "center",
+                                          }}
+                                        >
+                                          <img
+                                            src={url.replace(
+                                              ".png",
+                                              "-lowres.webp"
+                                            )}
+                                            alt={`Post image ${index}`}
+                                            className="post-image"
+                                            style={{
+                                              width: "95%",
+                                              height: "400px",
+                                              aspectRatio: "16/9",
+                                              backgroundColor: "#f0f0f0",
+                                            }}
+                                            loading="lazy"
+                                            onClick={(e) =>
+                                              handleImageClick(
+                                                e,
+                                                sliderRef.current
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                      )
+                                    )}
+                                  </Slider>
+                                </Suspense>
+                              )
+                            )}
+                            <div className="post-content">
+                              <p className="post-text">{post.content}</p>
+                              <p className="post-location">
+                                發布地址：{post.city}
+                                {post.district}
+                                {post.street}
+                              </p>
+                              <p className="post-date">
+                                發布於：
+                                {new Date(post.createdAt).toLocaleString(
+                                  "zh-TW",
+                                  {
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: false,
+                                  }
+                                )}
+                              </p>
+                            </div>
+                            <div className="post-actions">
+                              <button
+                                className="action-btn"
+                                onClick={() => handleLike(post.id)}
+                                style={{
+                                  color: likedPosts[post.id]
+                                    ? "#9E1212"
+                                    : "black",
+                                  fontWeight: likedPosts[post.id]
+                                    ? "bold"
+                                    : "normal",
+                                }}
+                              >
+                                <img
+                                  className="heart-pic"
+                                  src={
+                                    likedPosts[post.id]
+                                      ? HeartPicFilled
+                                      : HeartPic
+                                  }
+                                  alt="讚"
+                                />
+                                {post.total_likes}
+                              </button>
+                              <button
+                                className="comment-btn"
+                                onClick={() => toggleComments(post.id)}
+                              >
+                                <img
+                                  className="comment-pic"
+                                  src={CommentPic}
+                                  alt="留言"
+                                />
+                                {post.total_comments}
+                              </button>
+                            </div>
+                            {comments[post.id] && comments[post.id].visible && (
+                              <>
+                                <div className="comments-section">
+                                  {comments[post.id]?.list ? (
+                                    comments[post.id].list.length > 0 ? (
+                                      postComments.map((comment, index) => (
+                                        <div
+                                          className="comment"
+                                          key={comment.id || index}
+                                        >
+                                          <img
+                                            src={
+                                              comment.userAvatar ||
+                                              defaultAvatar
+                                            }
+                                            alt="評論者頭像"
+                                            className="comment-avatar"
+                                            style={{
+                                              width: "32px",
+                                              height: "32px",
+                                              borderRadius: "50%",
+                                              backgroundColor: "#f0f0f0",
+                                            }}
+                                            loading="lazy"
+                                          />
+                                          <div className="comment-content">
+                                            <div className="comment-author">
+                                              {comment.username}
+                                            </div>
+                                            <div className="comment-text">
+                                              {comment.content}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <div>No comment</div>
+                                    )
+                                  ) : (
+                                    <div>Loading comments...</div>
+                                  )}
+                                </div>
+                                <div className="new-comment">
+                                  <input
+                                    type="text"
+                                    placeholder="寫下你的評論..."
+                                    value={commentText}
+                                    onChange={(e) =>
+                                      setCommentText(e.target.value)
+                                    }
+                                  />
+                                  <button
+                                    className="send-btn"
+                                    onClick={() => handleAddComment(post.id)}
+                                  >
+                                    Send
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p>There are no posts yet</p>
+                    )}
+                  </div>
+                  <div className="load-more-container">
+                    {postData.length > visibleCount && (
+                      <button className="load-more" onClick={loadMorePosts}>
+                        Loading more posts...
+                      </button>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>

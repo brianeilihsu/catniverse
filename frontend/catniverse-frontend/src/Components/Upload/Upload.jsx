@@ -26,7 +26,7 @@ function Upload() {
   const [croppedImages, setCroppedImages] = useState([]);
   const [croppieInstances, setCroppieInstances] = useState([]);
   const fileInputRef = useRef(null);
-  const [earStatus, setEarStatus] = useState(null);
+  const [earStatus, setEarStatus] = useState(false);
   const [strayCatStatus, setStrayCatStatus] = useState(null);
   const [viewport, setViewport] = useState({
     latitude: 25.033,
@@ -164,7 +164,6 @@ function Upload() {
       //alert("new: " + latRef.current + " " + lngRef.current);
       setPopupInfo({ lat, lng, address: formattedAddress });
       setSelectedLocation(formattedAddress);
-      console.log(`解析後的地址: ${formattedAddress}`);
     } catch (error) {
       console.error("取得地址失敗", error);
       setPopupInfo({ lat, lng, address: "無法取得地址" });
@@ -188,7 +187,10 @@ function Upload() {
       if (cropContainerRef && !croppieInstances[index]) {
         const newCroppie = new Croppie(cropContainerRef, {
           viewport: { width: 250, height: 250, type: "square" },
-          boundary: { width: 400, height: 300 },
+          boundary: {
+            width: isMobile ? 350 : 400, 
+            height: 300 
+          },
           enableResize: false,
           enableZoom: true,
           url: src,
@@ -233,10 +235,7 @@ function Upload() {
                 gpsData[piexif.GPSIFD.GPSLongitudeRef]
               );
 
-              // 打印轉換後的 GPS 資訊
-              console.log(`圖片 ${index + 1} 的 GPS 資訊: ${lat}, ${lng}`);
               if (!isNaN(lat) && !isNaN(lng)) {
-                // 更新地圖視角到該 GPS 位置
                 setViewport((prevViewport) => ({
                   ...prevViewport,
                   latitude: lat,
@@ -244,17 +243,9 @@ function Upload() {
                   zoom: 15,
                 }));
 
-                // 在地圖上添加標記
                 setNewPlace({ lat, lng });
-                // 進行反向地理編碼以獲取地址
                 fetchAddress(lat, lng);
-              } else {
-                console.log(
-                  `Invalid GPS coordinates for image ${
-                    index + 1
-                  }: lat=${lat}, lng=${lng}`
-                );
-              }
+              } 
             }
           } catch (error) {
             console.log(
@@ -324,6 +315,9 @@ function Upload() {
       const croppedImageUrl = URL.createObjectURL(compressedBlob);
 
       updateImages(index, croppedImageUrl);
+      if (index === 0) {
+        await checkEarStatus(croppedImageUrl);
+      }
     }
   };
 
@@ -334,6 +328,41 @@ function Upload() {
       return updatedCropped;
     });
   };
+
+  const checkEarStatus = async (croppedImageUrl) => {
+    try {
+      const response = await fetch(croppedImageUrl);
+      const imageBlob = await response.blob();
+  
+      const formData = new FormData();
+      formData.append("images", imageBlob, "croppedImage.png");
+  
+      const result = await axios.post(
+        "http://140.136.151.71:8000/api/cat-ear-detection/",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log(result.data.data);
+  
+      const { is_cropped } = result.data.data;
+  
+      if (is_cropped) {
+        setEarStatus(true);
+      } else {
+        setEarStatus(false); 
+      }
+  
+      console.log("耳狀態檢測結果: ", is_cropped);
+    } catch (error) {
+      console.error("耳狀態檢測失敗: ", error.message);
+      alert("耳狀態檢測失敗，請稍後重試");
+    }
+  };
+  
 
   const handleCancelCrop = (index) => {
     if (croppieInstances[index]) {
@@ -406,7 +435,7 @@ function Upload() {
       });
 
       const response = await axios.post(
-        "https://api.catniverse.website/api/v1/posts/add",
+        "http://140.136.151.71:8787/api/v1/posts/add",
         formDataWithImages,
         {
           headers: {
@@ -495,42 +524,48 @@ function Upload() {
                 }
                 required
               />
+              <div className="map-wrapper">
+                <ReactMapGL
+                  mapboxAccessToken={TOKEN}
+                  initialViewState={viewport}
+                  mapStyle="mapbox://styles/mapbox/streets-v11"
+                  localIdeographFontFamily="'sans-serif'"
+                  onDblClick={handleAddClick}
+                  onLoad={(event) => {
+                    const map = event.target;
+                    map.resize();
+                  }}
+                  onMove={(event) => setViewport(event.viewState)}
+                  style={{ width: "auto", height: "100vh" }}
+                  className="mobile-map-container"
+                >
+                  {newPlace && (
+                    <Marker
+                      latitude={newPlace.lat}
+                      longitude={newPlace.lng}
+                      draggable
+                      onDragEnd={(event) => {
+                        const { lat, lng } = event.lngLat;
+                        setNewPlace({ lat, lng });
+                        fetchAddress(lat, lng);
+                      }}
+                    />
+                  )}
 
-              <ReactMapGL
-                mapboxAccessToken={TOKEN}
-                initialViewState={viewport}
-                mapStyle="mapbox://styles/mapbox/streets-v11"
-                localIdeographFontFamily="'sans-serif'"
-                onDblClick={handleAddClick}
-                onMove={(event) => setViewport(event.viewState)}
-                style={{ width: "100%", height: "400px" }}
-              >
-                {newPlace && (
-                  <Marker
-                    latitude={newPlace.lat}
-                    longitude={newPlace.lng}
-                    draggable
-                    onDragEnd={(event) => {
-                      const { lat, lng } = event.lngLat;
-                      setNewPlace({ lat, lng });
-                      fetchAddress(lat, lng);
-                    }}
-                  />
-                )}
+                  {popupInfo && (
+                    <Popup
+                      latitude={popupInfo.lat}
+                      longitude={popupInfo.lng}
+                      anchor="top"
+                      onClose={() => setPopupInfo(null)}
+                    >
+                      <div>{popupInfo.address}</div>
+                    </Popup>
+                  )}
 
-                {popupInfo && (
-                  <Popup
-                    latitude={popupInfo.lat}
-                    longitude={popupInfo.lng}
-                    anchor="top"
-                    onClose={() => setPopupInfo(null)}
-                  >
-                    <div>{popupInfo.address}</div>
-                  </Popup>
-                )}
-
-                <NavigationControl position="bottom-right" />
-              </ReactMapGL>
+                  <NavigationControl position="bottom-right" />
+                </ReactMapGL>
+              </div>
 
               <div className="selected-location">
                 <p>選擇的地點: {selectedLocation}</p>
@@ -597,7 +632,7 @@ function Upload() {
                   <div className="mobile-image-crop-section">
                     <div
                       id={`cropContainer-${index}`}
-                      style={{ height: "300px", width: "400px" }}
+                      style={{ height: "100%", width: "325px" }}
                     ></div>
 
                     <div className="justify-btn">
@@ -606,7 +641,7 @@ function Upload() {
                         className="btn-info"
                         type="button"
                         onClick={() => handleCrop(index)}
-                        disabled={isLoading}  
+                        disabled={isLoading}
                       >
                         <i className="fa fa-scissors"></i> 裁剪圖片
                       </button>
@@ -614,7 +649,7 @@ function Upload() {
                         className="btn-danger"
                         type="button"
                         onClick={() => handleCancelCrop(index)}
-                        disabled={isLoading}  
+                        disabled={isLoading}
                       >
                         取消圖片
                       </button>
@@ -635,11 +670,7 @@ function Upload() {
                 </div>
               ))}
 
-              <button 
-                className="submit-btn" 
-                type="submit"
-                disabled={isLoading}  
-              >
+              <button className="submit-btn" type="submit" disabled={isLoading}>
                 Post
               </button>
             </form>
@@ -798,7 +829,7 @@ function Upload() {
                         className="btn-info"
                         type="button"
                         onClick={() => handleCrop(index)}
-                        disabled={isLoading}  
+                        disabled={isLoading}
                       >
                         <i className="fa fa-scissors"></i> 裁剪圖片
                       </button>
@@ -806,7 +837,7 @@ function Upload() {
                         className="btn-danger"
                         type="button"
                         onClick={() => handleCancelCrop(index)}
-                        disabled={isLoading}  
+                        disabled={isLoading}
                       >
                         取消圖片
                       </button>
@@ -827,11 +858,7 @@ function Upload() {
                 </div>
               ))}
 
-              <button 
-                className="submit-btn" 
-                type="submit"
-                disabled={isLoading}    
-              >
+              <button className="submit-btn" type="submit" disabled={isLoading}>
                 Post
               </button>
             </form>

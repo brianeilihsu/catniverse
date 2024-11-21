@@ -80,7 +80,7 @@ const Chart = () => {
 
       try {
         const response = await fetch(
-          `https://api.catniverse.website/api/v1/chart/${
+          `http://140.136.151.71:8787/api/v1/chart/${
             selectedCity === "all" ? "stray/all" : selectedCity
           }`
         );
@@ -339,7 +339,7 @@ const Chart = () => {
   useEffect(() => {
     const fetchData = async () => {
       const response = await fetch(
-        `https://api.catniverse.website/api/v1/chart/${
+        `http://140.136.151.71:8787/api/v1/chart/${
           selectedCity === "all" ? "stray/all" : selectedCity
         }`
       );

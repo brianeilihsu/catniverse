@@ -26,7 +26,7 @@ function Order() {
     const fetchOrders = async () => {
       try {
         const response = await axios.get(
-          `https://api.catniverse.website/api/v1/orders/${userId}/user-orders`,
+          `http://140.136.151.71:8787/api/v1/orders/${userId}/user-orders`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -61,7 +61,7 @@ function Order() {
   const fetchImages = async (downloadUrl) => {
     try {
       const response = await axios.get(
-        `https://api.catniverse.website${downloadUrl}`,
+        `http://140.136.151.71:8787${downloadUrl}`,
         { responseType: "blob" }
       );
       return URL.createObjectURL(response.data);

@@ -71,6 +71,9 @@ textarea {
 }
 
 .mobile-upload-container {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding: 30px;
   padding-top: 60px;
 }
@@ -83,4 +86,10 @@ textarea {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+}
+
+.map-wrapper {
+  height: 400px; 
+  overflow: hidden; 
+  position: relative;
 }

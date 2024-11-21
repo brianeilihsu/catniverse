@@ -7,7 +7,6 @@ import { feature } from "topojson-client";
 import "./Map.css";
 import townTopoData from "../../../src/taiwan-townships.json";
 import countyTopoData from "../../../src/taiwan-countyships.json";
-import countyBoundaries from "../../../src/countyboundary.json";
 import { regionOptions } from "./regionOptions";
 import { countyOptions } from "./countyOptions";
 import HeartPic from "../../Image/comment-heart.png";
@@ -21,15 +20,6 @@ mapboxgl.accessToken =
   "pk.eyJ1Ijoic2hlZHlqdWFuYTk5IiwiYSI6ImNtMTRnY2U5ajB4ZzYyanBtMjBrMXd1a3UifQ.OcvE1wSjJs8Z1VpQDM12tg";
 
 const Slider = React.lazy(() => import("react-slick"));
-
-const sliderSettings = {
-  infinite: true,
-  speed: 500,
-  slidesToShow: 1,
-  slidesToScroll: 1,
-  arrows: false,
-  dots: false,
-};
 
 const Map = () => {
   const mapContainerRef = useRef(null);
@@ -67,7 +57,23 @@ const Map = () => {
   const [username, setUsername] = useState("");
   const directions = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLocation, setIsLocation] = useState(false);
+  const [isCatLocation, setIsCatLocation] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [step, setStep] = useState(0);
+
+  const sliderSettings = (sliderRef) => ({
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: false,
+    dots: false,
+    beforeChange: (oldIndex, newIndex) => setCurrentSlide(newIndex),
+    ref: sliderRef, 
+  });
+  
+
   const twBoundaries = feature(
     townTopoData,
     townTopoData.objects["TOWN_MOI_1130718"]
@@ -75,13 +81,6 @@ const Map = () => {
   const twCountyBoundaries = feature(
     countyTopoData,
     countyTopoData.objects["COUNTY_MOI_1130718"]
-  );
-
-  const cities = Object.keys(
-    countyBoundaries.features.reduce((acc, feature) => {
-      acc[feature.properties.COUNTYNAME] = true;
-      return acc;
-    }, {})
   );
 
   const towns = selectedCounty ? regionOptions[selectedCounty] || [] : [];
@@ -93,22 +92,22 @@ const Map = () => {
     台中市: [120.6736, 24.1477],
     臺南市: [120.3325, 23.0481],
     高雄市: [120.6396, 23.0835],
-    基隆市: [121.7419, 25.1330],
+    基隆市: [121.7419, 25.133],
     新竹市: [120.9647, 24.8039],
     嘉義市: [120.4473, 23.4755],
     新竹縣: [121.1252, 24.7033],
     苗栗縣: [120.9417, 24.4893],
-    彰化縣: [120.4818, 23.9920],
+    彰化縣: [120.4818, 23.992],
     南投縣: [120.9876, 23.8388],
     雲林縣: [120.3897, 23.7559],
-    嘉義縣: [120.5740, 23.4588],
+    嘉義縣: [120.574, 23.4588],
     屏東縣: [120.62, 22.5495],
     宜蘭縣: [121.7195, 24.6929],
     花蓮縣: [121.3542, 23.7569],
     臺東縣: [121.1132, 22.7583],
     澎湖縣: [119.6151, 23.5655],
     金門縣: [118.3171, 24.4321],
-    連江縣: [119.5397, 26.1974]
+    連江縣: [119.5397, 26.1974],
   };
 
   useEffect(() => {
@@ -139,11 +138,11 @@ const Map = () => {
       }
     } else if (catDensityEnabled) {
       if (selectedDistrict) {
-        drawDensityByCatCount()
+        drawDensityByCatCount();
         drawDensityRegionBoundary(selectedCounty);
         drawRegionBoundary(selectedRegion);
       } else if (selectedCounty) {
-        drawDensityByCatCount()
+        drawDensityByCatCount();
         drawDensityRegionBoundary(selectedCounty);
         drawCountyBoundary(countyId, selectedCounty);
       } else if (
@@ -165,8 +164,12 @@ const Map = () => {
     removeLayerAndSource("selected-city-density", ["selected-city-density"]);
 
     removeLayer("region-density-line");
-    removeLayerAndSource("region-density", ["region-density-fill", "region-density-line", "region-names"]); // 确保删除 region-density 所有关联图层
-};
+    removeLayerAndSource("region-density", [
+      "region-density-fill",
+      "region-density-line",
+      "region-names",
+    ]); // 确保删除 region-density 所有关联图层
+  };
 
   const removeLayer = (layerName) => {
     if (mapRef.current && mapRef.current.getLayer(layerName)) {
@@ -282,7 +285,6 @@ const Map = () => {
   }, [catDensityEnabled]);
 
   useEffect(() => {
-    setIsLoading(true);
     if (!mapRef.current) {
       const map = new mapboxgl.Map({
         container: mapContainerRef.current,
@@ -324,7 +326,6 @@ const Map = () => {
 
       map.on("load", () => {
         map.resize();
-        setIsLoading(false);
         if (catPositioningEnabled) {
           geolocateControl.trigger();
         }
@@ -361,7 +362,7 @@ const Map = () => {
       cats.forEach((cat) => {
         const catImageUrls =
           catsImageUrls[cat.postId] && catsImageUrls[cat.postId].length > 0
-            ? catsImageUrls[cat.postId]
+            ? catsImageUrls[cat.postId][0]
             : null;
 
         if (catImageUrls) {
@@ -406,7 +407,7 @@ const Map = () => {
     setDensityByRegion({});
     try {
       const response = await axios.get(
-        "https://api.catniverse.website/api/v1/map/density"
+        "http://140.136.151.71:8787/api/v1/map/density"
       );
       const posts = response.data.data;
       const densityMap = {};
@@ -440,7 +441,7 @@ const Map = () => {
   const fetchComments = async (postId) => {
     try {
       const response = await axios.get(
-        `https://api.catniverse.website/api/v1/comments/from-post/${postId}`
+        `http://140.136.151.71:8787/api/v1/comments/from-post/${postId}`
       );
       const commentsData = response.data.data || [];
       const commentsWithUserInfo = await Promise.all(
@@ -468,7 +469,7 @@ const Map = () => {
   };
 
   const fetchUserDetails = async (userId) => {
-    return axios.get(`https://api.catniverse.website/api/v1/users/${userId}/user`);
+    return axios.get(`http://140.136.151.71:8787/api/v1/users/${userId}/user`);
   };
 
   const handleLike = async (postId) => {
@@ -476,7 +477,7 @@ const Map = () => {
     try {
       if (isLiked) {
         await axios.delete(
-          "https://api.catniverse.website/api/v1/likes/remove-like",
+          "http://140.136.151.71:8787/api/v1/likes/remove-like",
           {
             params: { postId: postId },
             headers: {
@@ -495,7 +496,7 @@ const Map = () => {
         }));
       } else {
         await axios.post(
-          "https://api.catniverse.website/api/v1/likes/add-like",
+          "http://140.136.151.71:8787/api/v1/likes/add-like",
           null,
           {
             params: { postId: postId },
@@ -523,7 +524,7 @@ const Map = () => {
   const checkIfLiked = async (postId) => {
     try {
       const response = await axios.get(
-        "https://api.catniverse.website/api/v1/likes/existed",
+        "http://140.136.151.71:8787/api/v1/likes/existed",
         {
           params: { postId: postId },
           headers: {
@@ -564,7 +565,7 @@ const Map = () => {
 
     try {
       await axios.post(
-        `https://api.catniverse.website/api/v1/comments/add/${postId}`,
+        `http://140.136.151.71:8787/api/v1/comments/add/${postId}`,
         null,
         {
           params: { content: commentText },
@@ -641,8 +642,8 @@ const Map = () => {
       if (mapRef.current && cityCenter) {
         mapRef.current.flyTo({
           center: cityCenter,
-          zoom: 10.5, 
-          speed: 1.5, 
+          zoom: 10.5,
+          speed: 1.5,
         });
       }
     }
@@ -790,7 +791,7 @@ const Map = () => {
 
     try {
       const response = await axios.get(
-        `https://api.catniverse.website/api/v1/map/region`,
+        `http://140.136.151.71:8787/api/v1/map/region`,
         {
           params: { city: selectedCounty },
         }
@@ -838,7 +839,7 @@ const Map = () => {
   const fetchTipped = async () => {
     try {
       const response = await axios.get(
-        `https://api.catniverse.website/api/v1/map/density`
+        `http://140.136.151.71:8787/api/v1/map/density`
       );
       const posts = response.data.data;
 
@@ -875,7 +876,7 @@ const Map = () => {
     setPostImageUrls({});
     try {
       const response = await axios.get(
-        `https://api.catniverse.website/api/v1/posts/post-id/${postId}`
+        `http://140.136.151.71:8787/api/v1/posts/post-id/${postId}`
       );
       const post = response.data.data;
 
@@ -909,7 +910,7 @@ const Map = () => {
   const fetchImage = async (downloadUrl) => {
     try {
       const response = await axios.get(
-        `https://api.catniverse.website${downloadUrl}`,
+        `http://140.136.151.71:8787${downloadUrl}`,
         { responseType: "blob" }
       );
       return URL.createObjectURL(response.data);
@@ -921,7 +922,7 @@ const Map = () => {
   const fetchPostImage = async (downloadUrl) => {
     try {
       const response = await axios.get(
-        `https://api.catniverse.website${downloadUrl}`,
+        `http://140.136.151.71:8787${downloadUrl}`,
         { responseType: "blob" }
       );
       return URL.createObjectURL(response.data);
@@ -933,7 +934,7 @@ const Map = () => {
   const fetchUserAvatar = async (id) => {
     try {
       const response = await axios.get(
-        `https://api.catniverse.website/api/v1/user-avatar/download/${id}`,
+        `http://140.136.151.71:8787/api/v1/user-avatar/download/${id}`,
         { responseType: "blob" }
       );
       const avatarUrl = URL.createObjectURL(response.data);
@@ -957,6 +958,8 @@ const Map = () => {
     if (userLocation) {
       directions.current.setOrigin(userLocation);
       directions.current.setDestination([catLng, catLat]);
+      setIsCatLocation(true);
+      setIsLocation(true);
     } else {
       alert("導航功能無法啟用，請確保已經獲取使用者和貓咪的位置信息");
     }
@@ -975,6 +978,8 @@ const Map = () => {
     setNotNeuteredCount(0);
     setLoading(false);
     setCountyId(null);
+    setIsCatLocation(false);
+    setIsLocation(false);
 
     if (mapRef.current) {
       const map = mapRef.current;
@@ -987,21 +992,21 @@ const Map = () => {
   };
 
   const drawDensityRegionBoundary = (selectedCounty) => {
-    if (!selectedCounty) return; 
-  
+    if (!selectedCounty) return;
+
     const regionsInCounty = regionOptions[selectedCounty] || [];
-    
+
     const maxCatCount = Math.max(
       ...regionsInCounty.map((region) => densityByRegion[region.name] || 0)
     );
-  
+
     const calculatedStep = maxCatCount / 6;
     setStep(calculatedStep);
-  
+
     const features = regionsInCounty.map((region) => {
       const regionName = region.name;
       const catCount = densityByRegion[regionName] || 0;
-  
+
       let color = "#FFFFFF";
       if (catCount > calculatedStep * 5) {
         color = "hsl(129, 55%, 40%)";
@@ -1016,9 +1021,9 @@ const Map = () => {
       } else if (catCount >= 0) {
         color = "hsl(129, 86%, 91%)";
       }
-  
+
       const selectedFeature = twBoundaries.features[region.geometryIndex];
-  
+
       return {
         type: "Feature",
         geometry: selectedFeature.geometry,
@@ -1029,7 +1034,7 @@ const Map = () => {
         },
       };
     });
-  
+
     if (mapRef.current.getLayer("region-density-fill")) {
       mapRef.current.removeLayer("region-density-fill");
     }
@@ -1042,7 +1047,6 @@ const Map = () => {
     if (mapRef.current.getSource("region-density")) {
       mapRef.current.removeSource("region-density");
     }
-  
 
     mapRef.current.addSource("region-density", {
       type: "geojson",
@@ -1051,7 +1055,7 @@ const Map = () => {
         features,
       },
     });
-  
+
     mapRef.current.addLayer({
       id: "region-density-fill",
       type: "fill",
@@ -1061,7 +1065,7 @@ const Map = () => {
         "fill-opacity": 1,
       },
     });
-  
+
     mapRef.current.addLayer({
       id: "region-density-line",
       type: "line",
@@ -1071,13 +1075,13 @@ const Map = () => {
         "line-width": 1,
       },
     });
-  
+
     mapRef.current.addLayer({
       id: "region-names",
       type: "symbol",
       source: "region-density",
       layout: {
-        "text-field": ["get", "regionName"], 
+        "text-field": ["get", "regionName"],
         "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
         "text-size": 12,
         "text-offset": [0, 0.6],
@@ -1089,8 +1093,56 @@ const Map = () => {
         "text-halo-width": 1,
       },
     });
-  };  
+  };
+
+  const toggleDirectionPanel = (isVisible) => {
+    const directionsPanel = document.querySelector(".mapbox-directions-panel");
+    const profileSwitcher = document.querySelector(".mapbox-directions-profile");
   
+    const routeSummary = document.querySelector(
+      ".mapbox-directions-route-summary"
+    );
+    const stepsContainer = document.querySelector(".mapbox-directions-steps");
+  
+    if (directionsPanel) {
+      directionsPanel.style.display = isVisible ? "block" : "none";
+    }
+    if (profileSwitcher) {
+      profileSwitcher.style.display = isVisible ? "block" : "none";
+    }
+    if (routeSummary) {
+      routeSummary.style.display = isVisible ? "block" : "none";
+    }
+    if (stepsContainer) {
+      stepsContainer.style.display = isVisible ? "block" : "none";
+    }
+  };
+  
+  
+  const handleCloseDirection = () => {
+    if (directions.current && mapRef.current) {
+      toggleDirectionPanel(false);
+      setIsLocation(false); 
+    }
+  };
+  
+  const handleShowDirection = () => {
+    if (directions.current && mapRef.current) {
+      toggleDirectionPanel(true);
+      setIsLocation(true);
+    }
+  };
+  
+  const handleImageClick = (e, sliderRef) => {
+    const clickX = e.clientX;
+    const imageWidth = e.target.clientWidth;
+
+    if (clickX < imageWidth / 2) {
+      sliderRef.slickPrev();
+    } else {
+      sliderRef.slickNext();
+    }
+  };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -1167,6 +1219,16 @@ const Map = () => {
                   </select>
 
                   <button onClick={handleReset}>重新選擇</button>
+                  {catPositioningEnabled && isCatLocation && (
+                    <button
+                      className="closeDirection"
+                      onClick={
+                        isLocation ? handleCloseDirection : handleShowDirection
+                      }
+                    >
+                      {isLocation ? "關閉導航" : "開啟導航"}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -1223,41 +1285,48 @@ const Map = () => {
                 <span className="closed-button" onClick={handleCloseModal}>
                   &times;
                 </span>
-                <div className="mobile-profile-post" key={selectedPostData.id}>
+                <div className="mobile-map-post" key={selectedPostData.id}>
                   <div className="mobile-post-header">
-                    <Link
-                      to={`/profile/${selectedPostData.userId}`}
-                      style={{ textDecoration: "none", color: "inherit" }}
-                    >
-                      <img
-                        src={
-                          userImageUrls
-                            ? userImageUrls.replace(".png", "-lowres.webp")
-                            : defaultAvatar
-                        }
-                        sizes="50px"
-                        alt="使用者頭像"
-                        className="mobile-user-avatar"
-                        style={{
-                          width: "50px",
-                          height: "50px",
-                          borderRadius: "50%",
-                          backgroundColor: "#f0f0f0",
-                        }}
-                        loading="lazy"
-                      />
-                    </Link>
-                    <Link
-                      to={`/profile/${selectedPostData.userId}`}
-                      style={{ textDecoration: "none", color: "inherit" }}
-                    >
-                      <span className="mobile-user-name">
-                        {username ? username : "未知使用者"}
-                      </span>
-                    </Link>
-                    <button className="mobile-location-btn" onClick={handleDirection}>
-                      <img src={mapPic} alt="Map" />
-                    </button>
+                    <div className="mph">
+                      <Link
+                        to={`/profile/${selectedPostData.userId}`}
+                        style={{ textDecoration: "none", color: "inherit" }}
+                      >
+                        <img
+                          src={
+                            userImageUrls
+                              ? userImageUrls.replace(".png", "-lowres.webp")
+                              : defaultAvatar
+                          }
+                          sizes="50px"
+                          alt="使用者頭像"
+                          className="mobile-user-avatar"
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                            borderRadius: "50%",
+                            backgroundColor: "#f0f0f0",
+                          }}
+                          loading="lazy"
+                        />
+                      </Link>
+                      <Link
+                        to={`/profile/${selectedPostData.userId}`}
+                        style={{ textDecoration: "none", color: "inherit" }}
+                      >
+                        <span className="mobile-user-name">
+                          {username ? username : "未知使用者"}
+                        </span>
+                      </Link>
+                    </div>
+                    <div className="locatoinBtn">
+                      <button
+                        className="mobile-location-btn"
+                        onClick={handleDirection}
+                      >
+                        <img src={mapPic} alt="Map" />
+                      </button>
+                    </div>
                   </div>
                   <h4>{selectedPostData.title}</h4>
                   {postImagesUrls[selectedPostData?.id] &&
@@ -1591,10 +1660,7 @@ const Map = () => {
                   ) : (
                     <Suspense fallback={<div>Loading slider...</div>}>
                       <Slider
-                        {...sliderSettings}
-                        ref={(slider) =>
-                          (sliderRefs.current[selectedPostData?.id] = slider)
-                        }
+                        {...sliderSettings(sliderRefs)}
                       >
                         {postImagesUrls[selectedPostData?.id]?.map(
                           (url, index) => (
@@ -1605,6 +1671,9 @@ const Map = () => {
                                 alt={`Cat image ${index}`}
                                 style={{ width: "500px", height: "660px" }}
                                 loading="lazy"
+                                onClick={(e) =>
+                                  handleImageClick(e, sliderRefs.current)
+                                }
                               />
                             </div>
                           )

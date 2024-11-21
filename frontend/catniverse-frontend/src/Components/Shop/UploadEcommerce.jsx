@@ -37,7 +37,7 @@ const ProductManagement = () => {
   const fetchProductData = async () => {
     try {
       const response = await axios.get(
-        `https://api.catniverse.website/api/v1/products/all`
+        `http://140.136.151.71:8787/api/v1/products/all`
       );
       const products = response.data.data;
       setProductData(products);
@@ -59,7 +59,7 @@ const ProductManagement = () => {
     try {
       const imageBlobPromises = downloadUrls.map(async (downloadUrl) => {
         const response = await axios.get(
-          `https://api.catniverse.website${downloadUrl}`,
+          `http://140.136.151.71:8787${downloadUrl}`,
           { responseType: "blob" }
         );
         return URL.createObjectURL(response.data);
@@ -135,7 +135,7 @@ const ProductManagement = () => {
 
     try {
       const response = await axios.delete(
-        `https://api.catniverse.website/api/v1/products/product/${productId}/delete`,
+        `http://140.136.151.71:8787/api/v1/products/product/${productId}/delete`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -160,7 +160,7 @@ const ProductManagement = () => {
 
     try {
       await axios.put(
-        `https://api.catniverse.website/api/v1/products/product/${productId}/update`,
+        `http://140.136.151.71:8787/api/v1/products/product/${productId}/update`,
         editedProduct,
         {
           headers: {
@@ -183,7 +183,7 @@ const ProductManagement = () => {
         formData.append("file", editedImages);
 
         await axios.put(
-          `https://api.catniverse.website/api/v1/product-images/image/${imageId}/update`,
+          `http://140.136.151.71:8787/api/v1/product-images/image/${imageId}/update`,
           formData,
           {
             headers: {
@@ -223,7 +223,7 @@ const ProductManagement = () => {
 
     try {
       const productResponse = await axios.post(
-        "https://api.catniverse.website/api/v1/products/add",
+        "http://140.136.151.71:8787/api/v1/products/add",
         newProduct,
         {
           headers: {
@@ -242,7 +242,7 @@ const ProductManagement = () => {
         });
 
         await axios.post(
-          `https://api.catniverse.website/api/v1/product-images/upload`,
+          `http://140.136.151.71:8787/api/v1/product-images/upload`,
           formData,
           {
             headers: {

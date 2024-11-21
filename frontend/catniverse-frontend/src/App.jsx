@@ -8,9 +8,6 @@ import Shop from "./Components/Shop/Shop";
 import Upload from "./Components/Upload/Upload";
 import Member from "./Components/Member/Member";
 import Profile from "./Components/Profile/Profile";
-import ReportCat from "./Components/ReportCat";
-import ImageTest from "./Components/ImageTest";
-import Show from "./Components/Show";
 import UploadEcommerce from "./Components/Shop/UploadEcommerce";
 import Cart from "./Components/Shop/Cart";
 import Order from "./Components/Shop/Order";
@@ -79,9 +76,6 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/profile/:id" element={<Profile />} />
         <Route path="/login" element={<Login setUsername={setUsername} />} />
-        <Route path="/ReportCat" element={<ReportCat />} />
-        <Route path="/test" element={<ImageTest />} />
-        <Route path="/show" element={<Show />} />
         <Route path="/uploadEcommerce" element={<UploadEcommerce />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/order" element={<Order />} />

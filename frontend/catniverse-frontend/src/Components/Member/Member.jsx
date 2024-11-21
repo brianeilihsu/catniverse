@@ -29,7 +29,7 @@ function Member() {
     const fetchUserData = async (userId) => {
       try {
         const response = await axios.get(
-          `https://api.catniverse.website/api/v1/users/${userId}/user`
+          `http://140.136.151.71:8787/api/v1/users/${userId}/user`
         );
         const user = response.data.data;
         setUserData(user);
@@ -46,7 +46,7 @@ function Member() {
     const fetchImage = async (downloadUrl) => {
       try {
         const response = await axios.get(
-          `https://api.catniverse.website${downloadUrl}`,
+          `http://140.136.151.71:8787${downloadUrl}`,
           { responseType: "blob" }
         );
         return URL.createObjectURL(response.data);
@@ -89,7 +89,7 @@ function Member() {
 
     try {
       await axios.put(
-        `https://api.catniverse.website/api/v1/user-avatar/${userId}/update`,
+        `http://140.136.151.71:8787/api/v1/user-avatar/${userId}/update`,
         imageData,
         {
           headers: {
@@ -130,7 +130,7 @@ function Member() {
     }
     try {
       await axios.put(
-        `https://api.catniverse.website/api/v1/users/${userId}/update`,
+        `http://140.136.151.71:8787/api/v1/users/${userId}/update`,
         userData
       );
       console.log("User profile updated successfully:", userData);
