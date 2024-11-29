@@ -727,7 +727,7 @@ function Index() {
               className="index-title"
               style={{ fontFamily: "Times New Roman" }}
             >
-              MeowTaiwan
+              Catniverse
             </h1>
             <button className="popular" onClick={handlePopularPost}>
               Popular

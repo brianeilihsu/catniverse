@@ -27,7 +27,7 @@ function Upload() {
   const [croppieInstances, setCroppieInstances] = useState([]);
   const fileInputRef = useRef(null);
   const [earStatus, setEarStatus] = useState(false);
-  const [strayCatStatus, setStrayCatStatus] = useState(null);
+  const [strayCatStatus, setStrayCatStatus] = useState(false);
   const [viewport, setViewport] = useState({
     latitude: 25.033,
     longitude: 121.5654,
@@ -85,7 +85,6 @@ function Upload() {
       parts = parts.filter(
         (part) => !part.includes("台湾") && !/^\d+$/.test(part)
       );
-      console.log(parts);
 
       if (parts.length >= 3) {
         const street = parts[0];
@@ -289,12 +288,11 @@ function Upload() {
 
     let decimal = degrees + minutes / 60 + seconds / 3600;
 
-    // 將南緯或西經轉為負值
     if (ref === "S" || ref === "W") {
       decimal = -decimal;
     }
 
-    return parseFloat(decimal.toFixed(15)); // 保留兩位小數
+    return parseFloat(decimal.toFixed(15)); 
   }
 
   const handleCrop = async (index) => {
@@ -334,8 +332,12 @@ function Upload() {
       const response = await fetch(croppedImageUrl);
       const imageBlob = await response.blob();
   
+      const imageFile = new File([imageBlob], "croppedImage.png", {
+        type: "image/png",
+      });
+  
       const formData = new FormData();
-      formData.append("images", imageBlob, "croppedImage.png");
+      formData.append("images", imageFile);
   
       const result = await axios.post(
         "http://140.136.151.71:8000/api/cat-ear-detection/",
@@ -346,23 +348,23 @@ function Upload() {
           },
         }
       );
-      console.log(result.data.data);
+      const is_cropped = result.data.is_cropped;
   
-      const { is_cropped } = result.data.data;
-  
-      if (is_cropped) {
-        setEarStatus(true);
+      if (typeof is_cropped === "boolean") {  
+        if (is_cropped) {
+          setEarStatus(true);
+          setStrayCatStatus(true);
+        } else {
+          setEarStatus(false);
+        }
       } else {
-        setEarStatus(false); 
+        console.error("Unexpected response format, is_cropped not a boolean");
       }
-  
-      console.log("耳狀態檢測結果: ", is_cropped);
     } catch (error) {
       console.error("耳狀態檢測失敗: ", error.message);
       alert("耳狀態檢測失敗，請稍後重試");
     }
-  };
-  
+  };  
 
   const handleCancelCrop = (index) => {
     if (croppieInstances[index]) {
@@ -391,6 +393,7 @@ function Upload() {
     setSelectedLocation("");
     setPopupInfo(null);
     setNewPlace(null);
+    setEarStatus(false);
   };
 
   const handleSubmit = async (e) => {
@@ -444,7 +447,6 @@ function Upload() {
           },
         }
       );
-      console.log("With image", response.data.data);
       //await handleFormSubmitWithImages(croppedBlobs.filter(blob => blob));
 
       setIsLoading(false);
@@ -461,19 +463,13 @@ function Upload() {
   };
 
   const handleEarStatusChange = (e) => {
-    const selectedStatus = e.target.value === "已剪耳" ? true : false;
-    setEarStatus(selectedStatus);
-
-    if (selectedStatus) {
-      setStrayCatStatus(true);
-    } else {
-      setStrayCatStatus(null);
-    }
+    setEarStatus(e.target.value === "已剪耳");
   };
-
+  
   const handleStrayCatStatusChange = (e) => {
-    setStrayCatStatus(e.target.value === "流浪貓" ? true : false);
+    setStrayCatStatus(e.target.value === "流浪貓");
   };
+  
 
   return (
     <>
@@ -568,7 +564,7 @@ function Upload() {
               </div>
 
               <div className="selected-location">
-                <p>選擇的地點: {selectedLocation}</p>
+                <p  className="p">選擇的地點: {selectedLocation}</p>
               </div>
 
               <div className="checkbox-section">
@@ -618,7 +614,7 @@ function Upload() {
                   </label>
                 </div>
               )}
-
+              <p className="p">上傳照片(請幫我上傳同一隻貓咪喔！)：</p>
               <input
                 type="file"
                 id="chooseImage"
@@ -756,7 +752,7 @@ function Upload() {
               </ReactMapGL>
 
               <div className="selected-location">
-                <p>選擇的地點: {selectedLocation}</p>
+                <p  className="p">選擇的地點: {selectedLocation}</p>
               </div>
 
               <div className="checkbox-section">
@@ -806,7 +802,7 @@ function Upload() {
                   </label>
                 </div>
               )}
-
+              <p className="p">上傳照片(請幫我上傳同一隻貓咪喔！)：</p>
               <input
                 type="file"
                 id="chooseImage"

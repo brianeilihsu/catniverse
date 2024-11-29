@@ -62,7 +62,7 @@ function Header({ user, onLogout }) {
                 className="mobile-index-title"
                 style={{ fontFamily: "Times New Roman" }}
               >
-                MeowTaiwan
+                Catniverse
               </h1>
             </div>
           )}
