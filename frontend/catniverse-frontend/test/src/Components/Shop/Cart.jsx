@@ -27,7 +27,7 @@ function Cart() {
       if (cartId && token) {
         try {
           const response = await axios.get(
-            `http://140.136.151.71:8787/api/v1/carts/user-cart`,
+            `https://api.catniverse.website:5000/api/v1/carts/user-cart`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -66,7 +66,7 @@ function Cart() {
     const fetchImage = async (downloadUrl) => {
       try {
         const response = await axios.get(
-          `http://140.136.151.71:8787${downloadUrl}`,
+          `https://api.catniverse.website:5000${downloadUrl}`,
           {
             responseType: "blob",
           }
@@ -101,7 +101,7 @@ function Cart() {
 
     try {
       const response = await axios.put(
-        `http://140.136.151.71:8787/api/v1/cartItems/item/update/${itemId}`,
+        `https://api.catniverse.website:5000/api/v1/cartItems/item/update/${itemId}`,
         null,
         {
           params: {
@@ -138,7 +138,7 @@ function Cart() {
       const deletePromises = itemsToDelete.map(async (item, index) => {
         const itemId = item.product.id;
         await axios.delete(
-          `http://140.136.151.71:8787/api/v1/cartItems/item/remove/${itemId}`,
+          `https://api.catniverse.website:5000/api/v1/cartItems/item/remove/${itemId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -174,7 +174,7 @@ function Cart() {
     try {
       const userId = localStorage.getItem("userId");
       const orderResponse = await axios.post(
-        `http://140.136.151.71:8787/api/v1/orders/order`,
+        `https://api.catniverse.website:5000/api/v1/orders/order`,
         null,
         {
           params: {
@@ -191,7 +191,7 @@ function Cart() {
         alert("Order created successfully!");
 
         const clearCartResponse = await axios.delete(
-          `http://140.136.151.71:8787/api/v1/carts/${cartId}/clear`,
+          `https://api.catniverse.website:5000/api/v1/carts/${cartId}/clear`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

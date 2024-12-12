@@ -116,7 +116,6 @@ public class PostController {
         try {
             User user = userService.getAuthenticatedUser();
             postRequest.setUser(user);
-
             Post post = postService.addPost(postRequest);
             postImageService.savePostImages(post.getId(), files);
             PostDto postDto = postService.convertToDto(post);

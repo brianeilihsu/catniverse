@@ -88,7 +88,7 @@ public class ShopConfig {
                                 "https://catniverse.website",
                                 "http://192.168.1.109:5173",
                                 "http://172.20.10.4:5173",
-                                "http://localhost:5173",
+                                "http://140.136.151.71:5173",
                                 "https://catniverse-load-balancer-1712037285.us-east-1.elb.amazonaws.com",
                                 "http://catniverse.website.s3-website-ap-southeast-2.amazonaws.com",
                                 "https://catniverse.website.s3-website-ap-southeast-2.amazonaws.com") // Allow this origin

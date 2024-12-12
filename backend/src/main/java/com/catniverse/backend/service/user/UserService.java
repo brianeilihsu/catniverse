@@ -18,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,6 +52,7 @@ public class UserService implements ImpUserService{
                     user.setUsername(req.getUsername());
                     user.setEmail(request.getEmail());
                     user.setPassword(passwordEncoder.encode(request.getPassword()));
+                    user.setJoinDate(LocalDate.now());
                     return userRepo.save(user);
                 }).orElseThrow(()-> new AlreadyExistsException("Oops! " + request.getEmail() + "User already exists"));
     }
@@ -63,7 +65,9 @@ public class UserService implements ImpUserService{
             return userRepo.findById(userId).map(existingUser -> {
 
                 existingUser.setUsername(request.getUsername());
-                existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
+                if(request.getPassword() != null) {
+                    existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
+                }
                 existingUser.setBio(request.getBio());
                 return userRepo.save(existingUser);
             }).orElseThrow(()-> new ResourceNotFoundException("User not found"));

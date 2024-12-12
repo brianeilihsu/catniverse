@@ -108,7 +108,7 @@ function Index() {
     try {
       const imageBlobPromises = downloadUrls.map(async (downloadUrl) => {
         const response = await axios.get(
-          `http://140.136.151.71:8787${downloadUrl.replace(".png", ".webp")}`,
+          `https://api.catniverse.website:5000${downloadUrl.replace(".png", ".webp")}`,
           {
             responseType: "blob",
           }
@@ -130,7 +130,7 @@ function Index() {
     if (userData[userId]) return;
     try {
       const response = await axios.get(
-        `http://140.136.151.71:8787/api/v1/users/${userId}/user`
+        `https://api.catniverse.website:5000/api/v1/users/${userId}/user`
       );
       const user = response.data.data;
 
@@ -154,7 +154,7 @@ function Index() {
   const fetchImage = async (downloadUrl) => {
     try {
       const response = await axios.get(
-        `http://140.136.151.71:8787${downloadUrl}`,
+        `https://api.catniverse.website:5000${downloadUrl}`,
         { responseType: "blob" }
       );
       return URL.createObjectURL(response.data);
@@ -166,7 +166,7 @@ function Index() {
   const handlePopularPost = async () => {
     try {
       const response = await axios.get(
-        "http://140.136.151.71:8787/api/v1/posts/popular"
+        "https://api.catniverse.website:5000/api/v1/posts/popular"
       );
       const posts = response.data.data;
       await fetchPostData(posts);
@@ -178,7 +178,7 @@ function Index() {
   const handleLatestPost = async () => {
     try {
       const response = await axios.get(
-        "http://140.136.151.71:8787/api/v1/posts/latest"
+        "https://api.catniverse.website:5000/api/v1/posts/latest"
       );
       const posts = response.data.data;
       await fetchPostData(posts);
@@ -194,7 +194,7 @@ function Index() {
     try {
       if (region) {
         const response = await axios.get(
-          `http://140.136.151.71:8787/api/v1/posts/region`,
+          `https://api.catniverse.website:5000/api/v1/posts/region`,
           {
             params: { city: region },
           }
@@ -212,7 +212,7 @@ function Index() {
   const checkIfLiked = async (postId) => {
     try {
       const response = await axios.get(
-        "http://140.136.151.71:8787/api/v1/likes/existed",
+        "https://api.catniverse.website:5000/api/v1/likes/existed",
         {
           params: { postId },
           headers: {
@@ -246,7 +246,7 @@ function Index() {
   const fetchComments = async (postId) => {
     try {
       const response = await axios.get(
-        `http://140.136.151.71:8787/api/v1/comments/from-post/${postId}`
+        `https://api.catniverse.website:5000/api/v1/comments/from-post/${postId}`
       );
       const commentsData = response.data.data || [];
       const commentsWithUserInfo = await Promise.all(
@@ -275,13 +275,13 @@ function Index() {
   };
 
   const fetchUserDetails = async (userId) => {
-    return axios.get(`http://140.136.151.71:8787/api/v1/users/${userId}/user`);
+    return axios.get(`https://api.catniverse.website:5000/api/v1/users/${userId}/user`);
   };
 
   const fetchCommentImage = async (downloadUrl) => {
     try {
       const response = await axios.get(
-        `http://140.136.151.71:8787${downloadUrl}`,
+        `https://api.catniverse.website:5000${downloadUrl}`,
         { responseType: "blob" }
       );
       return URL.createObjectURL(response.data);
@@ -301,7 +301,7 @@ function Index() {
 
     try {
       const response = await axios.post(
-        `http://140.136.151.71:8787/api/v1/comments/add/${postId}`,
+        `https://api.catniverse.website:5000/api/v1/comments/add/${postId}`,
         null,
         {
           params: { content: commentText },
@@ -340,7 +340,7 @@ function Index() {
     try {
       if (isLiked) {
         await axios.delete(
-          "http://140.136.151.71:8787/api/v1/likes/remove-like",
+          "https://api.catniverse.website:5000/api/v1/likes/remove-like",
           {
             params: { postId },
             headers: {
@@ -362,7 +362,7 @@ function Index() {
         );
       } else {
         await axios.post(
-          "http://140.136.151.71:8787/api/v1/likes/add-like",
+          "https://api.catniverse.website:5000/api/v1/likes/add-like",
           null,
           {
             params: { postId },

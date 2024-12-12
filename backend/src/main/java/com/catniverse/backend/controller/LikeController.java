@@ -46,7 +46,7 @@ public class LikeController {
             return ResponseEntity.ok().body(new ApiResponse("like existed with id: " + likeId, likeId));
         }
         catch (ResourceNotFoundException e){
-            return ResponseEntity.status(404).body(new ApiResponse(e.getMessage(), null));
+            return ResponseEntity.ok().body(new ApiResponse(e.getMessage(), null));
         }
     }
 

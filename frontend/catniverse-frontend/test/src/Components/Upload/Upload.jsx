@@ -340,7 +340,7 @@ function Upload() {
       formData.append("images", imageFile);
   
       const result = await axios.post(
-        "http://140.136.151.71:8000/api/cat-ear-detection/",
+        "https://model.catniverse.website:8001/api/cat-ear-detection/", // 上傳至yolo api
         formData,
         {
           headers: {
@@ -438,7 +438,7 @@ function Upload() {
       });
 
       const response = await axios.post(
-        "http://140.136.151.71:8787/api/v1/posts/add",
+        "https://api.catniverse.website:5000/api/v1/posts/add",
         formDataWithImages,
         {
           headers: {
