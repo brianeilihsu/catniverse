@@ -86,6 +86,7 @@ public class ShopConfig {
                 registry.addMapping("/**") // Apply to all endpoints
                         .allowedOrigins(
                                 "https://catniverse.website",
+                                "https://140.136.151.71",
                                 "https://catniverse-load-balancer.amazonaws.com",
                                 "http://catniverse.website.s3-website-ap-southeast-2.amazonaws.com",
                                 "https://catniverse.website.s3-website-ap-southeast-2.amazonaws.com") // Allow this origin
