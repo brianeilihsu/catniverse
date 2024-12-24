@@ -68,7 +68,7 @@ const Chart = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener("resize", handleResize);
     handleResize();
     return () => window.removeEventListener("resize", handleResize);
@@ -140,7 +140,7 @@ const Chart = () => {
       );
 
       datasets.push({
-        label: "流浪貓總數",
+        label: "貓咪總數",
         data: totalCats,
         backgroundColor: "rgba(54, 162, 235, 0.6)",
         borderColor: "rgba(54, 162, 235, 1)",
@@ -237,7 +237,7 @@ const Chart = () => {
       );
 
       datasets.push({
-        label: "流浪貓總數",
+        label: "貓咪總數",
         data: totalCats,
         backgroundColor: generateColors(totalCats.length),
         labels: labels,
@@ -403,11 +403,14 @@ const Chart = () => {
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+    document.body.style.overflow = isSidebarOpen ? "auto" : "hidden"; 
   };
-
+  
   const closeSidebar = () => {
     setIsSidebarOpen(false);
+    document.body.style.overflow = "auto"; 
   };
+  
 
   return (
     <>
@@ -507,7 +510,7 @@ const Chart = () => {
                         checked={chartTypes.total_cat}
                         onChange={handleCheckboxChange}
                       />
-                      <label htmlFor="total_cat">流浪貓總數</label>
+                      <label htmlFor="total_cat">貓咪總數</label>
                     </div>
                     <div>
                       <input
@@ -564,6 +567,11 @@ const Chart = () => {
                     </div>
                   </div>
                 </div>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
               </div>
             )}
           </div>
@@ -620,7 +628,7 @@ const Chart = () => {
                     checked={chartTypes.total_cat}
                     onChange={handleCheckboxChange}
                   />
-                  <label htmlFor="total_cat">流浪貓總數</label>
+                  <label htmlFor="total_cat">貓咪總數</label>
                 </div>
                 <div>
                   <input

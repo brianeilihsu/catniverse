@@ -13,6 +13,9 @@ public interface ImpPostService {
     void deletePostById(Long id);
 
     List<Post> getAllPosts();
+
+    List<PostDto> getPopularPosts(int page);
+
     List<Post> getPostsByUserId(Long userId);
 
     List<Post> getPostsByTitle(String title);

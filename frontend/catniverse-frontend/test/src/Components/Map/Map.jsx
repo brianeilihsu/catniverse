@@ -111,7 +111,7 @@ const Map = () => {
   };
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener("resize", handleResize);
     handleResize();
     return () => window.removeEventListener("resize", handleResize);
@@ -1417,6 +1417,8 @@ const Map = () => {
                   )}
                   <div className="post-content">
                     <p className="post-text">{selectedPostData.content}</p>
+                    <p className="post-stray">流浪狀態：{selectedPostData.stray === true? "流浪貓" : "非流浪貓"}</p>
+                    <p className="post-cropped">剪耳狀態：{selectedPostData.tipped === true? "已剪耳" : "未剪耳"}</p>
                     <p className="post-location">
                       發布地址：{selectedPostData.city}
                       {selectedPostData.district}

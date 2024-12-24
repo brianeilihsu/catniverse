@@ -63,7 +63,7 @@ function Upload() {
   }, []);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener("resize", handleResize);
     handleResize();
     return () => window.removeEventListener("resize", handleResize);
@@ -223,6 +223,7 @@ function Upload() {
 
             if (Object.keys(gpsData).length === 0) {
               console.log(`圖片 ${index + 1} 沒有 GPS 資訊`);
+              alert("無法讀取照片位置，請手動選取！");
             } else {
               // 解析 GPS 資訊並轉換為小數格式
               const lat = convertDMSToDecimal(
@@ -362,6 +363,7 @@ function Upload() {
       }
     } catch (error) {
       console.error("耳狀態檢測失敗: ", error.message);
+      
       alert("耳狀態檢測失敗，請稍後重試");
     }
   };  

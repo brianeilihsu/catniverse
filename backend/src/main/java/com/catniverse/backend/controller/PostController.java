@@ -32,20 +32,32 @@ public class PostController {
     private final ImpUserService userService;
     private final ImpPostImageService postImageService;
 
+//    @GetMapping("/popular")
+//    public ResponseEntity<ApiResponse> getPopularPosts() {
+//        try {
+//            List<Post> posts = postService.getAllPosts();
+//            List<PostDto> convertedPosts = postService.getConvertedPosts(posts)
+//                    .stream()
+//                    .sorted((p1, p2) -> Integer.compare(p2.getTotal_likes()+ p2.getTotal_comments()
+//                                                        , p1.getTotal_likes()+ p1.getTotal_comments()))
+//                    .collect(Collectors.toList());
+//            return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(500).body(new ApiResponse( e.getMessage(), null));
+//        }
+//    }
+
     @GetMapping("/popular")
-    public ResponseEntity<ApiResponse> getPopularPosts() {
+    public ResponseEntity<ApiResponse> getPopularPosts(@RequestParam(defaultValue = "0") int page) {
         try {
-            List<Post> posts = postService.getAllPosts();
-            List<PostDto> convertedPosts = postService.getConvertedPosts(posts)
-                    .stream()
-                    .sorted((p1, p2) -> Integer.compare(p2.getTotal_likes()+ p2.getTotal_comments()
-                                                        , p1.getTotal_likes()+ p1.getTotal_comments()))
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(new ApiResponse("success", convertedPosts));
+            // 使用 Service 抓取分頁後的熱門貼文
+            List<PostDto> popularPosts = postService.getPopularPosts(page);
+            return ResponseEntity.ok(new ApiResponse("success", popularPosts));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse( e.getMessage(), null));
+            return ResponseEntity.status(500).body(new ApiResponse(e.getMessage(), null));
         }
     }
+
 
     @GetMapping("/latest")
     public ResponseEntity<ApiResponse> getLatestPosts() {

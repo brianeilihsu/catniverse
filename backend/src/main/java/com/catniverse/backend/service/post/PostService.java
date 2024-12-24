@@ -7,6 +7,7 @@ import com.catniverse.backend.exceptions.ResourceNotFoundException;
 import com.catniverse.backend.exceptions.SpecitficNameException;
 import com.catniverse.backend.model.Post;
 import com.catniverse.backend.model.PostImage;
+import com.catniverse.backend.model.Post;
 import com.catniverse.backend.repo.PostImageRepo;
 import com.catniverse.backend.repo.PostRepo;
 import com.catniverse.backend.request.AddPostRequest;
@@ -14,11 +15,15 @@ import com.catniverse.backend.service.chart.ImpChartService;
 import com.catniverse.backend.service.forbidden.ImpForbiddenService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -77,6 +82,23 @@ public class PostService implements ImpPostService{
     @Override
     public List<Post> getAllPosts() {
         return postRepo.findAll();
+    }
+
+    @Override
+    public List<PostDto> getPopularPosts(int page) {
+        int pageSize = 5; // 每頁顯示的貼文數量
+        Pageable pageable = PageRequest.of(page, pageSize);
+
+        // 自定義查詢分頁後的熱門貼文，並按總受歡迎度 (total_likes + total_comments) 降序排序
+        Page<Post> postPage = postRepo.findAll(pageable);
+
+        // 將貼文按總受歡迎度排序後，轉換為 DTO 格式
+        return postPage.stream()
+                .map(this::convertToDto) // 先轉換為 DTO
+                .sorted((dto1, dto2) -> Integer.compare(
+                        (dto2.getTotal_likes() + dto2.getTotal_comments()), // 比較 DTO 的受歡迎度
+                        (dto1.getTotal_likes() + dto1.getTotal_comments())))
+                .collect(Collectors.toList());
     }
 
     @Override

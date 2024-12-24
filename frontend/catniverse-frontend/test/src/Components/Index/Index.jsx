@@ -11,9 +11,9 @@ import "./Index.css";
 const Slider = React.lazy(() => import("react-slick"));
 
 function Index() {
-  const [postData, setPostData] = useState(["loading"]);
+  const [postData, setPostData] = useState([]);
   const [userData, setUserData] = useState({});
-  const [visibleCount, setVisibleCount] = useState(10);
+  const [visibleCount, setVisibleCount] = useState(5);
   const [postImageUrls, setPostImageUrls] = useState({});
   const [userImageUrls, setUserImageUrls] = useState({});
   const [likedPosts, setLikedPosts] = useState({});
@@ -26,6 +26,8 @@ function Index() {
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const sliderRef = useRef({});
+  const [cnt, setCnt] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const taiwanRegions = [
     "臺北市",
@@ -53,7 +55,7 @@ function Index() {
   ];
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener("resize", handleResize);
     handleResize();
     return () => window.removeEventListener("resize", handleResize);
@@ -68,7 +70,9 @@ function Index() {
 
       if (!observerRef.current) {
         observerRef.current = true;
+        setIsLoading(true);
         await handlePopularPost();
+        setIsLoading(false);
       }
     };
 
@@ -76,7 +80,30 @@ function Index() {
   }, []);
 
   const fetchPostData = async (posts) => {
-    setPostData(["loading"]);
+    const userId = localStorage.getItem("userId");
+  
+    const postPromises = posts.map(async (post) => {
+      const userPromise = fetchUserData(post.userId);
+      const commentsPromise = fetchComments(post.id);
+      const imagePromise =
+        post.postImages && post.postImages.length > 0
+          ? fetchPostImages(
+              post.postImages.map((img) => img.downloadUrl),
+              post.id
+            )
+          : Promise.resolve();
+  
+      const likedPromise = userId ? checkIfLiked(post.id) : Promise.resolve();
+  
+      await Promise.all([userPromise, commentsPromise, imagePromise, likedPromise]);
+      return post; 
+    });
+  
+    const processedPosts = await Promise.all(postPromises);
+    return processedPosts; 
+  };  
+
+  const fetchAnotherPostData = async (posts) => {
     const userId = localStorage.getItem("userId");
 
     const postPromises = posts.map(async (post) => {
@@ -165,26 +192,42 @@ function Index() {
 
   const handlePopularPost = async () => {
     try {
+      setCnt(1);
+      setPostData([]);
+      setIsLoading(true);
       const response = await axios.get(
-        "https://api.catniverse.website:5000/api/v1/posts/popular"
+        `https://api.catniverse.website:5000/api/v1/posts/popular?page=${cnt}`
       );
       const posts = response.data.data;
-      await fetchPostData(posts);
+      const processedPosts = await fetchPostData(posts);
+
+    setPostData((prevPosts) => {
+      const allPosts = [...prevPosts, ...processedPosts];
+      const uniquePosts = Array.from(
+        new Set(allPosts.map((post) => post.id))
+      ).map((id) => allPosts.find((post) => post.id === id));
+      return uniquePosts;
+    });
     } catch (error) {
       console.error("Error fetching popular posts: ", error);
     }
+    setIsLoading(false);
   };
 
   const handleLatestPost = async () => {
     try {
+      setCnt(1);
+      setPostData([]);
+      setIsLoading(true);
       const response = await axios.get(
         "https://api.catniverse.website:5000/api/v1/posts/latest"
       );
       const posts = response.data.data;
-      await fetchPostData(posts);
+      await fetchAnotherPostData(posts);
     } catch (error) {
       console.error("Error fetching latest posts: ", error);
     }
+    setIsLoading(false);
   };
 
   const handleRegionPost = async (e) => {
@@ -192,6 +235,9 @@ function Index() {
     setSelectedRegion(region);
 
     try {
+      setCnt(1);
+      setPostData([]);
+      setIsLoading(true);
       if (region) {
         const response = await axios.get(
           `https://api.catniverse.website:5000/api/v1/posts/region`,
@@ -200,13 +246,14 @@ function Index() {
           }
         );
         const posts = response.data.data;
-        await fetchPostData(posts);
+        await fetchAnotherPostData(posts);
       } else {
         handlePopularPost();
       }
     } catch (error) {
       console.error("Error fetching region-based posts: ", error);
     }
+    setIsLoading(false);
   };
 
   const checkIfLiked = async (postId) => {
@@ -238,7 +285,7 @@ function Index() {
           [postId]: false,
         }));
       } else {
-        console.error(`Error checking like status for post ${postId}:`, error);
+        //console.error(`Error checking like status for post ${postId}:`, error);
       }
     }
   };
@@ -293,6 +340,7 @@ function Index() {
   const handleAddComment = async (postId) => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
+      alert("請先登入才可留言！")
       navigate("/login");
       return;
     }
@@ -331,7 +379,7 @@ function Index() {
   const handleLike = async (postId) => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
-      navigate("/login");
+      alert("請先登入才可按讚！")
       return;
     }
 
@@ -386,12 +434,35 @@ function Index() {
       }
     } catch (error) {
       console.error(`Error updating like for post ${postId}:`, error);
+      alert("帳號憑證已過期，請重新登入！")
     }
   };
 
-  const loadMorePosts = () => {
-    setVisibleCount((prevCount) => prevCount + 10);
-  };
+  const loadMorePosts = async () => {
+    try {
+      let newCount = cnt + 1;
+      setCnt(newCount);
+  
+      const response = await axios.get(
+        `https://api.catniverse.website:5000/api/v1/posts/popular?page=${newCount}`
+      );
+      const newPosts = response.data.data;
+  
+      const processedNewPosts = await fetchPostData(newPosts);
+  
+      setPostData((prevPosts) => {
+        const allPosts = [...prevPosts, ...processedNewPosts];
+        const uniquePosts = Array.from(
+          new Set(allPosts.map((post) => post.id))
+        ).map((id) => allPosts.find((post) => post.id === id));
+        return uniquePosts;
+      });
+  
+      setVisibleCount((prevCount) => prevCount + 5); 
+    } catch (error) {
+      console.error("Error loading more posts:", error);
+    }
+  };  
 
   const handleImageClick = (e, sliderRef) => {
     const clickX = e.clientX;
@@ -452,7 +523,7 @@ function Index() {
           <div className="mobile-content">
             <div className="NoContainer">
               <br />
-              {postData[0] === "loading" ? (
+              {isLoading === true ? (
                 <div className="loading-overlay">
                   <ClipLoader color={"#666"} size={50} />
                 </div>
@@ -585,6 +656,8 @@ function Index() {
                             )}
                             <div className="post-content">
                               <p className="post-text">{post.content}</p>
+                              <p className="post-stray">流浪狀態：{post.stray === true? "流浪貓" : "非流浪貓"}</p>
+                              <p className="post-cropped">剪耳狀態：{post.tipped === true? "已剪耳" : "未剪耳"}</p>
                               <p className="post-location">
                                 發布地址：{post.city}
                                 {post.district}
@@ -709,7 +782,7 @@ function Index() {
                     )}
                   </div>
                   <div className="load-more-container">
-                    {postData.length > visibleCount && (
+                    {visibleCount && (
                       <button className="load-more" onClick={loadMorePosts}>
                         Loading more posts...
                       </button>
@@ -751,7 +824,7 @@ function Index() {
           <div className="content">
             <div className="NoContainer">
               <br />
-              {postData[0] === "loading" ? (
+              {isLoading === true ? (
                 <div className="loading-overlay">
                   <ClipLoader color={"#666"} size={50} />
                 </div>
@@ -932,6 +1005,8 @@ function Index() {
                             )}
                             <div className="post-content">
                               <p className="post-text">{post.content}</p>
+                              <p className="post-stray">流浪狀態：{post.stray === true? "流浪貓" : "非流浪貓"}</p>
+                              <p className="post-cropped">剪耳狀態：{post.tipped === true? "已剪耳" : "未剪耳"}</p>
                               <p className="post-location">
                                 發布地址：{post.city}
                                 {post.district}
@@ -1057,7 +1132,7 @@ function Index() {
                     )}
                   </div>
 
-                  {postData.length > visibleCount && (
+                  {visibleCount && (
                     <button className="load-more" onClick={loadMorePosts}>
                       Loading more posts...
                     </button>

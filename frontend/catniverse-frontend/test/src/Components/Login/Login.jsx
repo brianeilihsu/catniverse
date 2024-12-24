@@ -67,9 +67,7 @@ function Login({ setUsername }) {
   const handleLogin = async (e) => {
 
     setIsLoading(true);
-
-    e.preventDefault();
-    
+  
     try {
       const response = await axios.post("https://api.catniverse.website:5000/api/v1/auth/login", {
         email: email,
@@ -104,6 +102,9 @@ function Login({ setUsername }) {
     } catch (error) {
       if (error.response && error.response.status === 401) {
         setMessage('Login failed: Invalid email or password.');
+        alert("帳號錯誤或密碼錯誤！");
+        setIsLoading(false);
+        window.location.reload();
       } else {
         setMessage('An error occurred: ' + error.message);
       }
@@ -125,6 +126,7 @@ function Login({ setUsername }) {
         <form>
           <input
             type="text"
+            autocomplete="username"
             id="account"
             placeholder="Email"
             value={email}
