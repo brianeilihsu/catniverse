@@ -51,6 +51,4 @@ public class Post {
         this.user = user; // 使用 user 物件
         this.createdAt = createdAt;
     }
-
-
 }
